@@ -15,8 +15,6 @@ class PocketSmithClient:
     Features:
     - API authentication via Developer Key
     - Rate limiting
-    - Response caching
-    - Error handling and retries
     - Request/response logging
     """
 

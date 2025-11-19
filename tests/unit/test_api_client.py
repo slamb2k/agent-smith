@@ -85,3 +85,59 @@ def test_api_client_enforces_rate_limiting(mock_get):
 
     # Should take at least rate_limit_delay (50ms)
     assert elapsed >= 0.05
+
+
+@patch('scripts.core.api_client.requests.post')
+def test_api_client_post_request(mock_post):
+    """Test POST request with proper headers and rate limiting."""
+    mock_response = Mock()
+    mock_response.status_code = 201
+    mock_response.json.return_value = {"id": 456, "created": True}
+    mock_post.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    result = client.post("/categories", data={"name": "Test Category"})
+
+    assert result == {"id": 456, "created": True}
+    mock_post.assert_called_once()
+    args, kwargs = mock_post.call_args
+    assert args[0] == "https://api.pocketsmith.com/v2/categories"
+    assert kwargs['headers']['X-Developer-Key'] == "test_key"
+    assert kwargs['json'] == {"name": "Test Category"}
+
+
+@patch('scripts.core.api_client.requests.put')
+def test_api_client_put_request(mock_put):
+    """Test PUT request with proper headers and rate limiting."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"id": 456, "updated": True}
+    mock_put.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    result = client.put("/categories/456", data={"name": "Updated Category"})
+
+    assert result == {"id": 456, "updated": True}
+    mock_put.assert_called_once()
+    args, kwargs = mock_put.call_args
+    assert args[0] == "https://api.pocketsmith.com/v2/categories/456"
+    assert kwargs['headers']['X-Developer-Key'] == "test_key"
+    assert kwargs['json'] == {"name": "Updated Category"}
+
+
+@patch('scripts.core.api_client.requests.delete')
+def test_api_client_delete_request(mock_delete):
+    """Test DELETE request with proper headers and rate limiting."""
+    mock_response = Mock()
+    mock_response.status_code = 204
+    mock_response.text = ""
+    mock_delete.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    result = client.delete("/categories/456")
+
+    assert result is None
+    mock_delete.assert_called_once()
+    args, kwargs = mock_delete.call_args
+    assert args[0] == "https://api.pocketsmith.com/v2/categories/456"
+    assert kwargs['headers']['X-Developer-Key'] == "test_key"
