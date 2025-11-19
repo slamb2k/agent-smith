@@ -1,0 +1,49 @@
+# Sensitive - NEVER commit
+.env
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build-python/
+
+# Agent Smith working data (not for git)
+*.log
+*_analysis.json
+*_data.json
+backups/
+reports/
+data/cache/
+logs/
+
+# Build reference (temporary - remove before publishing)
+build/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

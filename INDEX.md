@@ -1,0 +1,137 @@
+# Budget Smith - Repository Index
+
+**Last Updated:** 2025-11-20
+
+This index provides a comprehensive overview of the repository structure for both human readers and AI agents.
+
+---
+
+## Root Directory
+
+| File/Directory | Type | Description | Status |
+|----------------|------|-------------|--------|
+| `README.md` | File | Project overview and quick start guide | Active |
+| `INDEX.md` | File | This file - complete directory index | Active |
+| `.gitignore` | File | Git ignore rules (protects sensitive data) | Active |
+| `.env` | File | API configuration (NEVER commit - protected) | Protected |
+| `.claude/` | Directory | Claude Code configuration and commands | Active |
+| `docs/` | Directory | Documentation and design specifications | Active |
+| `ai_docs/` | Directory | Documentation for AI agents/subagents | Active |
+| `build/` | Directory | Reference materials (temporary, pre-publish) | Temporary |
+
+---
+
+## Directory Details
+
+### `/docs/` - Documentation
+
+Contains all project documentation including design specifications.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `docs/INDEX.md` | Documentation index | Index |
+| `docs/design/2025-11-20-agent-smith-design.md` | Complete Agent Smith design specification | Design Doc |
+
+**Purpose:** Central location for all project documentation, design specs, implementation guides, and user documentation.
+
+**See:** [docs/INDEX.md](docs/INDEX.md)
+
+---
+
+### `/ai_docs/` - AI Agent Documentation
+
+Documentation specifically formatted for AI agents and subagents to reference during operations.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `ai_docs/INDEX.md` | AI documentation index | Index |
+| `ai_docs/pocketsmith-api-documentation.md` | PocketSmith API v2 reference | API Docs |
+
+**Purpose:** Provides AI agents with comprehensive references without needing to download documentation repeatedly. Optimized for LLM consumption.
+
+**See:** [ai_docs/INDEX.md](ai_docs/INDEX.md)
+
+---
+
+### `/build/` - Reference Materials (Temporary)
+
+Contains reference materials from previous PocketSmith migration work. This directory will be removed before final publication as useful content is incorporated into Agent Smith.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `build/docs/` | Migration documentation (9 files) | Reference |
+| `build/scripts/` | Python scripts from migration work (40+ files) | Reference |
+
+**Purpose:** Preserve previous work for reference during Agent Smith development.
+
+**Status:** Temporary - will be removed before publish
+
+**Contents:**
+- `build/docs/` - Category hierarchy planning, migration guides, implementation notes
+- `build/scripts/` - Python scripts for categorization, analysis, migration, reporting
+
+---
+
+### `/.claude/` - Claude Code Configuration
+
+Claude Code configuration directory (managed by Claude Code itself).
+
+**Purpose:** Stores Claude Code settings, slash commands, and skill configurations.
+
+**Note:** Will contain Agent Smith slash commands once implementation begins.
+
+---
+
+## Quick Navigation
+
+### For Developers
+
+- **Getting Started:** [README.md](README.md)
+- **Design Specification:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
+- **Implementation Roadmap:** See design doc Section 11
+
+### For AI Agents
+
+- **PocketSmith API Reference:** [ai_docs/pocketsmith-api-documentation.md](ai_docs/pocketsmith-api-documentation.md)
+- **Agent Smith Architecture:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
+- **Reference Scripts:** [build/scripts/](build/scripts/)
+
+### Key Documents
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [README.md](README.md) | Project overview | All |
+| [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md) | Complete design spec | Developers, AI agents |
+| [ai_docs/pocketsmith-api-documentation.md](ai_docs/pocketsmith-api-documentation.md) | API reference | AI agents |
+
+---
+
+## File Counts
+
+- **Documentation Files:** 2 (+ 9 in build/docs)
+- **Design Specifications:** 1
+- **AI Reference Docs:** 1
+- **Reference Scripts:** 40+ (in build/scripts)
+
+---
+
+## Repository Size
+
+- **Active Files:** ~812KB
+- **Build Reference:** ~1MB
+- **Total:** ~2MB
+- **Backup (original work):** 341MB at `../budget-smith-backup-20251120_093733/`
+
+---
+
+## Notes
+
+- `.env` file contains sensitive API keys and is protected by `.gitignore`
+- `build/` directory is temporary and will be removed before publication
+- All useful content from `build/` will be incorporated into Agent Smith skill structure
+- Complete backup of original work exists at `../budget-smith-backup-20251120_093733/`
+
+---
+
+**Last Updated:** 2025-11-20
+**Repository Version:** Design Phase (Pre-Implementation)
