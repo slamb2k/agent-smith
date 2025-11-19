@@ -61,3 +61,102 @@ class PocketSmithClient:
         if elapsed < self.rate_limit_delay:
             time.sleep(self.rate_limit_delay - elapsed)
         self._last_request_time = time.time()
+
+    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Any:
+        """Make GET request to API.
+
+        Args:
+            endpoint: API endpoint (e.g., "/me" or "/users/123/transactions")
+            params: Query parameters
+
+        Returns:
+            Parsed JSON response
+
+        Raises:
+            requests.HTTPError: If request fails
+        """
+        self._rate_limit()
+
+        url = f"{self.base_url}{endpoint}"
+        logger.debug(f"GET {url} (params: {params})")
+
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+
+        logger.debug(f"GET {url} - {response.status_code}")
+        return response.json()
+
+    def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Any:
+        """Make POST request to API.
+
+        Args:
+            endpoint: API endpoint
+            data: Request body data
+
+        Returns:
+            Parsed JSON response
+
+        Raises:
+            requests.HTTPError: If request fails
+        """
+        self._rate_limit()
+
+        url = f"{self.base_url}{endpoint}"
+        logger.debug(f"POST {url}")
+
+        response = requests.post(url, headers=self.headers, json=data)
+        response.raise_for_status()
+
+        logger.debug(f"POST {url} - {response.status_code}")
+        return response.json()
+
+    def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Any:
+        """Make PUT request to API.
+
+        Args:
+            endpoint: API endpoint
+            data: Request body data
+
+        Returns:
+            Parsed JSON response
+
+        Raises:
+            requests.HTTPError: If request fails
+        """
+        self._rate_limit()
+
+        url = f"{self.base_url}{endpoint}"
+        logger.debug(f"PUT {url}")
+
+        response = requests.put(url, headers=self.headers, json=data)
+        response.raise_for_status()
+
+        logger.debug(f"PUT {url} - {response.status_code}")
+        return response.json()
+
+    def delete(self, endpoint: str) -> Any:
+        """Make DELETE request to API.
+
+        Args:
+            endpoint: API endpoint
+
+        Returns:
+            Parsed JSON response or None
+
+        Raises:
+            requests.HTTPError: If request fails
+        """
+        self._rate_limit()
+
+        url = f"{self.base_url}{endpoint}"
+        logger.debug(f"DELETE {url}")
+
+        response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
+
+        logger.debug(f"DELETE {url} - {response.status_code}")
+
+        # DELETE may return empty response
+        if response.text:
+            return response.json()
+        return None

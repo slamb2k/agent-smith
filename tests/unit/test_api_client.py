@@ -1,6 +1,8 @@
 """Tests for PocketSmith API client."""
 import os
 import pytest
+from unittest.mock import Mock, patch
+import requests
 from scripts.core.api_client import PocketSmithClient
 
 
@@ -29,3 +31,57 @@ def test_api_client_sets_default_rate_limit():
     """API client should set default rate limit delay."""
     client = PocketSmithClient(api_key="test_key")
     assert client.rate_limit_delay == 0.1  # 100ms default
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_api_client_get_request(mock_get):
+    """Test GET request with proper headers and rate limiting."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"id": 123, "name": "Test User"}
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    result = client.get("/me")
+
+    assert result == {"id": 123, "name": "Test User"}
+    mock_get.assert_called_once()
+    args, kwargs = mock_get.call_args
+    assert args[0] == "https://api.pocketsmith.com/v2/me"
+    assert kwargs['headers']['X-Developer-Key'] == "test_key"
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_api_client_handles_404(mock_get):
+    """Test handling of 404 Not Found responses."""
+    mock_response = Mock()
+    mock_response.status_code = 404
+    mock_response.text = "Not Found"
+    mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+
+    with pytest.raises(requests.HTTPError):
+        client.get("/nonexistent")
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_api_client_enforces_rate_limiting(mock_get):
+    """Test that rate limiting delay is enforced between requests."""
+    import time
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"success": True}
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key", rate_limit_delay=0.05)
+
+    start = time.time()
+    client.get("/me")
+    client.get("/me")
+    elapsed = time.time() - start
+
+    # Should take at least rate_limit_delay (50ms)
+    assert elapsed >= 0.05
