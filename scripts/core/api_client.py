@@ -158,3 +158,117 @@ class PocketSmithClient:
         if response.text:
             return response.json()
         return None
+
+    # High-level API methods
+
+    def get_user(self) -> Dict[str, Any]:
+        """Get authorized user information.
+
+        Returns:
+            User object with id, login, name, email, etc.
+        """
+        logger.info("Fetching authorized user")
+        return self.get("/me")
+
+    def get_transactions(
+        self,
+        user_id: int,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        uncategorised: Optional[bool] = None,
+        account_id: Optional[int] = None,
+        page: int = 1,
+        per_page: int = 100
+    ) -> list:
+        """Get transactions for a user.
+
+        Args:
+            user_id: PocketSmith user ID
+            start_date: Filter start date (YYYY-MM-DD)
+            end_date: Filter end date (YYYY-MM-DD)
+            uncategorised: Filter for uncategorized transactions only
+            account_id: Filter by specific account
+            page: Page number (1-indexed)
+            per_page: Results per page (max 100)
+
+        Returns:
+            List of transaction objects
+        """
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        if uncategorised is not None:
+            params["uncategorised"] = 1 if uncategorised else 0
+        if account_id:
+            params["account_id"] = account_id
+
+        logger.info(f"Fetching transactions for user {user_id} (page {page})")
+        return self.get(f"/users/{user_id}/transactions", params=params)
+
+    def get_categories(self, user_id: int) -> list:
+        """Get all categories for a user.
+
+        Args:
+            user_id: PocketSmith user ID
+
+        Returns:
+            List of category objects with full hierarchy
+        """
+        logger.info(f"Fetching categories for user {user_id}")
+        return self.get(f"/users/{user_id}/categories")
+
+    def update_transaction(
+        self,
+        transaction_id: int,
+        category_id: Optional[int] = None,
+        note: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Update a transaction.
+
+        Args:
+            transaction_id: Transaction ID to update
+            category_id: New category ID
+            note: Transaction note/memo
+
+        Returns:
+            Updated transaction object
+        """
+        data = {}
+        if category_id is not None:
+            data["category_id"] = category_id
+        if note is not None:
+            data["note"] = note
+
+        logger.info(f"Updating transaction {transaction_id}")
+        return self.put(f"/transactions/{transaction_id}", data=data)
+
+    def create_category_rule(
+        self,
+        category_id: int,
+        payee_matches: str
+    ) -> Dict[str, Any]:
+        """Create a category rule (platform rule).
+
+        Note: PocketSmith API only supports simple keyword matching.
+        For advanced rules, use local rule engine.
+
+        Args:
+            category_id: Category to assign
+            payee_matches: Keyword to match in payee name
+
+        Returns:
+            Created category rule object
+        """
+        data = {
+            "payee_matches": payee_matches,
+            "apply_to_all": True
+        }
+
+        logger.info(f"Creating category rule for category {category_id}: '{payee_matches}'")
+        return self.post(f"/categories/{category_id}/category_rules", data=data)

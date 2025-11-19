@@ -141,3 +141,67 @@ def test_api_client_delete_request(mock_delete):
     args, kwargs = mock_delete.call_args
     assert args[0] == "https://api.pocketsmith.com/v2/categories/456"
     assert kwargs['headers']['X-Developer-Key'] == "test_key"
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_get_user(mock_get):
+    """Test get_user retrieves authorized user info."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id": 217031,
+        "login": "testuser",
+        "name": "Test User",
+        "email": "test@example.com"
+    }
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    user = client.get_user()
+
+    assert user["id"] == 217031
+    assert user["login"] == "testuser"
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_get_transactions(mock_get):
+    """Test get_transactions with filters."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [
+        {"id": 1, "payee": "Test Store", "amount": "-50.00"},
+        {"id": 2, "payee": "Income", "amount": "1000.00"}
+    ]
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    transactions = client.get_transactions(
+        user_id=217031,
+        start_date="2025-01-01",
+        end_date="2025-01-31"
+    )
+
+    assert len(transactions) == 2
+    assert transactions[0]["payee"] == "Test Store"
+
+    # Verify correct parameters passed
+    args, kwargs = mock_get.call_args
+    assert "start_date=2025-01-01" in args[0] or kwargs.get('params', {}).get('start_date') == "2025-01-01"
+
+
+@patch('scripts.core.api_client.requests.get')
+def test_get_categories(mock_get):
+    """Test get_categories retrieves category tree."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [
+        {"id": 100, "title": "Income", "is_transfer": False},
+        {"id": 200, "title": "Expenses", "is_transfer": False}
+    ]
+    mock_get.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    categories = client.get_categories(user_id=217031)
+
+    assert len(categories) == 2
+    assert categories[0]["title"] == "Income"
