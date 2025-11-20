@@ -25,7 +25,7 @@ No state files yet. These will be created during operations:
 ## Subdirectories
 
 - **alerts/** - Alert rules and history
-- **tax/** - Tax intelligence data (ATO mappings, deductions, CGT)
+- **tax/** - Tax intelligence data (ATO mappings, deductions, CGT) - see `tax/INDEX.md`
 - **scenarios/** - Saved scenarios and results
 - **merchants/** - Merchant intelligence data
 - **investments/** - Investment tracking
