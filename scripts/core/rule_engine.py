@@ -195,3 +195,29 @@ class RuleEngine:
             return 70 <= rule.confidence < 90
         else:  # AGGRESSIVE
             return 50 <= rule.confidence < 80
+
+    def find_matching_rules(self, transaction: Dict[str, Any]) -> List[Rule]:
+        """Find all rules that match a transaction.
+
+        Args:
+            transaction: Transaction dict to match against
+
+        Returns:
+            List of matching rules sorted by priority (highest first)
+        """
+        matches = [rule for rule in self.rules if rule.match_transaction(transaction)]
+        # Sort by priority descending
+        matches.sort(key=lambda r: r.priority, reverse=True)
+        return matches
+
+    def find_best_match(self, transaction: Dict[str, Any]) -> Optional[Rule]:
+        """Find the best matching rule for a transaction.
+
+        Args:
+            transaction: Transaction dict to match against
+
+        Returns:
+            Best matching rule (highest priority) or None
+        """
+        matches = self.find_matching_rules(transaction)
+        return matches[0] if matches else None

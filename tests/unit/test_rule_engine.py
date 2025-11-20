@@ -206,3 +206,63 @@ def test_intelligence_mode_aggressive():
 
     assert engine.should_auto_apply(very_low) is False
     assert engine.should_ask_approval(very_low) is False
+
+
+def test_find_matching_rules_returns_sorted_by_priority():
+    """Test find_matching_rules returns rules sorted by priority (highest first)."""
+    engine = RuleEngine()
+
+    low_priority = Rule(name="Low", payee_regex="TEST.*", category_id=100, priority=50)
+    high_priority = Rule(name="High", payee_regex="TEST.*", category_id=200, priority=200)
+    medium_priority = Rule(name="Med", payee_regex="TEST.*", category_id=150, priority=100)
+
+    engine.add_rule(low_priority)
+    engine.add_rule(high_priority)
+    engine.add_rule(medium_priority)
+
+    transaction = {"payee": "TEST MERCHANT", "amount": "-50.00"}
+    matches = engine.find_matching_rules(transaction)
+
+    assert len(matches) == 3
+    assert matches[0].name == "High"
+    assert matches[1].name == "Med"
+    assert matches[2].name == "Low"
+
+
+def test_find_matching_rules_returns_empty_for_no_match():
+    """Test find_matching_rules returns empty list when no rules match."""
+    engine = RuleEngine()
+    engine.add_rule(Rule(name="Woolworths", payee_regex="WOOLWORTHS.*", category_id=100))
+
+    transaction = {"payee": "COLES SUPERMARKET", "amount": "-50.00"}
+    matches = engine.find_matching_rules(transaction)
+
+    assert len(matches) == 0
+
+
+def test_find_best_match_returns_highest_priority():
+    """Test find_best_match returns highest priority matching rule."""
+    engine = RuleEngine()
+
+    low_priority = Rule(name="Low", payee_regex="TEST.*", category_id=100, priority=50)
+    high_priority = Rule(name="High", payee_regex="TEST.*", category_id=200, priority=200)
+
+    engine.add_rule(low_priority)
+    engine.add_rule(high_priority)
+
+    transaction = {"payee": "TEST MERCHANT", "amount": "-50.00"}
+    best = engine.find_best_match(transaction)
+
+    assert best is not None
+    assert best.name == "High"
+
+
+def test_find_best_match_returns_none_for_no_match():
+    """Test find_best_match returns None when no rules match."""
+    engine = RuleEngine()
+    engine.add_rule(Rule(name="Woolworths", payee_regex="WOOLWORTHS.*", category_id=100))
+
+    transaction = {"payee": "COLES SUPERMARKET", "amount": "-50.00"}
+    best = engine.find_best_match(transaction)
+
+    assert best is None
