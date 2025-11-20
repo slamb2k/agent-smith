@@ -1,7 +1,6 @@
 """Tests for historical scenario analysis."""
 
 import pytest
-from datetime import date
 from scripts.scenarios.historical import (
     calculate_what_if_spending,
     compare_periods,

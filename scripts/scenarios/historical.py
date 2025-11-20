@@ -22,7 +22,7 @@ def calculate_what_if_spending(
     Returns:
         Dict with actual_spent, adjusted_spent, savings, category, adjustment_percent
     """
-    # Filter by date range
+    # Filter by date range (using ISO 8601 string comparison)
     filtered = transactions
     if start_date:
         filtered = [t for t in filtered if t.get("date", "") >= start_date]
@@ -80,6 +80,7 @@ def compare_periods(
         total = 0.0
         for txn in transactions:
             date = txn.get("date", "")
+            # Filter by date range (using ISO 8601 string comparison)
             if start <= date <= end:
                 amount = float(txn.get("amount", 0))
                 if amount < 0:  # Expenses only
@@ -145,6 +146,11 @@ def detect_spending_anomalies(
     # Calculate average
     amounts = [abs(float(t.get("amount", 0))) for t in category_txns]
     average = sum(amounts) / len(amounts)
+
+    # Protect against division by zero
+    if average == 0:
+        return []
+
     threshold = average * (1 + threshold_percent / 100.0)
 
     # Find anomalies
