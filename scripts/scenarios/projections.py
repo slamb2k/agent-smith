@@ -45,9 +45,8 @@ def forecast_spending(
 
     # Generate projections
     projections = []
-    # Start projections from the current month (November 2025 in the test)
-    # In production, this would be datetime.now()
-    base_date = datetime(2025, 10, 1)  # October 2025, will add 1 month to start from Nov
+    # Start projections from the current month
+    base_date = datetime.now()
 
     for i in range(months_forward):
         month_date = base_date + relativedelta(months=i + 1)

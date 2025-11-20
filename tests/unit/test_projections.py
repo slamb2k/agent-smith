@@ -1,6 +1,8 @@
 """Tests for future projection scenarios."""
 
 import pytest
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from scripts.scenarios.projections import (
     forecast_spending,
     calculate_affordability,
@@ -41,8 +43,11 @@ def test_forecast_spending_3_months():
     assert result["months_forward"] == 3
     assert len(result["projections"]) == 3
 
+    # Calculate expected first month (should be next month from now)
+    expected_first_month = (datetime.now() + relativedelta(months=1)).strftime("%Y-%m")
+
     # Conservative scenario (10% higher)
-    assert result["projections"][0]["month"] == "2025-11"
+    assert result["projections"][0]["month"] == expected_first_month
     assert result["projections"][0]["conservative"] == pytest.approx(341.0, abs=1)
     assert result["projections"][0]["realistic"] == pytest.approx(310.0, abs=1)
     assert result["projections"][0]["optimistic"] == pytest.approx(279.0, abs=1)
