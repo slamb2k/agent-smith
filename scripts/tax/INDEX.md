@@ -30,6 +30,23 @@
 - **Tags:** tax, deductions, patterns, level-2, substantiation
 - **Tests:** `tests/unit/test_deduction_detector.py` (14 tests)
 
+### cgt_tracker.py
+- **Size:** 11 KB
+- **Created:** 2025-11-20 (Phase 4, Task 5)
+- **Purpose:** Capital Gains Tax tracking with FIFO matching
+- **Classes:** CGTTracker, Asset, CGTEvent, AssetType (enum)
+- **Level:** 2 (Smart Categorization Assistant)
+- **Features:**
+  - Track asset purchases (shares, crypto, property)
+  - FIFO matching for sales
+  - Cost base calculation (price + fees)
+  - Holding period calculation
+  - 50% CGT discount eligibility (> 365 days)
+  - Financial year reporting (AU: July 1 - June 30)
+  - Capital gains/loss calculation
+- **Tags:** tax, cgt, capital-gains, fifo, level-2, investments
+- **Tests:** `tests/unit/test_cgt_tracker.py` (17 tests)
+
 ### reporting.py
 - **Size:** 5.0 KB
 - **Created:** 2025-11-20 (Phase 4, Task 2)
@@ -51,8 +68,8 @@
 - ✅ Confidence scoring
 - ✅ Substantiation checking
 - ✅ Commuting detection
+- ✅ CGT tracking (FIFO, holding periods, discount eligibility)
 - ⬜ Expense splitting suggestions (future)
-- ⬜ CGT tracking (future)
 - ⬜ Home office calculations (future)
 
 ### Level 3: Full Compliance Suite (Future)
@@ -68,9 +85,9 @@
 
 ## Test Coverage
 
-- **Total tests:** 22 (3 + 14 + 5)
+- **Total tests:** 39 (3 + 14 + 5 + 17)
 - **Pass rate:** 100%
-- **Files:** 3 test files in `tests/unit/`
+- **Files:** 4 test files in `tests/unit/`
 
 ## Usage Examples
 
@@ -102,6 +119,42 @@ from scripts.tax.reporting import generate_tax_summary
 
 summary = generate_tax_summary(transactions)
 # Returns: {total_deductible: 5000.00, by_category: {...}, ...}
+```
+
+### Capital Gains Tracking
+```python
+from scripts.tax.cgt_tracker import CGTTracker, AssetType
+from decimal import Decimal
+from datetime import date
+
+tracker = CGTTracker()
+
+# Track purchase
+tracker.track_purchase(
+    asset_type=AssetType.SHARES,
+    name="BHP Group",
+    quantity=Decimal("100"),
+    purchase_date=date(2023, 1, 1),
+    purchase_price=Decimal("45.50"),
+    fees=Decimal("19.95")
+)
+
+# Track sale (auto FIFO matching)
+event = tracker.track_sale(
+    asset_type=AssetType.SHARES,
+    name="BHP Group",
+    quantity=Decimal("100"),
+    sale_date=date(2024, 6, 1),
+    sale_price=Decimal("52.00"),
+    fees=Decimal("19.95")
+)
+
+print(f"Holding period: {event.holding_period_days} days")
+print(f"CGT discount eligible: {event.discount_eligible}")
+print(f"Capital gain: ${event.capital_gain}")
+
+# Get FY summary
+summary = tracker.calculate_total_capital_gains(2024)  # FY 2023-24
 ```
 
 ## Important Notes
