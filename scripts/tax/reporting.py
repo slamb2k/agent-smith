@@ -7,10 +7,58 @@ from scripts.tax.ato_categories import ATOCategoryMapper
 logger = logging.getLogger(__name__)
 
 
+def calculate_gst(transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate GST paid on business expenses.
+
+    GST in Australia is 10% of the base price, or 1/11 of the GST-inclusive price.
+
+    Args:
+        transactions: List of transaction dicts
+
+    Returns:
+        Dict with:
+        - total_gst_paid: Total GST paid (1/11 of deductible expenses)
+        - eligible_for_credit: GST eligible for input tax credits
+        - transaction_count: Number of transactions with GST
+    """
+    mapper = ATOCategoryMapper()
+
+    total_gst = 0.0
+    gst_eligible = 0.0
+    gst_transaction_count = 0
+
+    for txn in transactions:
+        # Skip income
+        amount = float(txn.get("amount", "0"))
+        if amount >= 0:
+            continue
+
+        amount_abs = abs(amount)
+
+        # Check if deductible
+        category = txn.get("category", {})
+        category_name = category.get("title", "Uncategorized")
+        ato_info = mapper.get_ato_category(category_name)
+
+        if ato_info["deductible"]:
+            # GST is 1/11 of GST-inclusive amount
+            gst_amount = amount_abs / 11.0
+            total_gst += gst_amount
+            gst_eligible += gst_amount
+            gst_transaction_count += 1
+
+    return {
+        "total_gst_paid": round(total_gst, 2),
+        "eligible_for_credit": round(gst_eligible, 2),
+        "transaction_count": gst_transaction_count,
+    }
+
+
 def generate_tax_summary(
     transactions: List[Dict[str, Any]],
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    include_gst: bool = False,
 ) -> Dict[str, Any]:
     """Generate tax summary from transactions.
 
@@ -18,6 +66,7 @@ def generate_tax_summary(
         transactions: List of transaction dicts
         start_date: Optional start date (YYYY-MM-DD)
         end_date: Optional end date (YYYY-MM-DD)
+        include_gst: Whether to include GST calculations
 
     Returns:
         Dict with tax summary including:
@@ -26,6 +75,7 @@ def generate_tax_summary(
         - non_deductible_expenses: Total non-deductible amount
         - by_ato_category: List of ATO categories with totals
         - transaction_count: Number of transactions processed
+        - gst_summary: GST information if include_gst is True
     """
     mapper = ATOCategoryMapper()
 
@@ -86,7 +136,7 @@ def generate_tax_summary(
     ato_categories = list(ato_breakdown.values())
     ato_categories.sort(key=lambda x: x["total"], reverse=True)
 
-    return {
+    result = {
         "total_expenses": total_expenses,
         "deductible_expenses": deductible_expenses,
         "non_deductible_expenses": non_deductible_expenses,
@@ -97,3 +147,9 @@ def generate_tax_summary(
             "end": end_date,
         },
     }
+
+    # Add GST calculation if requested
+    if include_gst:
+        result["gst_summary"] = calculate_gst(filtered_txns)
+
+    return result

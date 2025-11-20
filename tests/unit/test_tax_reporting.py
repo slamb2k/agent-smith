@@ -108,3 +108,59 @@ def test_generate_tax_summary_excludes_income():
 
     assert result["total_expenses"] == 150.00
     assert result["transaction_count"] == 1
+
+
+def test_calculate_gst_from_transactions():
+    """Test calculating GST paid on business expenses."""
+    from scripts.tax.reporting import calculate_gst
+
+    transactions = [
+        {
+            "id": 1,
+            "payee": "Office Warehouse",
+            "amount": "-110.00",  # Includes $10 GST
+            "date": "2025-07-01",
+            "category": {"id": 100, "title": "Office Supplies"},
+        },
+        {
+            "id": 2,
+            "payee": "Tech Store",
+            "amount": "-220.00",  # Includes $20 GST
+            "date": "2025-07-05",
+            "category": {"id": 100, "title": "Office Supplies"},
+        },
+        {
+            "id": 3,
+            "payee": "Groceries",
+            "amount": "-50.00",  # Not deductible, no GST credit
+            "date": "2025-07-10",
+            "category": {"id": 200, "title": "Groceries"},
+        },
+    ]
+
+    result = calculate_gst(transactions)
+
+    # GST is 1/11 of GST-inclusive amount for deductible expenses
+    # $110 -> $10 GST, $220 -> $20 GST, Total = $30
+    assert result["total_gst_paid"] == 30.00
+    assert result["eligible_for_credit"] == 30.00
+    assert result["transaction_count"] == 2  # Only deductible transactions
+
+
+def test_gst_tracking_in_tax_summary():
+    """Test that tax summary includes GST information."""
+    transactions = [
+        {
+            "id": 1,
+            "payee": "Office Warehouse",
+            "amount": "-110.00",
+            "date": "2025-07-01",
+            "category": {"id": 100, "title": "Office Supplies"},
+        },
+    ]
+
+    result = generate_tax_summary(transactions, include_gst=True)
+
+    assert "gst_summary" in result
+    assert result["gst_summary"]["total_gst_paid"] == 10.00
+    assert result["gst_summary"]["eligible_for_credit"] == 10.00
