@@ -153,7 +153,7 @@ Contains all unit and integration tests.
 | `tests/integration/test_rule_engine_integration.py` | Rule engine integration tests (Phase 2) | Integration Test |
 | `tests/integration/test_analysis_integration.py` | Analysis workflow integration tests (Phase 3) | Integration Test |
 
-**Test Coverage:** 101 tests (89 unit + 12 integration), all passing
+**Test Coverage:** 101 tests (87 unit + 14 integration), all passing
 
 **Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 
