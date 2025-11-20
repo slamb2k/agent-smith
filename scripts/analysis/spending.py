@@ -77,3 +77,61 @@ def analyze_spending_by_merchant(transactions: List[Dict[str, Any]]) -> List[Dic
     result.sort(key=lambda x: x["total_spent"], reverse=True)
 
     return result
+
+
+def filter_transactions_by_period(
+    transactions: List[Dict[str, Any]], period: str
+) -> List[Dict[str, Any]]:
+    """Filter transactions by time period.
+
+    Args:
+        transactions: List of transaction dicts
+        period: Period string (YYYY or YYYY-MM)
+
+    Returns:
+        Filtered list of transactions
+    """
+    filtered = []
+
+    for txn in transactions:
+        date_str = txn.get("date", "")
+        if not date_str:
+            continue
+
+        # Extract date prefix for comparison
+        if len(period) == 4:  # Year: "2025"
+            if date_str.startswith(period):
+                filtered.append(txn)
+        elif len(period) == 7:  # Month: "2025-11"
+            if date_str.startswith(period):
+                filtered.append(txn)
+
+    return filtered
+
+
+def get_period_summary(transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Get summary statistics for a period.
+
+    Args:
+        transactions: List of transaction dicts
+
+    Returns:
+        Dict with total_income, total_expenses, net_income, transaction_count
+    """
+    total_income = 0.0
+    total_expenses = 0.0
+
+    for txn in transactions:
+        amount = float(txn.get("amount", "0"))
+
+        if amount > 0:
+            total_income += amount
+        else:
+            total_expenses += abs(amount)
+
+    return {
+        "total_income": total_income,
+        "total_expenses": total_expenses,
+        "net_income": total_income - total_expenses,
+        "transaction_count": len(transactions),
+    }
