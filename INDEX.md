@@ -36,6 +36,7 @@ Contains all project documentation including design specifications and operation
 | `docs/operations/2025-11-20_phase1_testing.md` | Phase 1 testing operation log | Operation Log |
 | `docs/operations/2025-11-20_phase2_completion.md` | Phase 2 completion operation log | Operation Log |
 | `docs/operations/2025-11-20_phase3_completion.md` | Phase 3 completion operation log | Operation Log |
+| `docs/operations/2025-11-20_phase4_completion.md` | Phase 4 completion operation log | Operation Log |
 
 **Purpose:** Central location for all project documentation, design specs, implementation guides, and user documentation.
 
@@ -99,6 +100,11 @@ Contains all Python source code organized by function.
 | `scripts/analysis/spending.py` | Spending analysis by category/merchant/period (Phase 3) | Analysis |
 | `scripts/analysis/trends.py` | Trend detection and pattern analysis (Phase 3) | Analysis |
 | `scripts/reporting/formatters.py` | Multi-format report generation (Phase 3) | Reporting |
+| `scripts/tax/ato_categories.py` | ATO category mappings for tax compliance (Phase 4, Level 1) | Tax |
+| `scripts/tax/reporting.py` | Tax-specific reports and GST tracking (Phase 4, Level 1) | Tax |
+| `scripts/tax/deduction_detector.py` | Pattern-based deduction detection (Phase 4, Level 2) | Tax |
+| `scripts/tax/cgt_tracker.py` | Capital gains tax tracking with FIFO (Phase 4, Level 2) | Tax |
+| `scripts/tax/bas_preparation.py` | BAS worksheet generation (Phase 4, Level 3) | Tax |
 | `scripts/operations/categorize.py` | Transaction categorization workflow (Phase 2) | Operations |
 | `scripts/utils/backup.py` | Backup/restore utilities | Utility |
 | `scripts/utils/validation.py` | Data validation functions | Utility |
@@ -111,6 +117,7 @@ Contains all Python source code organized by function.
 - `core/` - Core libraries (API client, rule engine, etc.)
 - `analysis/` - Analysis modules (spending, trends, etc.)
 - `reporting/` - Report generation and formatting
+- `tax/` - Tax intelligence (3-tier: Reference, Smart, Full compliance)
 - `operations/` - High-level operations (categorization, analysis, etc.)
 - `utils/` - Utility functions (backup, validation, logging, etc.)
 
@@ -126,6 +133,8 @@ Contains runtime data, user configuration, and persistent state.
 | `data/local_rules.json` | Local rule engine rules (Phase 2) | Data |
 | `data/platform_rules.json` | Platform rule tracking (Phase 2) | Data |
 | `data/merchants/merchant_mappings.json` | Merchant normalization mappings (Phase 2) | Data |
+| `data/tax/ato_category_mappings.json` | ATO category mappings (Phase 4) | Tax Data |
+| `data/tax/deduction_patterns.json` | Deduction detection patterns (Phase 4) | Tax Data |
 
 **Purpose:** Persistent storage for configuration, rules, and learned patterns.
 
@@ -149,11 +158,17 @@ Contains all unit and integration tests.
 | `tests/unit/test_spending.py` | Spending analysis unit tests (Phase 3) | Unit Test |
 | `tests/unit/test_trends.py` | Trend detection unit tests (Phase 3) | Unit Test |
 | `tests/unit/test_reporting.py` | Report formatters unit tests (Phase 3) | Unit Test |
+| `tests/unit/test_ato_categories.py` | ATO category mapping unit tests (Phase 4) | Unit Test |
+| `tests/unit/test_tax_reporting.py` | Tax reporting unit tests (Phase 4) | Unit Test |
+| `tests/unit/test_deduction_detector.py` | Deduction detector unit tests (Phase 4) | Unit Test |
+| `tests/unit/test_cgt_tracker.py` | CGT tracker unit tests (Phase 4) | Unit Test |
+| `tests/unit/test_bas_preparation.py` | BAS preparation unit tests (Phase 4) | Unit Test |
 | `tests/integration/test_api_client_integration.py` | API integration tests | Integration Test |
 | `tests/integration/test_rule_engine_integration.py` | Rule engine integration tests (Phase 2) | Integration Test |
 | `tests/integration/test_analysis_integration.py` | Analysis workflow integration tests (Phase 3) | Integration Test |
+| `tests/integration/test_tax_intelligence.py` | Tax intelligence integration tests (Phase 4) | Integration Test |
 
-**Test Coverage:** 101 tests (87 unit + 14 integration), all passing
+**Test Coverage:** 163 tests (141 unit + 22 integration), all passing
 
 **Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 

@@ -68,6 +68,12 @@ agent-smith/
 │   │   └── trends.py            # Trend detection ✓
 │   ├── reporting/               # Reporting modules
 │   │   └── formatters.py        # Multi-format reports ✓
+│   ├── tax/                     # Tax intelligence (3-tier system)
+│   │   ├── ato_categories.py    # ATO category mappings (Level 1) ✓
+│   │   ├── reporting.py         # Tax reports & GST tracking (Level 1) ✓
+│   │   ├── deduction_detector.py # Deduction detection (Level 2) ✓
+│   │   ├── cgt_tracker.py       # Capital gains tracking (Level 2) ✓
+│   │   └── bas_preparation.py   # BAS worksheet generation (Level 3) ✓
 │   ├── operations/              # Operations
 │   │   └── categorize.py        # Transaction categorization ✓
 │   └── utils/                   # Utilities
@@ -247,7 +253,7 @@ Git hooks (via lefthook) run automatically:
 - ✅ **Phase 1:** Foundation (Weeks 1-2) - **COMPLETE**
 - ✅ **Phase 2:** Rule Engine (Weeks 3-4) - **COMPLETE**
 - ✅ **Phase 3:** Analysis & Reporting (Weeks 5-6) - **COMPLETE**
-- [ ] **Phase 4:** Tax Intelligence (Weeks 7-8)
+- ✅ **Phase 4:** Tax Intelligence (Weeks 7-8) - **COMPLETE**
 - [ ] **Phase 5:** Scenario Analysis (Weeks 9-10)
 - [ ] **Phase 6:** Orchestration & UX (Weeks 11-12)
 - [ ] **Phase 7:** Advanced Features (Weeks 13-14)
@@ -269,13 +275,99 @@ Git hooks (via lefthook) run automatically:
 
 **Test Coverage:** 101 tests (87 existing + 14 new), all passing
 
+### Phase 4: Tax Intelligence ✅
+
+**3-Tier Tax Intelligence System:**
+- Level 1 (Reference): ATO category mappings, basic tax reports, GST tracking
+- Level 2 (Smart): Deduction detection, CGT tracking, confidence scoring
+- Level 3 (Full): BAS preparation with GST calculations and compliance checks
+
+**Deduction Detection:**
+- 14 pattern-based detection rules
+- Confidence scoring (high/medium/low)
+- Substantiation threshold checking ($300 default, $75 taxi/Uber)
+- Time-based commuting detection (weekday 6-9:30am, 4:30-7pm)
+- Instant asset write-off tracking ($20,000 threshold)
+
+**Capital Gains Tax (CGT):**
+- Asset tracking (shares, crypto, property)
+- FIFO matching for sales
+- Cost base calculation (price + fees)
+- Holding period calculation with 50% discount eligibility (>365 days)
+- Financial year reporting (July 1 - June 30)
+
+**BAS Preparation (Level 3):**
+- Quarterly BAS worksheet generation
+- GST calculations (G1, G10, G11, 1A, 1B, 1C)
+- Capital vs non-capital purchase classification
+- GST-free category exclusions
+- Professional advice disclaimers
+
+**Code Examples:**
+
+```python
+# ATO Category Mapping (Level 1)
+from scripts.tax.ato_categories import ATOCategoryMapper
+
+mapper = ATOCategoryMapper()
+ato_info = mapper.get_ato_category("Office Supplies")
+# Returns: {"ato_code": "D5", "ato_category": "Work-related other expenses", ...}
+
+# Deduction Detection (Level 2)
+from scripts.tax.deduction_detector import DeductionDetector
+
+detector = DeductionDetector()
+result = detector.detect_deduction(transaction)
+# Returns: {"is_deductible": True, "confidence": "high",
+#           "reason": "Office supplies", "substantiation_required": True}
+
+# CGT Tracking (Level 2)
+from scripts.tax.cgt_tracker import CGTTracker, AssetType
+from decimal import Decimal
+from datetime import date
+
+tracker = CGTTracker()
+tracker.track_purchase(
+    asset_type=AssetType.SHARES,
+    name="BHP Group",
+    quantity=Decimal("100"),
+    purchase_date=date(2023, 1, 1),
+    purchase_price=Decimal("45.50"),
+    fees=Decimal("19.95")
+)
+
+event = tracker.track_sale(
+    asset_type=AssetType.SHARES,
+    name="BHP Group",
+    quantity=Decimal("100"),
+    sale_date=date(2024, 6, 1),
+    sale_price=Decimal("52.00"),
+    fees=Decimal("19.95")
+)
+# Returns CGTEvent with capital_gain, discount_eligible, holding_period_days
+
+# BAS Preparation (Level 3)
+from scripts.tax.bas_preparation import generate_bas_worksheet
+
+worksheet = generate_bas_worksheet(
+    transactions=transactions,
+    start_date="2024-07-01",
+    end_date="2024-09-30"
+)
+# Returns: {"G1_total_sales": 33000.00, "1A_gst_on_sales": 3000.00,
+#           "1B_gst_on_purchases": 1500.00, "1C_net_gst": 1500.00, ...}
+```
+
+**Test Coverage:** 163 tests (141 unit + 22 integration), all passing
+- Phase 4 specific: 62 tests (54 unit + 8 integration)
+
 ### Next Phase
 
-**Phase 4:** Tax Intelligence (Weeks 7-8)
-- Australian tax-specific features
-- Deduction tracking and CGT calculations
-- BAS preparation and compliance checks
-- Tax report generation
+**Phase 5:** Scenario Analysis (Weeks 9-10)
+- Historical analysis and projections
+- Optimization recommendations
+- Tax planning scenarios
+- What-if modeling
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
