@@ -1,0 +1,166 @@
+name: Main CI/CD
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Format check (black)
+        run: black --check --diff scripts/ tests/
+
+      - name: Lint (flake8)
+        run: flake8 scripts/ tests/
+
+      - name: Type check (mypy)
+        run: mypy scripts/
+
+      - name: Run all tests
+        run: pytest tests/ -v --cov=scripts --cov-report=term-missing
+        env:
+          POCKETSMITH_API_KEY: ${{ secrets.POCKETSMITH_API_KEY }}
+
+      - name: Build check
+        run: python -m compileall scripts/ -q
+
+  version-and-release:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine version bump
+        id: version
+        run: |
+          # Get latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Parse version
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Check commit messages since last tag for conventional commits
+          COMMITS=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+
+          # Determine bump type
+          if echo "$COMMITS" | grep -q "^feat!:\\|^fix!:\\|BREAKING CHANGE:"; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif echo "$COMMITS" | grep -q "^feat:"; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif echo "$COMMITS" | grep -q "^fix:\\|^perf:"; then
+            PATCH=$((PATCH + 1))
+          else
+            # No version bump for chore, docs, etc
+            echo "No version bump needed"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEW_TAG="v$NEW_VERSION"
+
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create and push tag
+        if: steps.version.outputs.tag != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin ${{ steps.version.outputs.tag }}
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.tag != ''
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          generateReleaseNotes: true
+          draft: false
+          prerelease: false
+
+  build-skill:
+    needs: version-and-release
+    if: needs.version-and-release.outputs.tag != ''
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Package Claude Code skill
+        run: |
+          # Create skill package directory structure
+          mkdir -p skill-package/agent-smith
+
+          # Copy necessary files
+          cp -r scripts skill-package/agent-smith/
+          cp -r ai_docs skill-package/agent-smith/
+          cp -r data skill-package/agent-smith/
+          cp README.md skill-package/agent-smith/
+          cp .env.sample skill-package/agent-smith/
+          cp requirements.txt skill-package/agent-smith/
+
+          # Create skill manifest
+          cat > skill-package/agent-smith/skill.json << 'EOF'
+          {
+            "name": "agent-smith",
+            "version": "${{ needs.version-and-release.outputs.version }}",
+            "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration",
+            "author": "slamb2k",
+            "repository": "https://github.com/slamb2k/agent-smith",
+            "license": "MIT",
+            "entry_point": "scripts/core/api_client.py",
+            "requirements": "requirements.txt",
+            "keywords": ["pocketsmith", "finance", "ai", "financial-management"]
+          }
+          EOF
+
+          # Create tarball
+          cd skill-package
+          tar -czf agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz agent-smith/
+          cd ..
+
+          echo "Skill package created: skill-package/agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz"
+
+      - name: Upload skill package to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.version-and-release.outputs.tag }}
+          files: skill-package/agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz

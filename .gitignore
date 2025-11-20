@@ -14,6 +14,11 @@ ENV/
 *.egg-info/
 dist/
 build-python/
+.pytest_cache/
+.coverage
+.mypy_cache/
+.tox/
+htmlcov/
 
 # Agent Smith working data (not for git)
 *.log
