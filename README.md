@@ -132,6 +132,45 @@ categories = client.get_categories(user_id=user['id'])
 print(f"Found {len(categories)} categories")
 ```
 
+## Contributing Workflow
+
+This repository uses branch protection and requires all changes to go through pull requests.
+
+### Development Workflow
+
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes and commit**
+   - Git hooks will automatically run format, lint, and type checks on commit
+   - Unit tests run on push
+   ```bash
+   git add .
+   git commit -m "feat: add your feature"
+   git push -u origin feature/your-feature-name
+   ```
+
+3. **Create a pull request**
+   ```bash
+   gh pr create --fill
+   ```
+
+4. **Wait for CI validation**
+   - PR validation runs format, lint, type-check, tests, and build checks
+   - All checks must pass across Python 3.9, 3.10, 3.11, and 3.12
+
+5. **Squash and merge**
+   - PRs are squash-merged to maintain clean history
+   - Feature branches are automatically deleted after merge
+
+### Pre-commit Checks
+
+Git hooks (via lefthook) run automatically:
+- **Pre-commit**: Black formatting, flake8 linting, mypy type checking
+- **Pre-push**: Unit tests, build verification
+
 ## Documentation
 
 - **[Design Specification](docs/design/2025-11-20-agent-smith-design.md)** - Complete Agent Smith design
