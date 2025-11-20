@@ -97,6 +97,43 @@ class Rule:
 
         return True
 
+    def record_match(self) -> None:
+        """Record a match for performance tracking.
+
+        Increments matches counter and updates last_used timestamp.
+        """
+        self.matches += 1
+        self.last_used = datetime.now().isoformat()
+
+    def record_application(self) -> None:
+        """Record an application for performance tracking.
+
+        Increments both applied and matches counters, and updates last_used timestamp.
+        An application is also a match.
+        """
+        self.matches += 1
+        self.applied += 1
+        self.last_used = datetime.now().isoformat()
+
+    def record_override(self) -> None:
+        """Record a user override (user changed the categorization).
+
+        Increments user_overrides counter.
+        """
+        self.user_overrides += 1
+
+    def get_accuracy(self) -> float:
+        """Calculate rule accuracy percentage.
+
+        Returns:
+            Accuracy as percentage (0-100), or 0.0 if no matches
+        """
+        if self.matches == 0:
+            return 0.0
+
+        successful = self.applied - self.user_overrides
+        return (successful / self.matches) * 100.0
+
 
 class RuleEngine:
     """Hybrid rule engine managing local and platform rules."""

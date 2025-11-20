@@ -266,3 +266,65 @@ def test_find_best_match_returns_none_for_no_match():
     best = engine.find_best_match(transaction)
 
     assert best is None
+
+
+def test_record_match_increments_counter_and_updates_timestamp():
+    """Test record_match() increments matches counter and updates last_used."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    assert rule.matches == 0
+    assert rule.last_used is None
+
+    rule.record_match()
+
+    assert rule.matches == 1
+    assert rule.last_used is not None
+
+
+def test_record_application_increments_counter_and_updates_timestamp():
+    """Test record_application() increments applied counter and updates last_used."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    assert rule.applied == 0
+    assert rule.last_used is None
+
+    rule.record_application()
+
+    assert rule.applied == 1
+    assert rule.last_used is not None
+
+
+def test_record_override_increments_counter():
+    """Test record_override() increments user_overrides counter."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    assert rule.user_overrides == 0
+
+    rule.record_override()
+
+    assert rule.user_overrides == 1
+
+
+def test_get_accuracy_calculates_percentage():
+    """Test get_accuracy() calculates accuracy percentage."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    # Apply 10 times successfully
+    for _ in range(10):
+        rule.record_application()
+
+    assert rule.get_accuracy() == 100.0
+
+    # User overrides 1
+    rule.record_override()
+
+    # 9 successful out of 10 = 90%
+    assert abs(rule.get_accuracy() - 90.0) < 0.1
+
+
+def test_get_accuracy_handles_zero_matches():
+    """Test get_accuracy() handles division by zero."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    # No applications yet
+    assert rule.get_accuracy() == 0.0
