@@ -1,7 +1,8 @@
 """Goal tracking and progress monitoring."""
 
 from typing import List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def track_savings_goal(
@@ -44,7 +45,7 @@ def track_savings_goal(
     # Project completion
     if monthly_contribution > 0:
         months_to_complete = remaining_amount / monthly_contribution
-        projected_completion = today.replace(day=1) + timedelta(days=30 * months_to_complete)
+        projected_completion = today + relativedelta(months=int(months_to_complete))
         projected_completion_str = projected_completion.strftime("%Y-%m-%d")
     else:
         months_to_complete = None
@@ -104,6 +105,7 @@ def track_spending_reduction_goal(
     # Estimate months tracked
     start = datetime.strptime(start_date, "%Y-%m-%d")
     today = datetime.now()
+    # Calculate full calendar months elapsed (not fractional)
     months_tracked = max(1, (today.year - start.year) * 12 + (today.month - start.month))
 
     actual_monthly = total_spent / months_tracked
