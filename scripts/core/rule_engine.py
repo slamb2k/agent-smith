@@ -22,6 +22,14 @@ class RuleType(Enum):
     SESSION = "session"
 
 
+class IntelligenceMode(Enum):
+    """Intelligence mode for rule application."""
+
+    CONSERVATIVE = "conservative"
+    SMART = "smart"
+    AGGRESSIVE = "aggressive"
+
+
 @dataclass
 class Rule:
     """Represents a categorization rule."""
@@ -105,6 +113,7 @@ class RuleEngine:
 
         self.rules_file = Path(rules_file)
         self.rules: List[Rule] = []
+        self.intelligence_mode = IntelligenceMode.SMART
 
         if self.rules_file.exists():
             self.load_rules()
@@ -151,3 +160,38 @@ class RuleEngine:
             self.rules.append(rule)
 
         logger.info(f"Loaded {len(self.rules)} rules from {self.rules_file}")
+
+    def should_auto_apply(self, rule: Rule) -> bool:
+        """Determine if rule should be auto-applied based on intelligence mode.
+
+        Args:
+            rule: Rule to check
+
+        Returns:
+            True if should auto-apply, False otherwise
+        """
+        if rule.requires_approval:
+            return False
+
+        if self.intelligence_mode == IntelligenceMode.CONSERVATIVE:
+            return False
+        elif self.intelligence_mode == IntelligenceMode.SMART:
+            return rule.confidence >= 90
+        else:  # AGGRESSIVE
+            return rule.confidence >= 80
+
+    def should_ask_approval(self, rule: Rule) -> bool:
+        """Determine if should ask for approval based on intelligence mode.
+
+        Args:
+            rule: Rule to check
+
+        Returns:
+            True if should ask for approval, False if should skip
+        """
+        if self.intelligence_mode == IntelligenceMode.CONSERVATIVE:
+            return True
+        elif self.intelligence_mode == IntelligenceMode.SMART:
+            return 70 <= rule.confidence < 90
+        else:  # AGGRESSIVE
+            return 50 <= rule.confidence < 80

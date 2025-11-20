@@ -5,7 +5,7 @@ import uuid
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from scripts.core.rule_engine import Rule, RuleEngine, RuleType
+from scripts.core.rule_engine import Rule, RuleEngine, RuleType, IntelligenceMode
 
 
 def test_rule_initialization_with_minimal_fields():
@@ -157,3 +157,52 @@ def test_rule_engine_handles_missing_file():
 
     engine = RuleEngine(rules_file=rules_file)
     assert len(engine.rules) == 0
+
+
+def test_intelligence_mode_conservative():
+    """Test conservative mode requires approval for all rules."""
+    engine = RuleEngine()
+    engine.intelligence_mode = IntelligenceMode.CONSERVATIVE
+
+    high_confidence_rule = Rule(name="Test", payee_regex="TEST.*", category_id=100, confidence=95)
+
+    assert engine.should_auto_apply(high_confidence_rule) is False
+    assert engine.should_ask_approval(high_confidence_rule) is True
+
+
+def test_intelligence_mode_smart():
+    """Test smart mode auto-applies high confidence, asks for medium."""
+    engine = RuleEngine()
+    engine.intelligence_mode = IntelligenceMode.SMART
+
+    high_confidence = Rule(name="High", payee_regex="TEST.*", category_id=100, confidence=95)
+    medium_confidence = Rule(name="Med", payee_regex="TEST.*", category_id=100, confidence=80)
+    low_confidence = Rule(name="Low", payee_regex="TEST.*", category_id=100, confidence=60)
+
+    assert engine.should_auto_apply(high_confidence) is True
+    assert engine.should_ask_approval(high_confidence) is False
+
+    assert engine.should_auto_apply(medium_confidence) is False
+    assert engine.should_ask_approval(medium_confidence) is True
+
+    assert engine.should_auto_apply(low_confidence) is False
+    assert engine.should_ask_approval(low_confidence) is False
+
+
+def test_intelligence_mode_aggressive():
+    """Test aggressive mode auto-applies medium+ confidence."""
+    engine = RuleEngine()
+    engine.intelligence_mode = IntelligenceMode.AGGRESSIVE
+
+    medium_confidence = Rule(name="Med", payee_regex="TEST.*", category_id=100, confidence=80)
+    low_confidence = Rule(name="Low", payee_regex="TEST.*", category_id=100, confidence=55)
+    very_low = Rule(name="VLow", payee_regex="TEST.*", category_id=100, confidence=40)
+
+    assert engine.should_auto_apply(medium_confidence) is True
+    assert engine.should_ask_approval(medium_confidence) is False
+
+    assert engine.should_auto_apply(low_confidence) is False
+    assert engine.should_ask_approval(low_confidence) is True
+
+    assert engine.should_auto_apply(very_low) is False
+    assert engine.should_ask_approval(very_low) is False
