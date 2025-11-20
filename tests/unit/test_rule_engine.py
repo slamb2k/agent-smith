@@ -349,3 +349,142 @@ def test_get_accuracy_with_unapplied_matches():
 
     # 2 successful out of 3 applied = 66.67%
     assert abs(rule.get_accuracy() - 66.67) < 0.1
+
+
+def test_sync_platform_rules_fetches_from_api(tmp_path):
+    """Test sync_platform_rules fetches category rules from API."""
+    from unittest.mock import Mock
+
+    platform_rules_file = tmp_path / "platform_rules.json"
+    engine = RuleEngine()
+    engine.platform_rules_file = platform_rules_file
+
+    # Mock API client
+    mock_client = Mock()
+    mock_client.get_user.return_value = {"id": 123}
+    mock_client.get_categories.return_value = [
+        {"id": 100, "title": "Groceries"},
+        {"id": 200, "title": "Transport"},
+    ]
+    mock_client.get_category_rules.return_value = [
+        {"id": 1, "payee_matches": "WOOLWORTHS", "category_id": 100},
+        {"id": 2, "payee_matches": "COLES", "category_id": 100},
+    ]
+
+    # Sync platform rules
+    engine.sync_platform_rules(mock_client)
+
+    # Verify API calls
+    mock_client.get_user.assert_called_once()
+    mock_client.get_categories.assert_called_once_with(user_id=123)
+    assert mock_client.get_category_rules.call_count == 2
+
+    # Verify platform rules file created
+    assert platform_rules_file.exists()
+
+
+def test_sync_platform_rules_updates_tracking_file(tmp_path):
+    """Test sync_platform_rules updates platform_rules.json."""
+    from unittest.mock import Mock
+    import json
+
+    platform_rules_file = tmp_path / "platform_rules.json"
+    engine = RuleEngine()
+    engine.platform_rules_file = platform_rules_file
+
+    # Mock API client
+    mock_client = Mock()
+    mock_client.get_user.return_value = {"id": 123}
+    mock_client.get_categories.return_value = [
+        {"id": 100, "title": "Groceries"},
+    ]
+    mock_client.get_category_rules.return_value = [
+        {"id": 1, "payee_matches": "WOOLWORTHS"},
+    ]
+
+    # Sync platform rules
+    engine.sync_platform_rules(mock_client)
+
+    # Read tracking file
+    with open(platform_rules_file) as f:
+        platform_rules = json.load(f)
+
+    # Verify structure
+    assert len(platform_rules) == 1
+    assert platform_rules[0]["rule_id"] == 1
+    assert platform_rules[0]["category_id"] == 100
+    assert platform_rules[0]["payee_contains"] == "WOOLWORTHS"
+    assert "synced_at" in platform_rules[0]
+
+
+def test_create_platform_rule_creates_via_api(tmp_path):
+    """Test create_platform_rule creates rule via API and tracks it."""
+    from unittest.mock import Mock
+    import json
+
+    platform_rules_file = tmp_path / "platform_rules.json"
+    platform_rules_file.write_text("[]")
+
+    engine = RuleEngine()
+    engine.platform_rules_file = platform_rules_file
+
+    # Mock API client
+    mock_client = Mock()
+    mock_client.create_category_rule.return_value = {"id": 999}
+
+    # Create platform rule
+    result = engine.create_platform_rule(mock_client, category_id=100, payee_contains="WOOLWORTHS")
+
+    # Verify API call
+    mock_client.create_category_rule.assert_called_once_with(
+        category_id=100, payee_matches="WOOLWORTHS"
+    )
+
+    # Verify result
+    assert result["rule_id"] == 999
+    assert result["category_id"] == 100
+    assert result["payee_contains"] == "WOOLWORTHS"
+
+    # Verify tracking file updated
+    with open(platform_rules_file) as f:
+        platform_rules = json.load(f)
+
+    assert len(platform_rules) == 1
+    assert platform_rules[0]["rule_id"] == 999
+
+
+def test_create_platform_rule_appends_to_existing_tracking(tmp_path):
+    """Test create_platform_rule appends to existing platform rules."""
+    from unittest.mock import Mock
+    import json
+
+    platform_rules_file = tmp_path / "platform_rules.json"
+
+    # Create existing tracking file
+    existing_rules = [
+        {
+            "rule_id": 1,
+            "category_id": 100,
+            "payee_contains": "COLES",
+            "created_at": "2025-11-20T10:00:00",
+        }
+    ]
+    platform_rules_file.write_text(json.dumps(existing_rules))
+
+    engine = RuleEngine()
+    engine.platform_rules_file = platform_rules_file
+
+    # Mock API client
+    mock_client = Mock()
+    mock_client.create_category_rule.return_value = {"id": 2}
+
+    # Create new platform rule
+    engine.create_platform_rule(mock_client, category_id=200, payee_contains="WOOLWORTHS")
+
+    # Verify tracking file has both rules
+    with open(platform_rules_file) as f:
+        platform_rules = json.load(f)
+
+    assert len(platform_rules) == 2
+    assert platform_rules[0]["rule_id"] == 1
+    assert platform_rules[1]["rule_id"] == 2

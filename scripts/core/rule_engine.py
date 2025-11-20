@@ -141,17 +141,25 @@ class Rule:
 class RuleEngine:
     """Hybrid rule engine managing local and platform rules."""
 
-    def __init__(self, rules_file: Optional[Path] = None):
+    def __init__(
+        self, rules_file: Optional[Path] = None, platform_rules_file: Optional[Path] = None
+    ):
         """Initialize rule engine.
 
         Args:
             rules_file: Path to local rules JSON file
+            platform_rules_file: Path to platform rules tracking JSON file
         """
         if rules_file is None:
             project_root = Path(__file__).parent.parent.parent
             rules_file = project_root / "data" / "local_rules.json"
 
+        if platform_rules_file is None:
+            project_root = Path(__file__).parent.parent.parent
+            platform_rules_file = project_root / "data" / "platform_rules.json"
+
         self.rules_file = Path(rules_file)
+        self.platform_rules_file = Path(platform_rules_file)
         self.rules: List[Rule] = []
         self.intelligence_mode = IntelligenceMode.SMART
 
@@ -261,3 +269,89 @@ class RuleEngine:
         """
         matches = self.find_matching_rules(transaction)
         return matches[0] if matches else None
+
+    def sync_platform_rules(self, api_client: Any) -> None:
+        """Sync platform rules from PocketSmith API.
+
+        Fetches all category rules from the API and updates local tracking file.
+
+        Args:
+            api_client: PocketSmith API client instance
+        """
+        # Get user to access categories
+        user = api_client.get_user()
+        user_id = user["id"]
+
+        # Get all categories
+        categories = api_client.get_categories(user_id=user_id)
+
+        # Fetch rules for each category
+        platform_rules = []
+        for category in categories:
+            category_id = category["id"]
+            try:
+                rules = api_client.get_category_rules(category_id=category_id)
+                for rule in rules:
+                    platform_rule = {
+                        "rule_id": rule["id"],
+                        "category_id": category_id,
+                        "payee_contains": rule.get("payee_matches", ""),
+                        "synced_at": datetime.now().isoformat(),
+                    }
+                    platform_rules.append(platform_rule)
+            except Exception as e:
+                logger.warning(f"Failed to fetch rules for category {category_id}: {e}")
+                continue
+
+        # Save to tracking file
+        self.platform_rules_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.platform_rules_file, "w") as f:
+            json.dump(platform_rules, f, indent=2)
+
+        logger.info(f"Synced {len(platform_rules)} platform rules to {self.platform_rules_file}")
+
+    def create_platform_rule(
+        self, api_client: Any, category_id: int, payee_contains: str
+    ) -> Dict[str, Any]:
+        """Create a platform rule via PocketSmith API.
+
+        Creates a rule through the API and tracks it locally.
+
+        Args:
+            api_client: PocketSmith API client instance
+            category_id: Category ID to assign
+            payee_contains: Keyword to match in payee name
+
+        Returns:
+            Dict with rule_id, category_id, payee_contains, created_at
+        """
+        # Create rule via API
+        response = api_client.create_category_rule(
+            category_id=category_id, payee_matches=payee_contains
+        )
+
+        # Create tracking entry
+        rule_entry = {
+            "rule_id": response["id"],
+            "category_id": category_id,
+            "payee_contains": payee_contains,
+            "created_at": datetime.now().isoformat(),
+        }
+
+        # Load existing platform rules
+        platform_rules = []
+        if self.platform_rules_file.exists():
+            with open(self.platform_rules_file) as f:
+                platform_rules = json.load(f)
+
+        # Append new rule
+        platform_rules.append(rule_entry)
+
+        # Save to tracking file
+        self.platform_rules_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.platform_rules_file, "w") as f:
+            json.dump(platform_rules, f, indent=2)
+
+        logger.info(f"Created platform rule {response['id']} for category {category_id}")
+
+        return rule_entry

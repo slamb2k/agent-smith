@@ -246,6 +246,18 @@ class PocketSmithClient:
         logger.info(f"Updating transaction {transaction_id}")
         return cast(Dict[str, Any], self.put(f"/transactions/{transaction_id}", data=data))
 
+    def get_category_rules(self, category_id: int) -> List[Dict[str, Any]]:
+        """Get all category rules for a specific category.
+
+        Args:
+            category_id: Category ID to fetch rules for
+
+        Returns:
+            List of category rule objects
+        """
+        logger.info(f"Fetching category rules for category {category_id}")
+        return cast(List[Dict[str, Any]], self.get(f"/categories/{category_id}/category_rules"))
+
     def create_category_rule(self, category_id: int, payee_matches: str) -> Dict[str, Any]:
         """Create a category rule (platform rule).
 
