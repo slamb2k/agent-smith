@@ -2,12 +2,14 @@
 
 import pytest
 import os
+from datetime import datetime, timedelta
 from scripts.core.api_client import PocketSmithClient
 from scripts.scenarios.historical import calculate_what_if_spending, compare_periods
 from scripts.scenarios.projections import forecast_spending, calculate_affordability
 from scripts.scenarios.optimization import detect_subscriptions, suggest_optimizations
 from scripts.scenarios.cash_flow import forecast_cash_flow
 from scripts.scenarios.goals import track_savings_goal
+from scripts.scenarios.tax_scenarios import model_prepayment_scenario
 
 pytestmark = pytest.mark.integration
 
@@ -23,10 +25,17 @@ def api_client():
 
 @pytest.fixture
 def sample_transactions(api_client):
-    """Fetch real transactions for testing."""
+    """Fetch real transactions for testing (last 90 days)."""
     user = api_client.get_user()
+
+    # Use dynamic date range: last 90 days
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=90)
+
     transactions = api_client.get_transactions(
-        user_id=user["id"], start_date="2025-08-01", end_date="2025-11-30"
+        user_id=user["id"],
+        start_date=start_date.strftime("%Y-%m-%d"),
+        end_date=end_date.strftime("%Y-%m-%d"),
     )
     return transactions
 
@@ -49,13 +58,17 @@ class TestScenarioAnalysisWorkflows:
 
         test_category = list(categories)[0]
 
+        # Use last 30 days for analysis
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=30)
+
         # Run what-if scenario
         result = calculate_what_if_spending(
             transactions=sample_transactions,
             category_name=test_category,
             adjustment_percent=-20.0,
-            start_date="2025-10-01",
-            end_date="2025-10-31",
+            start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d"),
         )
 
         assert result["category"] == test_category
@@ -83,12 +96,15 @@ class TestScenarioAnalysisWorkflows:
 
         top_category = max(categories.items(), key=lambda x: x[1])[0]
 
+        # Use start of 90-day window for historical baseline
+        start_date = (datetime.now().date() - timedelta(days=90)).strftime("%Y-%m-%d")
+
         # Forecast spending
         forecast = forecast_spending(
             transactions=sample_transactions,
             category_name=top_category,
             months_forward=3,
-            start_date="2025-08-01",
+            start_date=start_date,
         )
 
         assert forecast["category"] == top_category
@@ -148,15 +164,84 @@ class TestScenarioAnalysisWorkflows:
             f"${suggestions['potential_annual_savings']:.2f} potential savings"
         )
 
+    def test_tax_scenario_planning_workflow(self, sample_transactions):
+        """Test tax scenario planning with real data."""
+        # Calculate total income from transactions
+        total_income = sum(
+            float(txn.get("amount", 0))
+            for txn in sample_transactions
+            if float(txn.get("amount", 0)) > 0
+        )
+
+        # Calculate annualized income (90 days worth of data * 4)
+        annualized_income = total_income * 4
+
+        # Test prepayment scenario with realistic amounts
+        expense_amount = 5000.00
+        current_fy_income = annualized_income if annualized_income > 0 else 80000.00
+        next_fy_income = current_fy_income * 1.1  # Assume 10% income growth
+
+        result = model_prepayment_scenario(
+            expense_amount=expense_amount,
+            current_fy_income=current_fy_income,
+            next_fy_projected_income=next_fy_income,
+        )
+
+        # Verify structure
+        assert "expense_amount" in result
+        assert "current_fy_income" in result
+        assert "next_fy_income" in result
+        assert "current_fy_tax_rate" in result
+        assert "next_fy_tax_rate" in result
+        assert "tax_saving_current_fy" in result
+        assert "tax_saving_next_fy" in result
+        assert "difference" in result
+        assert "recommendation" in result
+        assert "reason" in result
+
+        # Verify values are reasonable
+        assert result["expense_amount"] == expense_amount
+        assert result["current_fy_income"] == current_fy_income
+        assert result["next_fy_income"] == next_fy_income
+        assert 0 <= result["current_fy_tax_rate"] <= 0.45
+        assert 0 <= result["next_fy_tax_rate"] <= 0.45
+        assert result["tax_saving_current_fy"] >= 0
+        assert result["tax_saving_next_fy"] >= 0
+
+        # Verify recommendation logic
+        assert result["recommendation"] in ["prepay_now", "defer", "neutral"]
+        assert len(result["reason"]) > 0
+
+        # For higher income next year, should recommend prepaying now
+        if next_fy_income > current_fy_income:
+            # Tax rate should be higher in next FY or same
+            assert result["next_fy_tax_rate"] >= result["current_fy_tax_rate"]
+
+        print(
+            f"✓ Tax scenario: ${expense_amount:.2f} expense, "
+            f"Current FY income ${current_fy_income:.2f} "
+            f"({result['current_fy_tax_rate']*100:.0f}% rate), "
+            f"Next FY income ${next_fy_income:.2f} "
+            f"({result['next_fy_tax_rate']*100:.0f}% rate), "
+            f"Recommendation: {result['recommendation']}"
+        )
+
     def test_complete_scenario_analysis(self, sample_transactions):
         """Test complete scenario analysis pipeline."""
+        # Use dynamic dates: compare last 30 days to 30 days before that
+        end_date = datetime.now().date()
+        period2_end = end_date
+        period2_start = period2_end - timedelta(days=30)
+        period1_end = period2_start - timedelta(days=1)
+        period1_start = period1_end - timedelta(days=30)
+
         # 1. Historical analysis
         period_comparison = compare_periods(
             transactions=sample_transactions,
-            period1_start="2025-08-01",
-            period1_end="2025-08-31",
-            period2_start="2025-10-01",
-            period2_end="2025-10-31",
+            period1_start=period1_start.strftime("%Y-%m-%d"),
+            period1_end=period1_end.strftime("%Y-%m-%d"),
+            period2_start=period2_start.strftime("%Y-%m-%d"),
+            period2_end=period2_end.strftime("%Y-%m-%d"),
         )
 
         # 2. Future projections
