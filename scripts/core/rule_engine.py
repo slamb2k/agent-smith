@@ -2,9 +2,10 @@
 
 import uuid
 import re
+import json
 import logging
 from enum import Enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pathlib import Path
@@ -108,7 +109,45 @@ class RuleEngine:
         if self.rules_file.exists():
             self.load_rules()
 
+    def add_rule(self, rule: Rule) -> None:
+        """Add a rule to the engine.
+
+        Args:
+            rule: Rule to add
+        """
+        self.rules.append(rule)
+        logger.info(f"Added rule: {rule.name} (ID: {rule.rule_id})")
+
+    def save_rules(self) -> None:
+        """Save rules to JSON file."""
+        self.rules_file.parent.mkdir(parents=True, exist_ok=True)
+
+        rules_data = []
+        for rule in self.rules:
+            rule_dict = asdict(rule)
+            # Convert RuleType enum to string
+            rule_dict["rule_type"] = rule.rule_type.value
+            rules_data.append(rule_dict)
+
+        with open(self.rules_file, "w") as f:
+            json.dump(rules_data, f, indent=2)
+
+        logger.info(f"Saved {len(self.rules)} rules to {self.rules_file}")
+
     def load_rules(self) -> None:
         """Load rules from JSON file."""
-        # Stub implementation - will be implemented in Task 2
-        pass
+        if not self.rules_file.exists():
+            logger.debug(f"Rules file not found: {self.rules_file}")
+            return
+
+        with open(self.rules_file) as f:
+            rules_data = json.load(f)
+
+        self.rules = []
+        for rule_dict in rules_data:
+            # Convert rule_type string back to enum
+            rule_dict["rule_type"] = RuleType(rule_dict["rule_type"])
+            rule = Rule(**rule_dict)
+            self.rules.append(rule)
+
+        logger.info(f"Loaded {len(self.rules)} rules from {self.rules_file}")

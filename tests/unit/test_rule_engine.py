@@ -2,7 +2,9 @@
 
 import pytest
 import uuid
+import tempfile
 from datetime import datetime
+from pathlib import Path
 from scripts.core.rule_engine import Rule, RuleEngine, RuleType
 
 
@@ -121,3 +123,37 @@ def test_rule_excludes_pattern():
 
     # Should be excluded
     assert rule.match_transaction({"payee": "WOOLWORTHS PETROL", "amount": "-50.00"}) is False
+
+
+def test_rule_engine_saves_and_loads_rules(tmp_path):
+    """Test RuleEngine can save and load rules from JSON."""
+    rules_file = tmp_path / "test_rules.json"
+
+    # Create engine and add rules
+    engine = RuleEngine(rules_file=rules_file)
+    rule1 = Rule(name="Woolworths", payee_regex="WOOLWORTHS.*", category_id=100)
+    rule2 = Rule(name="Coles", payee_regex="COLES.*", category_id=200)
+
+    engine.add_rule(rule1)
+    engine.add_rule(rule2)
+    engine.save_rules()
+
+    # Create new engine and load
+    engine2 = RuleEngine(rules_file=rules_file)
+
+    assert len(engine2.rules) == 2
+    assert engine2.rules[0].name == "Woolworths"
+    assert engine2.rules[1].name == "Coles"
+
+
+def test_rule_engine_handles_missing_file():
+    """Test RuleEngine handles missing rules file gracefully."""
+    import tempfile
+
+    rules_file = Path(tempfile.gettempdir()) / "nonexistent_rules.json"
+
+    if rules_file.exists():
+        rules_file.unlink()
+
+    engine = RuleEngine(rules_file=rules_file)
+    assert len(engine.rules) == 0
