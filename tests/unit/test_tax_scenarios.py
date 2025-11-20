@@ -12,7 +12,6 @@ def test_model_prepayment_scenario():
     """Test tax impact of prepaying deductible expenses."""
     result = model_prepayment_scenario(
         expense_amount=12000.00,
-        marginal_tax_rate=0.37,  # 37% tax bracket
         current_fy_income=150000.00,
         next_fy_projected_income=150000.00,
     )
@@ -53,5 +52,6 @@ def test_calculate_salary_sacrifice_benefit():
     assert result["without_sacrifice"]["taxable_income"] == 100000.00
     assert result["with_sacrifice"]["taxable_income"] == 90000.00
     assert result["with_sacrifice"]["super_tax"] == 1500.00  # 15% of 10k
+    assert result["with_sacrifice"]["tax_arbitrage_benefit"] > 0
     assert result["total_tax_saving"] > 0
     assert result["worthwhile"] is True

@@ -6,7 +6,6 @@ from datetime import datetime, date
 
 def model_prepayment_scenario(
     expense_amount: float,
-    marginal_tax_rate: float,
     current_fy_income: float,
     next_fy_projected_income: float,
 ) -> Dict[str, Any]:
@@ -14,7 +13,6 @@ def model_prepayment_scenario(
 
     Args:
         expense_amount: Amount to prepay
-        marginal_tax_rate: Current marginal tax rate (e.g., 0.37 for 37%)
         current_fy_income: Current financial year income
         next_fy_projected_income: Next FY projected income
 
@@ -160,7 +158,7 @@ def calculate_salary_sacrifice_benefit(
         super_tax_rate: Super contributions tax rate (default 15%)
 
     Returns:
-        Dict with tax comparison and net benefit
+        Dict with tax comparison and tax arbitrage benefit
     """
 
     # Tax brackets (Australian 2025)
@@ -186,7 +184,10 @@ def calculate_salary_sacrifice_benefit(
     super_tax = sacrifice_amount * super_tax_rate
     net_with = reduced_income - tax_with + (sacrifice_amount - super_tax)
 
-    net_benefit = net_with - net_without
+    # Tax arbitrage: difference between income tax saved and super tax paid
+    # Note: This represents tax savings, not additional take-home pay since
+    # the sacrificed amount goes into super (locked until preservation age)
+    tax_arbitrage_benefit = net_with - net_without
 
     return {
         "gross_income": gross_income,
@@ -200,8 +201,8 @@ def calculate_salary_sacrifice_benefit(
             "taxable_income": reduced_income,
             "income_tax": round(tax_with, 2),
             "super_tax": round(super_tax, 2),
-            "net_benefit": round(net_benefit, 2),
+            "tax_arbitrage_benefit": round(tax_arbitrage_benefit, 2),
         },
-        "total_tax_saving": round(abs(net_benefit), 2),
-        "worthwhile": net_benefit > 0,
+        "total_tax_saving": round(abs(tax_arbitrage_benefit), 2),
+        "worthwhile": tax_arbitrage_benefit > 0,
     }
