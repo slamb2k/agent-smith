@@ -74,6 +74,13 @@ agent-smith/
 │   │   ├── deduction_detector.py # Deduction detection (Level 2) ✓
 │   │   ├── cgt_tracker.py       # Capital gains tracking (Level 2) ✓
 │   │   └── bas_preparation.py   # BAS worksheet generation (Level 3) ✓
+│   ├── scenarios/               # Scenario analysis
+│   │   ├── historical.py        # What-if modeling ✓
+│   │   ├── projections.py       # Spending forecasts ✓
+│   │   ├── optimization.py      # Savings optimization ✓
+│   │   ├── tax_scenarios.py     # Tax planning scenarios ✓
+│   │   ├── cash_flow.py         # Cash flow forecasting ✓
+│   │   └── goals.py             # Goal tracking ✓
 │   ├── operations/              # Operations
 │   │   └── categorize.py        # Transaction categorization ✓
 │   └── utils/                   # Utilities
@@ -254,7 +261,7 @@ Git hooks (via lefthook) run automatically:
 - ✅ **Phase 2:** Rule Engine (Weeks 3-4) - **COMPLETE**
 - ✅ **Phase 3:** Analysis & Reporting (Weeks 5-6) - **COMPLETE**
 - ✅ **Phase 4:** Tax Intelligence (Weeks 7-8) - **COMPLETE**
-- [ ] **Phase 5:** Scenario Analysis (Weeks 9-10)
+- ✅ **Phase 5:** Scenario Analysis (Weeks 9-10) - **COMPLETE**
 - [ ] **Phase 6:** Orchestration & UX (Weeks 11-12)
 - [ ] **Phase 7:** Advanced Features (Weeks 13-14)
 - [ ] **Phase 8:** Health Check & Polish (Weeks 15-16)
@@ -361,13 +368,56 @@ worksheet = generate_bas_worksheet(
 **Test Coverage:** 163 tests (141 unit + 22 integration), all passing
 - Phase 4 specific: 62 tests (54 unit + 8 integration)
 
+### Phase 5: Scenario Analysis ✅
+
+**Scenario Analysis:**
+- Historical "what-if" modeling for spending changes
+- Future spending projections with inflation
+- Optimization engine (subscriptions, trends, recurring expenses)
+- Tax scenario planning and optimization
+- Cash flow forecasting with emergency fund tracking
+- Goal tracking and progress monitoring
+
+**Example Usage:**
+
+```python
+from scripts.scenarios.historical import calculate_what_if_spending
+from scripts.scenarios.projections import forecast_spending
+from scripts.scenarios.optimization import suggest_optimizations
+
+# What-if analysis
+scenario = calculate_what_if_spending(
+    transactions=transactions,
+    category_name="Dining",
+    adjustment_percent=-30.0,  # 30% reduction
+    start_date="2025-01-01",
+    end_date="2025-12-31"
+)
+print(f"Savings: ${scenario['savings']:.2f}")
+
+# Spending forecast
+forecast = forecast_spending(
+    transactions=transactions,
+    category_name="Groceries",
+    months_forward=6,
+    inflation_rate=3.0
+)
+
+# Optimization suggestions
+optimizations = suggest_optimizations(transactions=transactions)
+print(f"Potential savings: ${optimizations['potential_annual_savings']:.2f}")
+```
+
+**Test Coverage:** 194 tests (167 unit + 27 integration), all passing
+- Phase 5 specific: 30 tests (23 unit + 7 integration)
+
 ### Next Phase
 
-**Phase 5:** Scenario Analysis (Weeks 9-10)
-- Historical analysis and projections
-- Optimization recommendations
-- Tax planning scenarios
-- What-if modeling
+**Phase 6:** Orchestration & UX (Weeks 11-12)
+- Subagent orchestration system
+- Slash commands implementation
+- Conversational workflows
+- User experience refinement
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
