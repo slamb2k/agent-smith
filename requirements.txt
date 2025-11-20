@@ -1,0 +1,8 @@
+# PocketSmith API integration
+requests>=2.31.0
+
+# Data validation
+python-dateutil>=2.8.2
+
+# Configuration
+python-dotenv>=1.0.0
