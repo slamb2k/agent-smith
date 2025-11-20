@@ -104,6 +104,7 @@ class Rule:
         """
         self.matches += 1
         self.last_used = datetime.now().isoformat()
+        self.last_modified = datetime.now().isoformat()
 
     def record_application(self) -> None:
         """Record an application for performance tracking.
@@ -114,6 +115,7 @@ class Rule:
         self.matches += 1
         self.applied += 1
         self.last_used = datetime.now().isoformat()
+        self.last_modified = datetime.now().isoformat()
 
     def record_override(self) -> None:
         """Record a user override (user changed the categorization).
@@ -121,18 +123,19 @@ class Rule:
         Increments user_overrides counter.
         """
         self.user_overrides += 1
+        self.last_modified = datetime.now().isoformat()
 
     def get_accuracy(self) -> float:
         """Calculate rule accuracy percentage.
 
         Returns:
-            Accuracy as percentage (0-100), or 0.0 if no matches
+            Accuracy as percentage (0-100), or 100.0 if no applications yet
         """
-        if self.matches == 0:
-            return 0.0
+        if self.applied == 0:
+            return 100.0
 
-        successful = self.applied - self.user_overrides
-        return (successful / self.matches) * 100.0
+        successful = max(0, self.applied - self.user_overrides)
+        return (successful / self.applied) * 100.0
 
 
 class RuleEngine:

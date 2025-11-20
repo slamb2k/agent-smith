@@ -322,9 +322,30 @@ def test_get_accuracy_calculates_percentage():
     assert abs(rule.get_accuracy() - 90.0) < 0.1
 
 
-def test_get_accuracy_handles_zero_matches():
-    """Test get_accuracy() handles division by zero."""
+def test_get_accuracy_handles_zero_applications():
+    """Test get_accuracy() handles division by zero when no applications."""
     rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
 
-    # No applications yet
-    assert rule.get_accuracy() == 0.0
+    # No applications yet - should return 100.0 (innocent until proven guilty)
+    assert rule.get_accuracy() == 100.0
+
+
+def test_get_accuracy_with_unapplied_matches():
+    """Test accuracy calculation when matches > applied."""
+    rule = Rule(name="Test", payee_regex="TEST.*", category_id=100)
+
+    # Match 5 times but only apply 3
+    rule.record_match()  # match only
+    rule.record_match()  # match only
+    rule.record_application()  # match + apply
+    rule.record_application()  # match + apply
+    rule.record_application()  # match + apply
+
+    # 3 applications, 0 overrides = 100% accuracy of applications
+    assert rule.get_accuracy() == 100.0
+
+    # Override one
+    rule.record_override()
+
+    # 2 successful out of 3 applied = 66.67%
+    assert abs(rule.get_accuracy() - 66.67) < 0.1
