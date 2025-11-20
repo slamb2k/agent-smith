@@ -78,3 +78,34 @@ def test_model_emergency_fund_critical():
     assert result["is_adequate"] is False
     assert result["status"] == "critical"
     assert result["coverage_months"] < 3.0
+
+
+def test_forecast_cash_flow_invalid_months_forward():
+    """Test that forecast_cash_flow validates months_forward parameter."""
+    transactions = [{"id": 1, "date": "2025-10-15", "amount": "5000.00", "is_transfer": False}]
+
+    with pytest.raises(ValueError, match="months_forward must be greater than 0"):
+        forecast_cash_flow(transactions=transactions, months_forward=0)
+
+    with pytest.raises(ValueError, match="months_forward must be greater than 0"):
+        forecast_cash_flow(transactions=transactions, months_forward=-1)
+
+
+def test_identify_cash_flow_gaps_invalid_months_forward():
+    """Test that identify_cash_flow_gaps validates months_forward parameter."""
+    transactions = [{"id": 1, "date": "2025-10-15", "amount": "5000.00", "is_transfer": False}]
+
+    with pytest.raises(ValueError, match="months_forward must be greater than 0"):
+        identify_cash_flow_gaps(transactions=transactions, months_forward=0)
+
+    with pytest.raises(ValueError, match="months_forward must be greater than 0"):
+        identify_cash_flow_gaps(transactions=transactions, months_forward=-5)
+
+
+def test_model_emergency_fund_invalid_target_months():
+    """Test that model_emergency_fund validates target_months parameter."""
+    with pytest.raises(ValueError, match="target_months must be greater than 0"):
+        model_emergency_fund(monthly_expenses=3000.00, current_savings=10000.00, target_months=0)
+
+    with pytest.raises(ValueError, match="target_months must be greater than 0"):
+        model_emergency_fund(monthly_expenses=3000.00, current_savings=10000.00, target_months=-3)

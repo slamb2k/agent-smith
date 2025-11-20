@@ -20,6 +20,10 @@ def forecast_cash_flow(
     Returns:
         Dict with average income/expenses and monthly projections
     """
+    # Validate inputs
+    if months_forward <= 0:
+        raise ValueError("months_forward must be greater than 0")
+
     # Calculate historical averages
     total_income = 0.0
     total_expenses = 0.0
@@ -38,8 +42,18 @@ def forecast_cash_flow(
             total_expenses += abs(amount)
             expense_count += 1
 
-    # Calculate monthly averages (assume data spans multiple months)
-    months_of_data = max(1, len(set(t.get("date", "")[:7] for t in transactions)))
+    # Calculate monthly averages based on actual date span
+    dates = [datetime.fromisoformat(t["date"]) for t in transactions if t.get("date")]
+    if dates:
+        min_date = min(dates)
+        max_date = max(dates)
+        # Calculate actual months between min and max dates
+        months_of_data = max(
+            1, (max_date.year - min_date.year) * 12 + (max_date.month - min_date.month) + 1
+        )
+    else:
+        months_of_data = 1
+
     avg_monthly_income = total_income / months_of_data
     avg_monthly_expenses = total_expenses / months_of_data
     avg_monthly_surplus = avg_monthly_income - avg_monthly_expenses
@@ -91,6 +105,10 @@ def identify_cash_flow_gaps(
     Returns:
         Dict with gap months and recommendations
     """
+    # Validate inputs
+    if months_forward <= 0:
+        raise ValueError("months_forward must be greater than 0")
+
     forecast = forecast_cash_flow(
         transactions=transactions,
         months_forward=months_forward,
@@ -144,6 +162,10 @@ def model_emergency_fund(
     Returns:
         Dict with target amount, current status, and recommendations
     """
+    # Validate inputs
+    if target_months <= 0:
+        raise ValueError("target_months must be greater than 0")
+
     target_amount = monthly_expenses * target_months
     shortfall = max(0, target_amount - current_savings)
     coverage_months = current_savings / monthly_expenses if monthly_expenses > 0 else 0
