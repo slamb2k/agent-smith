@@ -110,7 +110,7 @@ class TestLevel1TaxIntelligence:
         non_deductible_count = 0
 
         for txn in sample_transactions[:50]:  # Sample first 50
-            category = txn.get("category", {})
+            category = txn.get("category") or {}
             category_name = category.get("title", "Uncategorized")
 
             ato_info = mapper.get_ato_category(category_name)

@@ -215,7 +215,7 @@ def generate_bas_worksheet(
 
         # Get transaction details
         amount = float(txn.get("amount", 0))
-        category = txn.get("category", {})
+        category = txn.get("category") or {}
         category_name = category.get("title", "Uncategorized")
 
         # Skip GST-free categories

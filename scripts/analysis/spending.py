@@ -21,7 +21,7 @@ def analyze_spending_by_category(transactions: List[Dict[str, Any]]) -> List[Dic
         if amount >= 0:
             continue
 
-        category = txn.get("category", {})
+        category = txn.get("category") or {}
         category_id = category.get("id")
         category_name = category.get("title", "Uncategorized")
 

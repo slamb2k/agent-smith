@@ -72,6 +72,35 @@ def test_analyze_spending_excludes_income():
     assert result[0]["category_name"] == "Groceries"
 
 
+def test_analyze_spending_handles_null_category():
+    """Test spending analysis handles uncategorized transactions (category=null from API)."""
+    transactions = [
+        {
+            "id": 1,
+            "payee": "UNCATEGORIZED SHOP",
+            "amount": "-25.00",
+            "date": "2025-11-01",
+            "category": None,  # PocketSmith API returns null for uncategorized
+        },
+        {
+            "id": 2,
+            "payee": "WOOLWORTHS",
+            "amount": "-50.00",
+            "date": "2025-11-05",
+            "category": {"id": 100, "title": "Groceries"},
+        },
+    ]
+
+    result = analyze_spending_by_category(transactions)
+
+    assert len(result) == 2
+    # Uncategorized should be grouped with category_id=None
+    uncategorized = [r for r in result if r["category_id"] is None][0]
+    assert uncategorized["category_name"] == "Uncategorized"
+    assert uncategorized["total_spent"] == 25.00
+    assert uncategorized["transaction_count"] == 1
+
+
 def test_analyze_spending_sorts_by_amount_desc():
     """Test spending analysis returns categories sorted by total spent (descending)."""
     transactions = [

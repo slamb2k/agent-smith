@@ -87,7 +87,8 @@ class DeductionDetector:
         """
         payee = transaction.get("payee", "").lower()
         amount = abs(float(transaction.get("amount", 0)))
-        category_name = transaction.get("category", {}).get("title", "")
+        category = transaction.get("category") or {}
+        category_name = category.get("title", "")
         date_str = transaction.get("date", "")
         time_str = transaction.get("time", "")
         notes = transaction.get("notes", "").lower()

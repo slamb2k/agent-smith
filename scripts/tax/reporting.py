@@ -36,7 +36,7 @@ def calculate_gst(transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
         amount_abs = abs(amount)
 
         # Check if deductible
-        category = txn.get("category", {})
+        category = txn.get("category") or {}
         category_name = category.get("title", "Uncategorized")
         ato_info = mapper.get_ato_category(category_name)
 
@@ -107,7 +107,7 @@ def generate_tax_summary(
         total_expenses += amount_abs
 
         # Get ATO category mapping
-        category = txn.get("category", {})
+        category = txn.get("category") or {}
         category_name = category.get("title", "Uncategorized")
         ato_info = mapper.get_ato_category(category_name)
 
