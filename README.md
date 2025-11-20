@@ -63,6 +63,11 @@ agent-smith/
 │   │   ├── api_client.py        # PocketSmith API wrapper ✓
 │   │   ├── rule_engine.py       # Hybrid rule engine ✓
 │   │   └── index_updater.py     # INDEX.md manager ✓
+│   ├── analysis/                # Analysis modules
+│   │   ├── spending.py          # Spending analysis ✓
+│   │   └── trends.py            # Trend detection ✓
+│   ├── reporting/               # Reporting modules
+│   │   └── formatters.py        # Multi-format reports ✓
 │   ├── operations/              # Operations
 │   │   └── categorize.py        # Transaction categorization ✓
 │   └── utils/                   # Utilities
@@ -241,20 +246,36 @@ Git hooks (via lefthook) run automatically:
 
 - ✅ **Phase 1:** Foundation (Weeks 1-2) - **COMPLETE**
 - ✅ **Phase 2:** Rule Engine (Weeks 3-4) - **COMPLETE**
-- [ ] **Phase 3:** Analysis & Reporting (Weeks 5-6)
+- ✅ **Phase 3:** Analysis & Reporting (Weeks 5-6) - **COMPLETE**
 - [ ] **Phase 4:** Tax Intelligence (Weeks 7-8)
 - [ ] **Phase 5:** Scenario Analysis (Weeks 9-10)
 - [ ] **Phase 6:** Orchestration & UX (Weeks 11-12)
 - [ ] **Phase 7:** Advanced Features (Weeks 13-14)
 - [ ] **Phase 8:** Health Check & Polish (Weeks 15-16)
 
+### Phase 3: Analysis & Reporting ✅
+
+**Spending Analysis:**
+- Analyze spending by category, merchant, time period
+- Period filtering (year, month)
+- Summary statistics (income, expenses, net)
+- Trend detection (increasing, decreasing, stable)
+
+**Report Formats:**
+- Markdown reports with tables and summaries
+- CSV export for data analysis
+- JSON output for programmatic access
+- Multi-format generation support
+
+**Test Coverage:** 101 tests (87 existing + 14 new), all passing
+
 ### Next Phase
 
-**Phase 3:** Analysis & Reporting (Weeks 5-6)
-- Spending analysis by category, merchant, time period
-- Trend detection and pattern recognition
-- Budget vs. actual comparisons
-- Multi-format reports (Markdown, CSV/JSON, HTML, Excel)
+**Phase 4:** Tax Intelligence (Weeks 7-8)
+- Australian tax-specific features
+- Deduction tracking and CGT calculations
+- BAS preparation and compliance checks
+- Tax report generation
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 

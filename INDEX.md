@@ -32,8 +32,10 @@ Contains all project documentation including design specifications and operation
 | `docs/INDEX.md` | Documentation index | Index |
 | `docs/design/2025-11-20-agent-smith-design.md` | Complete Agent Smith design specification | Design Doc |
 | `docs/plans/2025-11-20-phase-2-rule-engine.md` | Phase 2 implementation plan | Plan |
+| `docs/plans/2025-11-20-phase-3-analysis-reporting.md` | Phase 3 implementation plan | Plan |
 | `docs/operations/2025-11-20_phase1_testing.md` | Phase 1 testing operation log | Operation Log |
 | `docs/operations/2025-11-20_phase2_completion.md` | Phase 2 completion operation log | Operation Log |
+| `docs/operations/2025-11-20_phase3_completion.md` | Phase 3 completion operation log | Operation Log |
 
 **Purpose:** Central location for all project documentation, design specs, implementation guides, and user documentation.
 
@@ -94,6 +96,9 @@ Contains all Python source code organized by function.
 | `scripts/core/api_client.py` | PocketSmith API v2 client with rate limiting | Core Library |
 | `scripts/core/rule_engine.py` | Hybrid rule engine (Phase 2) | Core Library |
 | `scripts/core/index_updater.py` | INDEX.md automation utility | Core Library |
+| `scripts/analysis/spending.py` | Spending analysis by category/merchant/period (Phase 3) | Analysis |
+| `scripts/analysis/trends.py` | Trend detection and pattern analysis (Phase 3) | Analysis |
+| `scripts/reporting/formatters.py` | Multi-format report generation (Phase 3) | Reporting |
 | `scripts/operations/categorize.py` | Transaction categorization workflow (Phase 2) | Operations |
 | `scripts/utils/backup.py` | Backup/restore utilities | Utility |
 | `scripts/utils/validation.py` | Data validation functions | Utility |
@@ -104,6 +109,8 @@ Contains all Python source code organized by function.
 
 **Structure:**
 - `core/` - Core libraries (API client, rule engine, etc.)
+- `analysis/` - Analysis modules (spending, trends, etc.)
+- `reporting/` - Report generation and formatting
 - `operations/` - High-level operations (categorization, analysis, etc.)
 - `utils/` - Utility functions (backup, validation, logging, etc.)
 
@@ -139,10 +146,14 @@ Contains all unit and integration tests.
 | `tests/unit/test_rule_engine.py` | Rule engine unit tests (Phase 2) | Unit Test |
 | `tests/unit/test_merchant_normalizer.py` | Merchant normalizer unit tests (Phase 2) | Unit Test |
 | `tests/unit/test_categorize.py` | Categorization unit tests (Phase 2) | Unit Test |
+| `tests/unit/test_spending.py` | Spending analysis unit tests (Phase 3) | Unit Test |
+| `tests/unit/test_trends.py` | Trend detection unit tests (Phase 3) | Unit Test |
+| `tests/unit/test_reporting.py` | Report formatters unit tests (Phase 3) | Unit Test |
 | `tests/integration/test_api_client_integration.py` | API integration tests | Integration Test |
 | `tests/integration/test_rule_engine_integration.py` | Rule engine integration tests (Phase 2) | Integration Test |
+| `tests/integration/test_analysis_integration.py` | Analysis workflow integration tests (Phase 3) | Integration Test |
 
-**Test Coverage:** 87 tests (75 unit + 12 integration), all passing
+**Test Coverage:** 101 tests (89 unit + 12 integration), all passing
 
 **Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 
