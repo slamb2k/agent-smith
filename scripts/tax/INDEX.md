@@ -56,6 +56,28 @@
 - **Tags:** tax, reporting, gst, summaries
 - **Tests:** `tests/unit/test_tax_reporting.py` (5 tests)
 
+### bas_preparation.py
+- **Size:** 7.2 KB
+- **Created:** 2025-11-20 (Phase 4, Task 6)
+- **Purpose:** BAS (Business Activity Statement) preparation with GST calculations
+- **Functions:** generate_bas_worksheet, is_gst_free, is_capital_purchase
+- **Level:** 3 (Full Compliance Suite)
+- **Features:**
+  - Quarterly BAS worksheet generation
+  - G1: Total sales (GST-inclusive)
+  - G10: Capital purchases >= $1000 GST-exclusive
+  - G11: Non-capital purchases < $1000 GST-exclusive
+  - 1A: GST on sales (1/11 of GST-inclusive)
+  - 1B: GST on purchases (1/11 of GST-inclusive)
+  - 1C: Net GST (1A - 1B)
+  - GST-free category exclusions (wages, bank fees, insurance, etc)
+  - Capital vs non-capital classification
+  - Date range filtering
+  - Transaction summary statistics
+  - Professional advice disclaimer
+- **Tags:** tax, bas, gst, level-3, compliance, ato
+- **Tests:** `tests/unit/test_bas_preparation.py` (14 tests)
+
 ## Tax Intelligence Levels
 
 ### Level 1: Reference & Reporting (Implemented)
@@ -72,11 +94,11 @@
 - ⬜ Expense splitting suggestions (future)
 - ⬜ Home office calculations (future)
 
-### Level 3: Full Compliance Suite (Future)
-- ⬜ BAS preparation
-- ⬜ Compliance checks
-- ⬜ Scenario planning
-- ⬜ Audit-ready documentation
+### Level 3: Full Compliance Suite (In Progress)
+- ✅ BAS preparation (quarterly GST worksheets)
+- ⬜ Compliance checks (future)
+- ⬜ Scenario planning (future)
+- ⬜ Audit-ready documentation (future)
 
 ## Data Files
 
@@ -85,9 +107,9 @@
 
 ## Test Coverage
 
-- **Total tests:** 39 (3 + 14 + 5 + 17)
+- **Total tests:** 53 (3 + 14 + 5 + 17 + 14)
 - **Pass rate:** 100%
-- **Files:** 4 test files in `tests/unit/`
+- **Files:** 5 test files in `tests/unit/`
 
 ## Usage Examples
 
@@ -155,6 +177,30 @@ print(f"Capital gain: ${event.capital_gain}")
 
 # Get FY summary
 summary = tracker.calculate_total_capital_gains(2024)  # FY 2023-24
+```
+
+### BAS Preparation (Level 3)
+```python
+from scripts.tax.bas_preparation import generate_bas_worksheet
+
+# Generate BAS worksheet for Q1 (Jul-Sep)
+worksheet = generate_bas_worksheet(
+    transactions=transactions,
+    start_date="2024-07-01",
+    end_date="2024-09-30"
+)
+
+# Returns:
+# {
+#   "G1_total_sales": 33000.00,
+#   "G10_capital_purchases": 11000.00,  # >= $1000 GST-exclusive
+#   "G11_non_capital_purchases": 5500.00,  # < $1000 GST-exclusive
+#   "1A_gst_on_sales": 3000.00,  # 1/11 of sales
+#   "1B_gst_on_purchases": 1500.00,  # 1/11 of purchases
+#   "1C_net_gst": 1500.00,  # Amount you owe (or negative for refund)
+#   "summary": {...},
+#   "disclaimer": "Consult a registered tax agent..."
+# }
 ```
 
 ## Important Notes
