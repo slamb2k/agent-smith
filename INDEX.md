@@ -25,12 +25,15 @@ This index provides a comprehensive overview of the repository structure for bot
 
 ### `/docs/` - Documentation
 
-Contains all project documentation including design specifications.
+Contains all project documentation including design specifications and operation logs.
 
 | Path | Description | Type |
 |------|-------------|------|
 | `docs/INDEX.md` | Documentation index | Index |
 | `docs/design/2025-11-20-agent-smith-design.md` | Complete Agent Smith design specification | Design Doc |
+| `docs/plans/2025-11-20-phase-2-rule-engine.md` | Phase 2 implementation plan | Plan |
+| `docs/operations/2025-11-20_phase1_testing.md` | Phase 1 testing operation log | Operation Log |
+| `docs/operations/2025-11-20_phase2_completion.md` | Phase 2 completion operation log | Operation Log |
 
 **Purpose:** Central location for all project documentation, design specs, implementation guides, and user documentation.
 
@@ -79,6 +82,69 @@ Claude Code configuration directory (managed by Claude Code itself).
 **Purpose:** Stores Claude Code settings, slash commands, and skill configurations.
 
 **Note:** Will contain Agent Smith slash commands once implementation begins.
+
+---
+
+### `/scripts/` - Python Code
+
+Contains all Python source code organized by function.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `scripts/core/api_client.py` | PocketSmith API v2 client with rate limiting | Core Library |
+| `scripts/core/rule_engine.py` | Hybrid rule engine (Phase 2) | Core Library |
+| `scripts/core/index_updater.py` | INDEX.md automation utility | Core Library |
+| `scripts/operations/categorize.py` | Transaction categorization workflow (Phase 2) | Operations |
+| `scripts/utils/backup.py` | Backup/restore utilities | Utility |
+| `scripts/utils/validation.py` | Data validation functions | Utility |
+| `scripts/utils/logging_config.py` | Logging infrastructure | Utility |
+| `scripts/utils/merchant_normalizer.py` | Merchant name normalization (Phase 2) | Utility |
+
+**Purpose:** All executable Python code for Agent Smith functionality.
+
+**Structure:**
+- `core/` - Core libraries (API client, rule engine, etc.)
+- `operations/` - High-level operations (categorization, analysis, etc.)
+- `utils/` - Utility functions (backup, validation, logging, etc.)
+
+---
+
+### `/data/` - Working Data
+
+Contains runtime data, user configuration, and persistent state.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `data/config.json` | User preferences and settings | Config |
+| `data/local_rules.json` | Local rule engine rules (Phase 2) | Data |
+| `data/platform_rules.json` | Platform rule tracking (Phase 2) | Data |
+| `data/merchants/merchant_mappings.json` | Merchant normalization mappings (Phase 2) | Data |
+
+**Purpose:** Persistent storage for configuration, rules, and learned patterns.
+
+**Note:** All files except INDEX.md are git-ignored to protect user data.
+
+---
+
+### `/tests/` - Test Suite
+
+Contains all unit and integration tests.
+
+| Path | Description | Type |
+|------|-------------|------|
+| `tests/unit/test_api_client.py` | API client unit tests | Unit Test |
+| `tests/unit/test_backup.py` | Backup utilities unit tests | Unit Test |
+| `tests/unit/test_validation.py` | Validation unit tests | Unit Test |
+| `tests/unit/test_index_updater.py` | Index updater unit tests | Unit Test |
+| `tests/unit/test_rule_engine.py` | Rule engine unit tests (Phase 2) | Unit Test |
+| `tests/unit/test_merchant_normalizer.py` | Merchant normalizer unit tests (Phase 2) | Unit Test |
+| `tests/unit/test_categorize.py` | Categorization unit tests (Phase 2) | Unit Test |
+| `tests/integration/test_api_client_integration.py` | API integration tests | Integration Test |
+| `tests/integration/test_rule_engine_integration.py` | Rule engine integration tests (Phase 2) | Integration Test |
+
+**Test Coverage:** 87 tests (75 unit + 12 integration), all passing
+
+**Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 
 ---
 

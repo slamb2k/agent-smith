@@ -61,11 +61,15 @@ agent-smith/
 │   ├── INDEX.md
 │   ├── core/                    # Core libraries
 │   │   ├── api_client.py        # PocketSmith API wrapper ✓
+│   │   ├── rule_engine.py       # Hybrid rule engine ✓
 │   │   └── index_updater.py     # INDEX.md manager ✓
+│   ├── operations/              # Operations
+│   │   └── categorize.py        # Transaction categorization ✓
 │   └── utils/                   # Utilities
 │       ├── backup.py            # Backup/restore ✓
 │       ├── validation.py        # Data validation ✓
-│       └── logging_config.py    # Logging setup ✓
+│       ├── logging_config.py    # Logging setup ✓
+│       └── merchant_normalizer.py  # Merchant normalization ✓
 │
 ├── tests/                       # Test suite
 │   ├── unit/                    # Unit tests
@@ -207,10 +211,36 @@ Git hooks (via lefthook) run automatically:
 - ✅ Integration tests for API client
 - ✅ Test framework configured (pytest)
 
+### Phase 2: Rule Engine ✅ **COMPLETE**
+
+#### Hybrid Rule System
+- ✅ Rule class with pattern matching (regex, amount ranges, exclusions)
+- ✅ Local rule engine with JSON persistence
+- ✅ Platform rule creation for simple patterns
+- ✅ Intelligence modes (Conservative/Smart/Aggressive)
+- ✅ Performance tracking (matches, accuracy, overrides)
+- ✅ Rule finding with priority sorting
+
+#### Categorization Workflow
+- ✅ Single transaction categorization
+- ✅ Batch categorization operations
+- ✅ Dry-run mode for testing
+- ✅ Auto-apply based on confidence thresholds
+- ✅ API integration for updates
+
+#### Merchant Intelligence
+- ✅ Merchant name normalization
+- ✅ Location code and suffix removal
+- ✅ Canonical name mapping
+- ✅ Learning from transaction history
+- ✅ Variation grouping
+
+**Test Coverage:** 75 unit tests + 12 integration tests = 87 tests, all passing
+
 ### Implementation Roadmap
 
 - ✅ **Phase 1:** Foundation (Weeks 1-2) - **COMPLETE**
-- [ ] **Phase 2:** Rule Engine (Weeks 3-4)
+- ✅ **Phase 2:** Rule Engine (Weeks 3-4) - **COMPLETE**
 - [ ] **Phase 3:** Analysis & Reporting (Weeks 5-6)
 - [ ] **Phase 4:** Tax Intelligence (Weeks 7-8)
 - [ ] **Phase 5:** Scenario Analysis (Weeks 9-10)
@@ -220,11 +250,11 @@ Git hooks (via lefthook) run automatically:
 
 ### Next Phase
 
-**Phase 2:** Rule Engine (Weeks 3-4)
-- Hybrid rule system (platform + local rules)
-- Categorization workflow
-- Rule suggestion engine
-- Merchant normalization
+**Phase 3:** Analysis & Reporting (Weeks 5-6)
+- Spending analysis by category, merchant, time period
+- Trend detection and pattern recognition
+- Budget vs. actual comparisons
+- Multi-format reports (Markdown, CSV/JSON, HTML, Excel)
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
