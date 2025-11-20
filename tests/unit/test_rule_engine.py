@@ -68,7 +68,7 @@ def test_rule_matches_simple_payee():
         "amount": "-50.00",
     }
 
-    assert rule.matches(transaction) is True
+    assert rule.match_transaction(transaction) is True
 
 
 def test_rule_does_not_match_different_payee():
@@ -84,7 +84,7 @@ def test_rule_does_not_match_different_payee():
         "amount": "-50.00",
     }
 
-    assert rule.matches(transaction) is False
+    assert rule.match_transaction(transaction) is False
 
 
 def test_rule_matches_with_amount_range():
@@ -98,13 +98,13 @@ def test_rule_matches_with_amount_range():
     )
 
     # Within range
-    assert rule.matches({"payee": "TEST", "amount": "-50.00"}) is True
+    assert rule.match_transaction({"payee": "TEST", "amount": "-50.00"}) is True
 
     # Below range
-    assert rule.matches({"payee": "TEST", "amount": "-5.00"}) is False
+    assert rule.match_transaction({"payee": "TEST", "amount": "-5.00"}) is False
 
     # Above range
-    assert rule.matches({"payee": "TEST", "amount": "-150.00"}) is False
+    assert rule.match_transaction({"payee": "TEST", "amount": "-150.00"}) is False
 
 
 def test_rule_excludes_pattern():
@@ -117,7 +117,7 @@ def test_rule_excludes_pattern():
     )
 
     # Should match
-    assert rule.matches({"payee": "WOOLWORTHS EPPING", "amount": "-50.00"}) is True
+    assert rule.match_transaction({"payee": "WOOLWORTHS EPPING", "amount": "-50.00"}) is True
 
     # Should be excluded
-    assert rule.matches({"payee": "WOOLWORTHS PETROL", "amount": "-50.00"}) is False
+    assert rule.match_transaction({"payee": "WOOLWORTHS PETROL", "amount": "-50.00"}) is False

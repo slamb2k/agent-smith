@@ -45,12 +45,12 @@ class Rule:
     last_modified: str = field(default_factory=lambda: datetime.now().isoformat())
 
     # Performance tracking
-    match_count: int = 0
+    matches: int = 0
     applied: int = 0
     user_overrides: int = 0
     last_used: Optional[str] = None
 
-    def matches(self, transaction: Dict[str, Any]) -> bool:
+    def match_transaction(self, transaction: Dict[str, Any]) -> bool:
         """Check if rule matches transaction.
 
         Args:
