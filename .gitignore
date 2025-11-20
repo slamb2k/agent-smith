@@ -19,10 +19,13 @@ build-python/
 *.log
 *_analysis.json
 *_data.json
-backups/
-reports/
+backups/*
+!backups/INDEX.md
+reports/*
+!reports/INDEX.md
 data/cache/
-logs/
+logs/*
+!logs/INDEX.md
 
 # Build reference (temporary - remove before publishing)
 build/
