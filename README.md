@@ -27,24 +27,49 @@ Agent Smith transforms PocketSmith from a passive tracking tool into an active f
 ## Repository Structure
 
 ```
-budget-smith/
+agent-smith/
 ├── README.md                    # This file
 ├── INDEX.md                     # Directory navigation guide
 ├── .gitignore                   # Git ignore rules
 ├── .env                         # API configuration (not committed)
+├── requirements.txt             # Python dependencies
+├── pytest.ini                   # Test configuration
+│
+├── backups/                     # Timestamped backups (30-day retention)
+│   └── INDEX.md
+│
+├── data/                        # Working data and state
+│   ├── INDEX.md
+│   └── config.json              # User preferences
 │
 ├── docs/                        # Documentation
 │   ├── INDEX.md
-│   └── design/                  # Design specifications
-│       └── 2025-11-20-agent-smith-design.md
+│   ├── design/                  # Design specifications
+│   └── operations/              # Operation logs
 │
 ├── ai_docs/                     # AI agent documentation
 │   ├── INDEX.md
 │   └── pocketsmith-api-documentation.md
 │
-├── build/                       # Reference materials (temporary)
-│   ├── docs/                    # Migration documentation
-│   └── scripts/                 # Python scripts for reference
+├── logs/                        # Execution logs (14-day retention)
+│   └── INDEX.md
+│
+├── reports/                     # Generated reports (90-day retention)
+│   └── INDEX.md
+│
+├── scripts/                     # Python code
+│   ├── INDEX.md
+│   ├── core/                    # Core libraries
+│   │   ├── api_client.py        # PocketSmith API wrapper ✓
+│   │   └── index_updater.py     # INDEX.md manager ✓
+│   └── utils/                   # Utilities
+│       ├── backup.py            # Backup/restore ✓
+│       ├── validation.py        # Data validation ✓
+│       └── logging_config.py    # Logging setup ✓
+│
+├── tests/                       # Test suite
+│   ├── unit/                    # Unit tests
+│   └── integration/             # Integration tests
 │
 └── .claude/                     # Claude Code configuration
     └── commands/                # Slash commands (future)
@@ -54,15 +79,58 @@ budget-smith/
 
 ### Prerequisites
 
+- Python 3.9+
 - PocketSmith account with API access
 - Developer API key from PocketSmith (Settings > Security)
 
-### Setup
+### Installation
 
-1. Clone the repository
-2. Copy `.env.sample` to `.env`
-3. Add your PocketSmith API key to `.env`
-4. Install Agent Smith skill (see design doc)
+```bash
+# Clone repository
+git clone <repository-url>
+cd agent-smith
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure API key
+cp .env.sample .env
+# Edit .env and add your POCKETSMITH_API_KEY
+```
+
+### Running Tests
+
+```bash
+# Run all unit tests
+pytest tests/unit -v
+
+# Run integration tests (requires API key)
+pytest tests/integration -v -m integration
+
+# Run all tests with coverage
+pytest --cov=scripts tests/
+```
+
+### Usage
+
+Currently in development. Phase 1 foundation is complete.
+
+Python usage example:
+
+```python
+from scripts.core.api_client import PocketSmithClient
+
+# Initialize client
+client = PocketSmithClient()
+
+# Get user info
+user = client.get_user()
+print(f"Connected as: {user['login']}")
+
+# Get categories
+categories = client.get_categories(user_id=user['id'])
+print(f"Found {len(categories)} categories")
+```
 
 ## Documentation
 
@@ -72,23 +140,54 @@ budget-smith/
 
 ## Development Status
 
-### Completed
-✅ Complete design specification
-✅ Repository structure
-✅ Documentation framework
+**Current Phase:** Phase 1 - Foundation ✅ **COMPLETE**
 
-### Next Steps
-- [ ] Create git worktree for isolated development
-- [ ] Implement Phase 1: Foundation (directory structure, core libraries)
-- [ ] Implement Phase 2: Rule Engine
-- [ ] Implement Phase 3: Analysis & Reporting
-- [ ] Implement Phase 4: Tax Intelligence
-- [ ] Implement Phase 5: Scenario Analysis
-- [ ] Implement Phase 6: Orchestration & UX
-- [ ] Implement Phase 7: Advanced Features
-- [ ] Implement Phase 8: Health Check & Polish
+### Phase 1 Completion Checklist
 
-See [design document](docs/design/2025-11-20-agent-smith-design.md) for full roadmap.
+#### Core Infrastructure
+- ✅ Directory structure created (backups, data, logs, reports, scripts, tests)
+- ✅ .env.sample configuration template
+- ✅ INDEX.md templates for all directories
+- ✅ pytest configuration and test structure
+
+#### Core Libraries
+- ✅ **api_client.py** - PocketSmith API wrapper with rate limiting
+- ✅ **index_updater.py** - INDEX.md automation
+- ✅ **backup.py** - Backup/restore utilities
+- ✅ **validation.py** - Data validation
+- ✅ **logging_config.py** - Logging infrastructure
+
+#### Basic Functionality
+- ✅ API authentication and basic queries
+- ✅ Backup/restore system
+- ✅ Logging infrastructure (operations, errors, API calls)
+- ✅ Configuration management (data/config.json)
+
+#### Testing
+- ✅ Unit tests for all core utilities (100% coverage)
+- ✅ Integration tests for API client
+- ✅ Test framework configured (pytest)
+
+### Implementation Roadmap
+
+- ✅ **Phase 1:** Foundation (Weeks 1-2) - **COMPLETE**
+- [ ] **Phase 2:** Rule Engine (Weeks 3-4)
+- [ ] **Phase 3:** Analysis & Reporting (Weeks 5-6)
+- [ ] **Phase 4:** Tax Intelligence (Weeks 7-8)
+- [ ] **Phase 5:** Scenario Analysis (Weeks 9-10)
+- [ ] **Phase 6:** Orchestration & UX (Weeks 11-12)
+- [ ] **Phase 7:** Advanced Features (Weeks 13-14)
+- [ ] **Phase 8:** Health Check & Polish (Weeks 15-16)
+
+### Next Phase
+
+**Phase 2:** Rule Engine (Weeks 3-4)
+- Hybrid rule system (platform + local rules)
+- Categorization workflow
+- Rule suggestion engine
+- Merchant normalization
+
+See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
 ## License
 
