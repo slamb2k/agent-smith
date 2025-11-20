@@ -1,17 +1,18 @@
 """Tests for validation utility."""
+
 import pytest
 from scripts.utils.validation import (
     validate_date_format,
     validate_transaction_data,
     validate_category_data,
-    ValidationError
+    ValidationError,
 )
 
 
 def test_validate_date_format_accepts_valid_dates():
     """Test date validation accepts YYYY-MM-DD format."""
-    assert validate_date_format("2025-01-15") == True
-    assert validate_date_format("2025-12-31") == True
+    assert validate_date_format("2025-01-15") is True
+    assert validate_date_format("2025-12-31") is True
 
 
 def test_validate_date_format_rejects_invalid_dates():
@@ -33,10 +34,10 @@ def test_validate_transaction_data_accepts_valid_transaction():
         "payee": "Test Store",
         "amount": "-50.00",
         "date": "2025-01-15",
-        "transaction_account": {"id": 100}
+        "transaction_account": {"id": 100},
     }
 
-    assert validate_transaction_data(transaction) == True
+    assert validate_transaction_data(transaction) is True
 
 
 def test_validate_transaction_data_rejects_missing_fields():
@@ -52,21 +53,14 @@ def test_validate_transaction_data_rejects_missing_fields():
 
 def test_validate_category_data_accepts_valid_category():
     """Test category validation accepts valid data."""
-    category = {
-        "id": 100,
-        "title": "Groceries",
-        "is_transfer": False
-    }
+    category = {"id": 100, "title": "Groceries", "is_transfer": False}
 
-    assert validate_category_data(category) == True
+    assert validate_category_data(category) is True
 
 
 def test_validate_category_data_rejects_invalid_category():
     """Test category validation rejects invalid data."""
-    category = {
-        "id": "invalid",  # Should be int
-        "title": "Test"
-    }
+    category = {"id": "invalid", "title": "Test"}  # Should be int
 
     with pytest.raises(ValidationError):
         validate_category_data(category)

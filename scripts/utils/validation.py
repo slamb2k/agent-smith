@@ -1,4 +1,5 @@
 """Data validation utilities for Agent Smith."""
+
 import re
 import logging
 from datetime import datetime
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ValidationError(Exception):
     """Raised when data validation fails."""
+
     pass
 
 
@@ -25,7 +27,7 @@ def validate_date_format(date_str: str) -> bool:
     Raises:
         ValidationError: If date format is invalid
     """
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", date_str):
         raise ValidationError(f"Invalid date format: {date_str}. Expected YYYY-MM-DD")
 
     # Verify it's a valid date
@@ -112,7 +114,7 @@ def validate_api_key(api_key: str) -> bool:
         raise ValidationError("API key cannot be empty")
 
     # PocketSmith API keys are hexadecimal and typically 128 characters
-    if not re.match(r'^[a-f0-9]{128}$', api_key):
+    if not re.match(r"^[a-f0-9]{128}$", api_key):
         logger.warning("API key does not match expected format (128 hex chars)")
 
     return True

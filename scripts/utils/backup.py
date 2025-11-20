@@ -1,4 +1,5 @@
 """Backup and restore utilities for Agent Smith."""
+
 import json
 import logging
 import shutil
@@ -37,11 +38,7 @@ class BackupManager:
 
         logger.info(f"BackupManager initialized (root: {self.backup_root})")
 
-    def create_backup(
-        self,
-        description: str,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Path:
+    def create_backup(self, description: str, metadata: Optional[Dict[str, Any]] = None) -> Path:
         """Create a new timestamped backup directory.
 
         Args:
@@ -57,25 +54,22 @@ class BackupManager:
 
         # Create metadata file
         metadata_dict = metadata or {}
-        metadata_dict.update({
-            "timestamp": timestamp,
-            "description": description,
-            "created_at": datetime.now().isoformat()
-        })
+        metadata_dict.update(
+            {
+                "timestamp": timestamp,
+                "description": description,
+                "created_at": datetime.now().isoformat(),
+            }
+        )
 
         metadata_file = backup_path / "metadata.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata_dict, f, indent=2)
 
         logger.info(f"Created backup: {backup_path} - {description}")
         return backup_path
 
-    def save_backup_data(
-        self,
-        backup_path: Path,
-        filename: str,
-        data: Any
-    ):
+    def save_backup_data(self, backup_path: Path, filename: str, data: Any) -> None:
         """Save data to backup directory.
 
         Args:
@@ -85,7 +79,7 @@ class BackupManager:
         """
         filepath = backup_path / filename
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
 
         logger.debug(f"Saved backup data: {filepath}")
@@ -112,12 +106,14 @@ class BackupManager:
             with open(metadata_file) as f:
                 metadata = json.load(f)
 
-            backups.append({
-                "path": backup_dir,
-                "timestamp": metadata.get("timestamp"),
-                "description": metadata.get("description"),
-                "metadata": metadata
-            })
+            backups.append(
+                {
+                    "path": backup_dir,
+                    "timestamp": metadata.get("timestamp"),
+                    "description": metadata.get("description"),
+                    "metadata": metadata,
+                }
+            )
 
         # Sort by timestamp (newest first)
         backups.sort(key=lambda x: x["timestamp"], reverse=True)
@@ -128,7 +124,7 @@ class BackupManager:
         logger.debug(f"Listed {len(backups)} backups")
         return backups
 
-    def restore_backup(self, backup_path: Path, target_dir: Path):
+    def restore_backup(self, backup_path: Path, target_dir: Path) -> None:
         """Restore a backup to target directory.
 
         Args:
@@ -148,9 +144,9 @@ class BackupManager:
             elif item.is_dir():
                 shutil.copytree(item, target_path, dirs_exist_ok=True)
 
-        logger.info(f"Backup restored successfully")
+        logger.info("Backup restored successfully")
 
-    def delete_backup(self, backup_path: Path):
+    def delete_backup(self, backup_path: Path) -> None:
         """Delete a backup directory.
 
         Args:

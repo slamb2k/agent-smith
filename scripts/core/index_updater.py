@@ -1,4 +1,5 @@
 """INDEX.md file updater for efficient LLM discovery."""
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class IndexEntry:
     """Represents an entry in an INDEX.md file."""
+
     filename: str
     description: str
     tags: List[str] = field(default_factory=list)
@@ -41,11 +43,7 @@ class IndexUpdater:
         self.index_file = self.directory / "INDEX.md"
         logger.debug(f"IndexUpdater initialized for {directory}")
 
-    def add_entry(
-        self,
-        entry: IndexEntry,
-        auto_detect_metadata: bool = True
-    ):
+    def add_entry(self, entry: IndexEntry, auto_detect_metadata: bool = True) -> None:
         """Add or update an entry in INDEX.md.
 
         Args:
@@ -74,7 +72,7 @@ class IndexUpdater:
 
         logger.debug(f"Added index entry: {entry.filename}")
 
-    def remove_entry(self, filename: str):
+    def remove_entry(self, filename: str) -> None:
         """Remove an entry from INDEX.md.
 
         Args:
@@ -86,10 +84,7 @@ class IndexUpdater:
 
         logger.debug(f"Removed index entry: {filename}")
 
-    def scan_directory(
-        self,
-        exclude_patterns: Optional[List[str]] = None
-    ) -> List[IndexEntry]:
+    def scan_directory(self, exclude_patterns: Optional[List[str]] = None) -> List[IndexEntry]:
         """Scan directory and create index entries for all files.
 
         Args:
@@ -117,7 +112,7 @@ class IndexUpdater:
                 filename=item.name,
                 description=f"{item.suffix} file",
                 size=stat.st_size,
-                modified=datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d")
+                modified=datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d"),
             )
             entries.append(entry)
 
@@ -137,26 +132,23 @@ class IndexUpdater:
         content = self.index_file.read_text()
 
         # Simple parsing - look for lines starting with "- "
-        for line in content.split('\n'):
-            if line.startswith('- **'):
+        for line in content.split("\n"):
+            if line.startswith("- **"):
                 # Extract filename from **filename**
                 try:
-                    filename = line.split('**')[1]
+                    filename = line.split("**")[1]
                     # Try to extract description
-                    parts = line.split(' - ', 1)
+                    parts = line.split(" - ", 1)
                     description = parts[1] if len(parts) > 1 else ""
-                    description = description.split('(')[0].strip()
+                    description = description.split("(")[0].strip()
 
-                    entries.append(IndexEntry(
-                        filename=filename,
-                        description=description
-                    ))
+                    entries.append(IndexEntry(filename=filename, description=description))
                 except (IndexError, ValueError):
                     continue
 
         return entries
 
-    def _write_index(self, entries: List[IndexEntry]):
+    def _write_index(self, entries: List[IndexEntry]) -> None:
         """Write entries to INDEX.md.
 
         Args:
@@ -174,7 +166,7 @@ class IndexUpdater:
             "---",
             "",
             "## Files",
-            ""
+            "",
         ]
 
         for entry in entries:
@@ -205,5 +197,5 @@ class IndexUpdater:
         lines.extend(["", "---", ""])
 
         # Write to file
-        self.index_file.write_text('\n'.join(lines))
+        self.index_file.write_text("\n".join(lines))
         logger.debug(f"Wrote {len(entries)} entries to {self.index_file}")

@@ -1,4 +1,5 @@
 """Tests for configuration validation."""
+
 import os
 from pathlib import Path
 
@@ -32,5 +33,6 @@ def test_env_sample_has_no_real_credentials():
     content = env_sample.read_text()
 
     # Real API keys are hexadecimal and long
-    assert "<Your" in content or "your-" in content, \
-        ".env.sample should use placeholders, not real keys"
+    assert (
+        "<Your" in content or "your-" in content
+    ), ".env.sample should use placeholders, not real keys"

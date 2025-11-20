@@ -1,8 +1,8 @@
 """Logging configuration for Agent Smith."""
+
 import logging
 import sys
 from pathlib import Path
-from datetime import datetime
 from typing import Optional
 
 
@@ -15,8 +15,8 @@ def setup_logging(
     log_level: str = "INFO",
     log_to_console: bool = True,
     log_to_file: bool = True,
-    force: bool = False
-):
+    force: bool = False,
+) -> None:
     """Configure logging for Agent Smith.
 
     Sets up:
@@ -55,13 +55,10 @@ def setup_logging(
     root_logger.handlers.clear()
 
     # Create formatters
-    console_formatter = logging.Formatter(
-        '%(levelname)-8s | %(name)-20s | %(message)s'
-    )
+    console_formatter = logging.Formatter("%(levelname)-8s | %(name)-20s | %(message)s")
 
     file_formatter = logging.Formatter(
-        '%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Console handler
@@ -94,7 +91,7 @@ def setup_logging(
         api_handler.setFormatter(file_formatter)
 
         # Add filter to only log API-related messages
-        api_handler.addFilter(lambda record: 'api' in record.name.lower())
+        api_handler.addFilter(lambda record: "api" in record.name.lower())
         root_logger.addHandler(api_handler)
 
     _logging_configured = True
@@ -114,7 +111,7 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
 
 
-def reset_logging():
+def reset_logging() -> None:
     """Reset logging configuration (useful for testing)."""
     global _logging_configured
     _logging_configured = False

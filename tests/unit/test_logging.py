@@ -1,4 +1,5 @@
 """Tests for logging configuration."""
+
 import logging
 import tempfile
 from pathlib import Path

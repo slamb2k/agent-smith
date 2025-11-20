@@ -1,4 +1,5 @@
 """Tests for backup utility."""
+
 import os
 import json
 import tempfile
@@ -33,7 +34,7 @@ def test_create_backup_creates_timestamped_directory(temp_backup_dir):
     assert backup_path.is_dir()
     # Check timestamp format YYYY-MM-DD_HHMMSS
     dir_name = backup_path.name
-    assert len(dir_name.split('_')) == 2
+    assert len(dir_name.split("_")) == 2
 
 
 def test_backup_saves_data_as_json(temp_backup_dir):
@@ -43,11 +44,7 @@ def test_backup_saves_data_as_json(temp_backup_dir):
     test_data = {"transactions": [{"id": 1, "amount": "50.00"}]}
     backup_path = manager.create_backup(description="test")
 
-    manager.save_backup_data(
-        backup_path=backup_path,
-        filename="transactions.json",
-        data=test_data
-    )
+    manager.save_backup_data(backup_path=backup_path, filename="transactions.json", data=test_data)
 
     saved_file = backup_path / "transactions.json"
     assert saved_file.exists()
@@ -62,8 +59,7 @@ def test_backup_creates_metadata_file(temp_backup_dir):
     """Test that backup creates metadata.json."""
     manager = BackupManager(backup_root=temp_backup_dir)
     backup_path = manager.create_backup(
-        description="Test backup",
-        metadata={"user_id": 217031, "operation": "categorize"}
+        description="Test backup", metadata={"user_id": 217031, "operation": "categorize"}
     )
 
     metadata_file = backup_path / "metadata.json"
@@ -83,6 +79,7 @@ def test_list_backups_returns_sorted_list(temp_backup_dir):
 
     # Create multiple backups with sufficient delay to get different timestamps
     import time
+
     backup1 = manager.create_backup(description="First")
     time.sleep(1.1)  # Sleep more than 1 second to ensure different timestamp
     backup2 = manager.create_backup(description="Second")

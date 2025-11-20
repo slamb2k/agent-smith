@@ -1,4 +1,5 @@
 """Tests for PocketSmith API client."""
+
 import os
 import pytest
 from unittest.mock import Mock, patch
@@ -33,7 +34,7 @@ def test_api_client_sets_default_rate_limit():
     assert client.rate_limit_delay == 0.1  # 100ms default
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_api_client_get_request(mock_get):
     """Test GET request with proper headers and rate limiting."""
     mock_response = Mock()
@@ -48,10 +49,10 @@ def test_api_client_get_request(mock_get):
     mock_get.assert_called_once()
     args, kwargs = mock_get.call_args
     assert args[0] == "https://api.pocketsmith.com/v2/me"
-    assert kwargs['headers']['X-Developer-Key'] == "test_key"
+    assert kwargs["headers"]["X-Developer-Key"] == "test_key"
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_api_client_handles_404(mock_get):
     """Test handling of 404 Not Found responses."""
     mock_response = Mock()
@@ -66,7 +67,7 @@ def test_api_client_handles_404(mock_get):
         client.get("/nonexistent")
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_api_client_enforces_rate_limiting(mock_get):
     """Test that rate limiting delay is enforced between requests."""
     import time
@@ -87,7 +88,7 @@ def test_api_client_enforces_rate_limiting(mock_get):
     assert elapsed >= 0.05
 
 
-@patch('scripts.core.api_client.requests.post')
+@patch("scripts.core.api_client.requests.post")
 def test_api_client_post_request(mock_post):
     """Test POST request with proper headers and rate limiting."""
     mock_response = Mock()
@@ -102,11 +103,11 @@ def test_api_client_post_request(mock_post):
     mock_post.assert_called_once()
     args, kwargs = mock_post.call_args
     assert args[0] == "https://api.pocketsmith.com/v2/categories"
-    assert kwargs['headers']['X-Developer-Key'] == "test_key"
-    assert kwargs['json'] == {"name": "Test Category"}
+    assert kwargs["headers"]["X-Developer-Key"] == "test_key"
+    assert kwargs["json"] == {"name": "Test Category"}
 
 
-@patch('scripts.core.api_client.requests.put')
+@patch("scripts.core.api_client.requests.put")
 def test_api_client_put_request(mock_put):
     """Test PUT request with proper headers and rate limiting."""
     mock_response = Mock()
@@ -121,11 +122,11 @@ def test_api_client_put_request(mock_put):
     mock_put.assert_called_once()
     args, kwargs = mock_put.call_args
     assert args[0] == "https://api.pocketsmith.com/v2/categories/456"
-    assert kwargs['headers']['X-Developer-Key'] == "test_key"
-    assert kwargs['json'] == {"name": "Updated Category"}
+    assert kwargs["headers"]["X-Developer-Key"] == "test_key"
+    assert kwargs["json"] == {"name": "Updated Category"}
 
 
-@patch('scripts.core.api_client.requests.delete')
+@patch("scripts.core.api_client.requests.delete")
 def test_api_client_delete_request(mock_delete):
     """Test DELETE request with proper headers and rate limiting."""
     mock_response = Mock()
@@ -140,10 +141,10 @@ def test_api_client_delete_request(mock_delete):
     mock_delete.assert_called_once()
     args, kwargs = mock_delete.call_args
     assert args[0] == "https://api.pocketsmith.com/v2/categories/456"
-    assert kwargs['headers']['X-Developer-Key'] == "test_key"
+    assert kwargs["headers"]["X-Developer-Key"] == "test_key"
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_get_user(mock_get):
     """Test get_user retrieves authorized user info."""
     mock_response = Mock()
@@ -152,7 +153,7 @@ def test_get_user(mock_get):
         "id": 217031,
         "login": "testuser",
         "name": "Test User",
-        "email": "test@example.com"
+        "email": "test@example.com",
     }
     mock_get.return_value = mock_response
 
@@ -163,22 +164,20 @@ def test_get_user(mock_get):
     assert user["login"] == "testuser"
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_get_transactions(mock_get):
     """Test get_transactions with filters."""
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = [
         {"id": 1, "payee": "Test Store", "amount": "-50.00"},
-        {"id": 2, "payee": "Income", "amount": "1000.00"}
+        {"id": 2, "payee": "Income", "amount": "1000.00"},
     ]
     mock_get.return_value = mock_response
 
     client = PocketSmithClient(api_key="test_key")
     transactions = client.get_transactions(
-        user_id=217031,
-        start_date="2025-01-01",
-        end_date="2025-01-31"
+        user_id=217031, start_date="2025-01-01", end_date="2025-01-31"
     )
 
     assert len(transactions) == 2
@@ -186,17 +185,20 @@ def test_get_transactions(mock_get):
 
     # Verify correct parameters passed
     args, kwargs = mock_get.call_args
-    assert "start_date=2025-01-01" in args[0] or kwargs.get('params', {}).get('start_date') == "2025-01-01"
+    assert (
+        "start_date=2025-01-01" in args[0]
+        or kwargs.get("params", {}).get("start_date") == "2025-01-01"
+    )
 
 
-@patch('scripts.core.api_client.requests.get')
+@patch("scripts.core.api_client.requests.get")
 def test_get_categories(mock_get):
     """Test get_categories retrieves category tree."""
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = [
         {"id": 100, "title": "Income", "is_transfer": False},
-        {"id": 200, "title": "Expenses", "is_transfer": False}
+        {"id": 200, "title": "Expenses", "is_transfer": False},
     ]
     mock_get.return_value = mock_response
 

@@ -1,4 +1,5 @@
 """Tests for configuration file handling."""
+
 import json
 from pathlib import Path
 import pytest
@@ -32,7 +33,7 @@ def test_config_has_required_fields():
         "intelligence_mode",
         "alerts_enabled",
         "backup_before_mutations",
-        "auto_archive"
+        "auto_archive",
     ]
 
     for field in required_fields:

@@ -5,6 +5,7 @@ These tests require:
 - Active internet connection
 - Run with: pytest -m integration
 """
+
 import os
 import pytest
 from scripts.core.api_client import PocketSmithClient
@@ -62,10 +63,7 @@ def test_get_transactions_with_filters(api_client):
 
     # Get recent transactions
     transactions = api_client.get_transactions(
-        user_id=user_id,
-        start_date="2025-01-01",
-        end_date="2025-12-31",
-        per_page=10
+        user_id=user_id, start_date="2025-01-01", end_date="2025-12-31", per_page=10
     )
 
     # Should return list (may be empty)

@@ -1,8 +1,9 @@
 """PocketSmith API client with rate limiting and error handling."""
+
 import os
 import time
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, cast
 import requests
 
 
@@ -22,7 +23,7 @@ class PocketSmithClient:
         self,
         api_key: Optional[str] = None,
         rate_limit_delay: float = 0.1,
-        base_url: str = "https://api.pocketsmith.com/v2"
+        base_url: str = "https://api.pocketsmith.com/v2",
     ):
         """Initialize PocketSmith API client.
 
@@ -36,24 +37,27 @@ class PocketSmithClient:
         """
         self.api_key = api_key or os.getenv("POCKETSMITH_API_KEY")
         if not self.api_key:
-            raise ValueError("API key is required. Provide via parameter or POCKETSMITH_API_KEY env var.")
+            raise ValueError(
+                "API key is required. Provide via parameter or POCKETSMITH_API_KEY env var."
+            )
 
         self.base_url = base_url
         self.rate_limit_delay = rate_limit_delay
-        self._last_request_time = 0
+        self._last_request_time = 0.0
 
         logger.info(f"Initialized PocketSmith API client (base_url: {base_url})")
 
     @property
     def headers(self) -> Dict[str, str]:
         """Get HTTP headers for API requests."""
+        assert self.api_key is not None  # Validated in __init__
         return {
             "X-Developer-Key": self.api_key,
             "Accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
-    def _rate_limit(self):
+    def _rate_limit(self) -> None:
         """Enforce rate limiting between requests."""
         elapsed = time.time() - self._last_request_time
         if elapsed < self.rate_limit_delay:
@@ -168,7 +172,7 @@ class PocketSmithClient:
             User object with id, login, name, email, etc.
         """
         logger.info("Fetching authorized user")
-        return self.get("/me")
+        return cast(Dict[str, Any], self.get("/me"))
 
     def get_transactions(
         self,
@@ -178,7 +182,7 @@ class PocketSmithClient:
         uncategorised: Optional[bool] = None,
         account_id: Optional[int] = None,
         page: int = 1,
-        per_page: int = 100
+        per_page: int = 100,
     ) -> list:
         """Get transactions for a user.
 
@@ -194,10 +198,7 @@ class PocketSmithClient:
         Returns:
             List of transaction objects
         """
-        params = {
-            "page": page,
-            "per_page": per_page
-        }
+        params: Dict[str, Any] = {"page": page, "per_page": per_page}
 
         if start_date:
             params["start_date"] = start_date
@@ -209,7 +210,7 @@ class PocketSmithClient:
             params["account_id"] = account_id
 
         logger.info(f"Fetching transactions for user {user_id} (page {page})")
-        return self.get(f"/users/{user_id}/transactions", params=params)
+        return cast(List[Any], self.get(f"/users/{user_id}/transactions", params=params))
 
     def get_categories(self, user_id: int) -> list:
         """Get all categories for a user.
@@ -221,13 +222,10 @@ class PocketSmithClient:
             List of category objects with full hierarchy
         """
         logger.info(f"Fetching categories for user {user_id}")
-        return self.get(f"/users/{user_id}/categories")
+        return cast(List[Any], self.get(f"/users/{user_id}/categories"))
 
     def update_transaction(
-        self,
-        transaction_id: int,
-        category_id: Optional[int] = None,
-        note: Optional[str] = None
+        self, transaction_id: int, category_id: Optional[int] = None, note: Optional[str] = None
     ) -> Dict[str, Any]:
         """Update a transaction.
 
@@ -239,20 +237,16 @@ class PocketSmithClient:
         Returns:
             Updated transaction object
         """
-        data = {}
+        data: Dict[str, Any] = {}
         if category_id is not None:
             data["category_id"] = category_id
         if note is not None:
             data["note"] = note
 
         logger.info(f"Updating transaction {transaction_id}")
-        return self.put(f"/transactions/{transaction_id}", data=data)
+        return cast(Dict[str, Any], self.put(f"/transactions/{transaction_id}", data=data))
 
-    def create_category_rule(
-        self,
-        category_id: int,
-        payee_matches: str
-    ) -> Dict[str, Any]:
+    def create_category_rule(self, category_id: int, payee_matches: str) -> Dict[str, Any]:
         """Create a category rule (platform rule).
 
         Note: PocketSmith API only supports simple keyword matching.
@@ -265,10 +259,9 @@ class PocketSmithClient:
         Returns:
             Created category rule object
         """
-        data = {
-            "payee_matches": payee_matches,
-            "apply_to_all": True
-        }
+        data = {"payee_matches": payee_matches, "apply_to_all": True}
 
         logger.info(f"Creating category rule for category {category_id}: '{payee_matches}'")
-        return self.post(f"/categories/{category_id}/category_rules", data=data)
+        return cast(
+            Dict[str, Any], self.post(f"/categories/{category_id}/category_rules", data=data)
+        )

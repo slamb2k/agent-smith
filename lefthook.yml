@@ -6,21 +6,21 @@ pre-commit:
   commands:
     format:
       glob: "*.py"
-      run: black --check --diff {staged_files}
+      run: .venv/bin/black --check --diff {staged_files}
       stage_fixed: true
     lint:
       glob: "*.py"
-      run: flake8 {staged_files}
+      run: .venv/bin/flake8 {staged_files}
     type-check:
       glob: "*.{py,pyi}"
-      run: mypy {staged_files}
+      run: .venv/bin/mypy scripts/
 
 pre-push:
   commands:
     tests:
-      run: pytest tests/unit -v
+      run: .venv/bin/pytest tests/unit -v
     build-check:
-      run: python -m compileall scripts/ -q
+      run: .venv/bin/python -m compileall scripts/ -q
 
 # Skip hooks for specific scenarios
 skip_output:

@@ -1,4 +1,5 @@
 """Tests for INDEX.md updater utility."""
+
 import tempfile
 import json
 from pathlib import Path
@@ -23,11 +24,7 @@ def test_index_updater_initialization(temp_dir):
 
 def test_create_index_entry():
     """Test creating an index entry."""
-    entry = IndexEntry(
-        filename="test.json",
-        description="Test file",
-        tags=["test", "data"]
-    )
+    entry = IndexEntry(filename="test.json", description="Test file", tags=["test", "data"])
 
     assert entry.filename == "test.json"
     assert entry.description == "Test file"
@@ -38,10 +35,7 @@ def test_add_entry_creates_index_file(temp_dir):
     """Test that adding entry creates INDEX.md if missing."""
     updater = IndexUpdater(directory=temp_dir)
 
-    entry = IndexEntry(
-        filename="data.json",
-        description="Test data file"
-    )
+    entry = IndexEntry(filename="data.json", description="Test data file")
 
     updater.add_entry(entry)
 
