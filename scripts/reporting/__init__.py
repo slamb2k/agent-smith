@@ -1,0 +1,1 @@
+"""Report formatting and generation."""
