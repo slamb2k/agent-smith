@@ -45,7 +45,7 @@ def detect_subscriptions(
 
         consistent = True
         for amount in amounts:
-            if abs(amount - avg_amount) / avg_amount > amount_tolerance:
+            if avg_amount > 0 and abs(amount - avg_amount) / avg_amount > amount_tolerance:
                 consistent = False
                 break
 
@@ -134,9 +134,11 @@ def suggest_optimizations(
     trending_categories = analyze_category_trends(transactions)
 
     # Calculate potential savings (conservative estimate)
-    subscription_savings = sum(s["annual_cost"] * 0.20 for s in subscriptions)  # 20% reduction
+    subscription_savings = sum(
+        float(s["annual_cost"]) * 0.20 for s in subscriptions
+    )  # 20% reduction
     trend_savings = sum(
-        t["average_change"] * 12 * 0.30 for t in trending_categories
+        float(t["average_change"]) * 12 * 0.30 for t in trending_categories
     )  # 30% reduction
 
     return {
