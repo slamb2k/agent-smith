@@ -239,3 +239,138 @@ Please complete the operation and return results in a structured format.
             estimated_tokens=estimated_tokens,
             can_parallelize=can_parallelize,
         )
+
+
+class ContextManager:
+    """Manages user context across subagent operations.
+
+    Preserves user preferences, session state, and configuration
+    while delegating heavy operations to subagents.
+    """
+
+    def __init__(self, user_id: str):
+        """Initialize context manager.
+
+        Args:
+            user_id: PocketSmith user ID
+        """
+        self.user_id = user_id
+        self.preferences: Dict[str, Any] = {}
+        self.session_state: Dict[str, Any] = {}
+
+    def set_preference(self, key: str, value: Any) -> None:
+        """Store user preference.
+
+        Args:
+            key: Preference key
+            value: Preference value
+        """
+        self.preferences[key] = value
+
+    def get_preference(self, key: str, default: Any = None) -> Any:
+        """Retrieve user preference.
+
+        Args:
+            key: Preference key
+            default: Default value if key not found
+
+        Returns:
+            Preference value or default
+        """
+        return self.preferences.get(key, default)
+
+    def update_session_state(self, key: str, value: Any) -> None:
+        """Update session state.
+
+        Args:
+            key: State key
+            value: State value
+        """
+        self.session_state[key] = value
+
+    def get_session_state(self, key: str, default: Any = None) -> Any:
+        """Retrieve session state.
+
+        Args:
+            key: State key
+            default: Default value if key not found
+
+        Returns:
+            State value or default
+        """
+        return self.session_state.get(key, default)
+
+
+class ResultAggregator:
+    """Aggregates results from multiple subagent operations.
+
+    Handles parallel processing results and merges them into
+    coherent summaries for the user.
+    """
+
+    def __init__(self) -> None:
+        """Initialize result aggregator."""
+        self.results: list[Dict[str, Any]] = []
+        self.total_operations = 0
+
+    def add_result(self, operation: str, status: str, data: Dict[str, Any]) -> None:
+        """Add result from a subagent operation.
+
+        Args:
+            operation: Operation identifier
+            status: success|error|partial
+            data: Operation result data
+        """
+        self.results.append({"operation": operation, "status": status, "data": data})
+        self.total_operations += 1
+
+    def merge_results(self, operation_type: str) -> Dict[str, Any]:
+        """Merge multiple subagent results into summary.
+
+        Args:
+            operation_type: Type of operation being aggregated
+
+        Returns:
+            Merged result summary
+        """
+        if not self.results:
+            return {
+                "status": "error",
+                "message": "No results to aggregate",
+                "total_operations": 0,
+            }
+
+        # Count successes and failures
+        successful = sum(1 for r in self.results if r["status"] == "success")
+        failed = sum(1 for r in self.results if r["status"] == "error")
+
+        # Determine overall status
+        if failed == 0:
+            status = "success"
+        elif successful == 0:
+            status = "error"
+        else:
+            status = "partial"
+
+        # Merge numeric data fields
+        aggregated_data: Dict[str, Any] = {}
+        for result in self.results:
+            if result["status"] != "success":
+                continue
+
+            data = result["data"]
+            for key, value in data.items():
+                if isinstance(value, (int, float)):
+                    aggregated_data[key] = aggregated_data.get(key, 0) + value
+                elif key == "error":
+                    # Skip error fields from successful results
+                    continue
+
+        return {
+            "status": status,
+            "operation_type": operation_type,
+            "total_operations": self.total_operations,
+            "successful_operations": successful,
+            "failed_operations": failed,
+            "aggregated_data": aggregated_data,
+        }
