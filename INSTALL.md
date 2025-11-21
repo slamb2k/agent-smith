@@ -45,7 +45,11 @@ cp .env.sample .env
 
 ### Required: PocketSmith API Key
 
-1. Log in to your PocketSmith account
+**✅ Works with ALL PocketSmith tiers** (including Free)
+
+API access is available on all subscription levels with no restrictions.
+
+1. Log in to your PocketSmith account (any tier)
 2. Go to **Settings** > **Security** > **Developer API Keys**
 3. Generate a new API key
 4. Add it to your `.env` file:
@@ -70,6 +74,28 @@ TAX_JURISDICTION=AU
 # Financial year end (MM-DD format)
 FINANCIAL_YEAR_END=06-30
 ```
+
+## PocketSmith Subscription Tiers
+
+Agent Smith works with **all** PocketSmith subscription tiers. The table below is for reference only - there are no API restrictions.
+
+| Feature | Free | Foundation | Flourish | Fortune |
+|---------|------|------------|----------|---------|
+| **Price (Annual)** | Free | $9.99/mo AUD | $16.66/mo AUD | $26.66/mo AUD |
+| **API Access** | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
+| **Agent Smith** | ✅ Works | ✅ Works | ✅ Works | ✅ Works |
+| **Accounts** | 2 | Unlimited | Unlimited | Unlimited |
+| **Bank Connections** | Manual | 6 (1 country) | 18 (all) | Unlimited |
+| **Automatic Feeds** | ❌ | ✅ | ✅ | ✅ |
+| **Budgets** | 12 | Unlimited | Unlimited | Unlimited |
+| **Forecast** | 6 months | 10 years | 30 years | 60 years |
+| **Support** | - | Email | Email | Priority |
+
+**Key Points:**
+- ✅ API access available on **all** tiers (including Free)
+- ✅ Agent Smith has **no feature restrictions** based on tier
+- ⚠️ Category rules created via API can only be modified/deleted via PocketSmith web interface (API limitation)
+- 💡 Free tier limited to 2 accounts and manual imports only
 
 ## Verification
 
