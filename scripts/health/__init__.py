@@ -19,6 +19,11 @@ from scripts.health.recommendations import (
     RecommendationPriority,
     RecommendationCategory,
 )
+from scripts.health.monitoring import (
+    HealthMonitor,
+    MonitoringConfig,
+    HealthAlert,
+)
 
 __all__ = [
     "HealthScore",
@@ -37,4 +42,7 @@ __all__ = [
     "Recommendation",
     "RecommendationPriority",
     "RecommendationCategory",
+    "HealthMonitor",
+    "MonitoringConfig",
+    "HealthAlert",
 ]
