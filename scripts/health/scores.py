@@ -1,6 +1,9 @@
 """Health score definitions and base classes."""
 
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List
 
 
 class HealthStatus(Enum):
@@ -43,9 +46,51 @@ class HealthStatus(Enum):
         }[self]
 
 
+@dataclass
+class HealthScore:
+    """Represents a health score for a specific dimension."""
+
+    dimension: str
+    score: int
+    max_score: int = 100
+    issues: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+    details: Dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    @property
+    def status(self) -> HealthStatus:
+        """Get status based on percentage score."""
+        return HealthStatus.from_score(int(self.percentage))
+
+    @property
+    def percentage(self) -> float:
+        """Calculate percentage score."""
+        if self.max_score == 0:
+            return 0.0
+        return (self.score / self.max_score) * 100
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to dictionary.
+
+        Returns:
+            Dict representation of health score
+        """
+        return {
+            "dimension": self.dimension,
+            "score": self.score,
+            "max_score": self.max_score,
+            "percentage": self.percentage,
+            "status": self.status.value,
+            "issues": self.issues,
+            "recommendations": self.recommendations,
+            "details": self.details,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-HealthScore = None
 DataQualityScorer = None
 CategoryStructureScorer = None
 RuleEngineScorer = None
