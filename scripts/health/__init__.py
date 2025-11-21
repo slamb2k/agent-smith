@@ -11,6 +11,7 @@ from scripts.health.scores import (
     BudgetAlignmentScorer,
 )
 from scripts.health.engine import HealthCheckEngine
+from scripts.health.collector import HealthDataCollector
 
 __all__ = [
     "HealthScore",
@@ -22,4 +23,5 @@ __all__ = [
     "AutomationScorer",
     "BudgetAlignmentScorer",
     "HealthCheckEngine",
+    "HealthDataCollector",
 ]
