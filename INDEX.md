@@ -130,6 +130,13 @@ Contains all Python source code organized by function.
 | `scripts/workflows/categorization.py` | Interactive categorization workflow (Phase 6) | Workflows |
 | `scripts/workflows/INDEX.md` | Workflow API reference | Index |
 | `scripts/operations/categorize.py` | Transaction categorization workflow (Phase 2) | Operations |
+| `scripts/features/alerts.py` | Smart alerts and notification scheduling (Phase 7) | Features |
+| `scripts/features/merchant_intelligence.py` | Merchant variation detection and grouping (Phase 7) | Features |
+| `scripts/features/documents.py` | Document and receipt requirement tracking (Phase 7) | Features |
+| `scripts/features/multi_user.py` | Shared expense and settlement tracking (Phase 7) | Features |
+| `scripts/features/benchmarking.py` | Privacy-first comparative benchmarking (Phase 7) | Features |
+| `scripts/features/audit.py` | Audit trail and activity logging (Phase 7) | Features |
+| `scripts/features/INDEX.md` | Features API reference | Index |
 | `scripts/utils/backup.py` | Backup/restore utilities | Utility |
 | `scripts/utils/validation.py` | Data validation functions | Utility |
 | `scripts/utils/logging_config.py` | Logging infrastructure | Utility |
@@ -150,6 +157,14 @@ Contains all Python source code organized by function.
   - `categorization.py` - Categorization workflow with subagent delegation
   - `INDEX.md` - Workflow API reference
 - `operations/` - High-level operations (categorization, analysis, etc.)
+- `features/` - Advanced features (7 files, Phase 7)
+  - `alerts.py` - Smart alerts and notification scheduling
+  - `merchant_intelligence.py` - Merchant variation detection and grouping
+  - `documents.py` - Document and receipt requirement tracking
+  - `multi_user.py` - Shared expense and settlement tracking
+  - `benchmarking.py` - Privacy-first comparative benchmarking
+  - `audit.py` - Audit trail and activity logging
+  - `INDEX.md` - Features API reference
 - `utils/` - Utility functions (backup, validation, logging, etc.)
 
 ---
@@ -208,11 +223,19 @@ Contains all unit and integration tests.
 | `tests/unit/test_conductor.py` | Subagent conductor unit tests (Phase 6) | Unit Test |
 | `tests/unit/test_context_preservation.py` | Context preservation unit tests (Phase 6) | Unit Test |
 | `tests/unit/test_categorization_workflow.py` | Categorization workflow unit tests (Phase 6) | Unit Test |
+| `tests/unit/test_alerts.py` | Alert foundation unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_alert_scheduler.py` | Alert scheduler unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_merchant_intelligence.py` | Merchant intelligence unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_documents.py` | Document management unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_multi_user.py` | Multi-user support unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_benchmarking.py` | Benchmarking unit tests (Phase 7) | Unit Test |
+| `tests/unit/test_audit.py` | Audit trail unit tests (Phase 7) | Unit Test |
 | `tests/integration/test_orchestration.py` | Orchestration integration tests (Phase 6) | Integration Test |
+| `tests/integration/test_advanced_features.py` | Advanced features integration tests (Phase 7) | Integration Test |
 
-**Test Coverage:** 227 tests (189 unit + 38 integration), all passing
-- Phase 1-5: 194 tests
-- Phase 6: 31 tests (25 unit + 6 integration)
+**Test Coverage:** 287 tests (243 unit + 44 integration), all passing
+- Phase 1-6: 227 tests (189 unit + 38 integration)
+- Phase 7: 60 tests (54 unit + 6 integration)
 
 **Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 
@@ -270,4 +293,4 @@ Contains all unit and integration tests.
 ---
 
 **Last Updated:** 2025-11-21
-**Repository Version:** Phase 6 Complete (75% Implementation)
+**Repository Version:** Phase 7 Complete (87.5% Implementation)

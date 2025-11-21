@@ -267,10 +267,10 @@ Git hooks (via lefthook) run automatically:
 - ✅ **Phase 4:** Tax Intelligence (Weeks 7-8) - 3-tier tax system, deductions, BAS
 - ✅ **Phase 5:** Scenario Analysis (Weeks 9-10) - What-if, projections, optimization
 - ✅ **Phase 6:** Orchestration & UX (Weeks 11-12) - Subagent conductor, slash commands
-- ⏳ **Phase 7:** Advanced Features (Weeks 13-14) - Alerts, merchant intelligence
+- ✅ **Phase 7:** Advanced Features (Weeks 13-14) - Alerts, merchant intelligence, audit trail
 - ⏳ **Phase 8:** Health Check & Polish (Weeks 15-16) - Health scores, optimization
 
-**Progress:** 6/8 phases complete (75%)
+**Progress:** 7/8 phases complete (87.5%)
 
 ### Phase 3: Analysis & Reporting ✅
 
@@ -470,13 +470,140 @@ context.set_preference("tax_level", "full")
 **Test Coverage:** 227 tests (189 unit + 38 integration), all passing
 - Phase 6 specific: 31 tests (25 unit + 6 integration)
 
+### Phase 7: Advanced Features ✅
+
+**Smart Alerts & Notifications:**
+```python
+from scripts.features.alerts import AlertEngine, AlertScheduler, ScheduleType
+
+# Create alert engine
+engine = AlertEngine(user_id="user_123")
+scheduler = AlertScheduler(alert_engine=engine)
+
+# Schedule weekly budget review
+schedule = scheduler.add_schedule(
+    schedule_type=ScheduleType.WEEKLY,
+    alert_type=AlertType.BUDGET,
+    title="Weekly Budget Review",
+    next_run=datetime(2025, 11, 28, 9, 0),
+)
+
+# Process due schedules
+alerts = scheduler.process_due_schedules()
+```
+
+**Merchant Intelligence:**
+```python
+from scripts.features.merchant_intelligence import MerchantMatcher
+
+matcher = MerchantMatcher()
+
+# Learn merchant variations
+matcher.add_variation("Woolworths", "WOOLWORTHS PTY LTD")
+matcher.add_variation("Woolworths", "woolworth")
+
+# Find canonical name
+canonical = matcher.find_canonical("woolies")  # Returns "Woolworths"
+
+# Suggest matches for unknown payee
+suggestions = matcher.suggest_matches("woollies", threshold=0.8)
+```
+
+**Document Management:**
+```python
+from scripts.features.documents import DocumentManager
+
+manager = DocumentManager()
+
+# Track transaction requiring receipt (> $300)
+doc = manager.track_transaction(
+    transaction_id=12345,
+    amount=450.00,
+    category="Work Expenses",
+    date=datetime(2025, 11, 15),
+)  # Automatically marked as REQUIRED
+
+# Get missing required documents
+missing = manager.get_missing_documents(required_only=True)
+```
+
+**Multi-User Shared Expenses:**
+```python
+from scripts.features.multi_user import SharedExpenseTracker
+
+tracker = SharedExpenseTracker(users=["alice", "bob", "charlie"])
+
+# Add shared expense
+tracker.add_expense(
+    transaction_id=1,
+    amount=150.00,
+    description="Dinner",
+    paid_by="alice",
+    date=datetime.now(),
+    split_equally=True,
+)
+
+# Generate settlement recommendations
+settlements = tracker.generate_settlements()
+# Returns: [Settlement(from_user="bob", to_user="alice", amount=50.00), ...]
+```
+
+**Comparative Benchmarking:**
+```python
+from scripts.features.benchmarking import BenchmarkEngine, PeerCriteria
+
+engine = BenchmarkEngine()
+criteria = PeerCriteria(household_size=2, income_bracket="50k-75k")
+
+# Compare spending to peers
+result = engine.compare(
+    category="Groceries",
+    user_amount=500.00,
+    criteria=criteria,
+)
+# Returns: BenchmarkResult with peer_average, peer_median, percentile
+```
+
+**Audit Trail:**
+```python
+from scripts.features.audit import AuditLogger, AuditAction
+
+logger = AuditLogger(user_id="user_123")
+
+# Log transaction modification
+entry = logger.log_action(
+    action=AuditAction.TRANSACTION_MODIFY,
+    description="Changed category",
+    before_state={"category": "Food"},
+    after_state={"category": "Groceries"},
+    affected_ids=[123],
+)
+
+# Query audit trail
+entries = logger.get_entries(affected_id=123)
+
+# Check if action can be undone
+can_undo = logger.can_undo(entry.entry_id)
+```
+
+**Features:**
+- Smart alerts with scheduling (weekly, monthly, quarterly, annual, one-time)
+- Merchant intelligence with variation detection and grouping
+- Document tracking with ATO compliance ($300 threshold)
+- Multi-user shared expenses with settlement optimization
+- Privacy-first benchmarking (SHA-256 anonymization, min 3 peers)
+- Comprehensive audit trail with undo capability
+
+**Test Coverage:** 287 tests (243 unit + 44 integration), all passing
+- Phase 7 specific: 60 tests (54 unit + 6 integration)
+
 ### Next Phase
 
-**Phase 7:** Advanced Features (Weeks 13-14)
-- Smart alerts and notifications
-- Merchant intelligence
-- Receipt and document management
-- Comparative benchmarking
+**Phase 8:** Health Check & Polish (Weeks 15-16)
+- Health check system with 6 health scores
+- Recommendation engine
+- Automated monitoring
+- Performance optimization
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
