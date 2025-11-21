@@ -50,6 +50,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+      bumped: ${{ steps.version.outputs.bumped }}
 
     steps:
       - name: Checkout code
@@ -73,20 +74,26 @@ jobs:
           COMMITS=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
 
           # Determine bump type
-          if echo "$COMMITS" | grep -q "^feat!:\\|^fix!:\\|BREAKING CHANGE:"; then
+          BUMPED="false"
+          if echo "$COMMITS" | grep -q "^feat!:\|^fix!:\|BREAKING CHANGE:"; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
+            BUMPED="true"
           elif echo "$COMMITS" | grep -q "^feat:"; then
             MINOR=$((MINOR + 1))
             PATCH=0
-          elif echo "$COMMITS" | grep -q "^fix:\\|^perf:"; then
+            BUMPED="true"
+          elif echo "$COMMITS" | grep -q "^fix:\|^perf:"; then
             PATCH=$((PATCH + 1))
-          else
-            # No version bump for chore, docs, etc
+            BUMPED="true"
+          fi
+
+          if [ "$BUMPED" = "false" ]; then
             echo "No version bump needed"
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+            echo "bumped=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -96,17 +103,54 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "bumped=true" >> $GITHUB_OUTPUT
 
-      - name: Create and push tag
-        if: steps.version.outputs.tag != ''
+      - name: Update version in project files
+        if: steps.version.outputs.bumped == 'true'
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+
+          # Update marketplace.json
+          if [ -f marketplace.json ]; then
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" marketplace.json
+            echo "Updated marketplace.json to version $NEW_VERSION"
+          fi
+
+          # Update plugin.json
+          if [ -f plugin.json ]; then
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" plugin.json
+            echo "Updated plugin.json to version $NEW_VERSION"
+          fi
+
+          # Update pyproject.toml
+          if [ -f pyproject.toml ]; then
+            sed -i "s/^version = \"[^\"]*\"/version = \"$NEW_VERSION\"/" pyproject.toml
+            echo "Updated pyproject.toml to version $NEW_VERSION"
+          fi
+
+      - name: Commit version updates
+        if: steps.version.outputs.bumped == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if there are changes to commit
+          if git diff --quiet; then
+            echo "No version file changes to commit"
+          else
+            git add marketplace.json plugin.json pyproject.toml
+            git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]"
+            git push origin main
+          fi
+
+      - name: Create and push tag
+        if: steps.version.outputs.bumped == 'true'
+        run: |
           git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.tag }}"
           git push origin ${{ steps.version.outputs.tag }}
 
       - name: Create GitHub Release
-        if: steps.version.outputs.tag != ''
+        if: steps.version.outputs.bumped == 'true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.version.outputs.tag }}
@@ -115,52 +159,122 @@ jobs:
           draft: false
           prerelease: false
 
-  build-skill:
+  build-plugin:
     needs: version-and-release
-    if: needs.version-and-release.outputs.tag != ''
+    if: needs.version-and-release.outputs.bumped == 'true'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version-and-release.outputs.tag }}
 
-      - name: Package Claude Code skill
+      - name: Build plugin package
         run: |
-          # Create skill package directory structure
-          mkdir -p skill-package/agent-smith
+          VERSION="${{ needs.version-and-release.outputs.version }}"
+          PLUGIN_DIR="agent-smith-plugin-${VERSION}"
 
-          # Copy necessary files
-          cp -r scripts skill-package/agent-smith/
-          cp -r ai_docs skill-package/agent-smith/
-          cp -r data skill-package/agent-smith/
-          cp README.md skill-package/agent-smith/
-          cp .env.sample skill-package/agent-smith/
-          cp requirements.txt skill-package/agent-smith/
+          # Create plugin package directory
+          mkdir -p "${PLUGIN_DIR}"
 
-          # Create skill manifest
-          cat > skill-package/agent-smith/skill.json << 'EOF'
-          {
-            "name": "agent-smith",
-            "version": "${{ needs.version-and-release.outputs.version }}",
-            "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration",
-            "author": "slamb2k",
-            "repository": "https://github.com/slamb2k/agent-smith",
-            "license": "MIT",
-            "entry_point": "scripts/core/api_client.py",
-            "requirements": "requirements.txt",
-            "keywords": ["pocketsmith", "finance", "ai", "financial-management"]
-          }
-          EOF
+          # Copy plugin manifest files
+          cp marketplace.json "${PLUGIN_DIR}/"
+          cp plugin.json "${PLUGIN_DIR}/"
+          cp README.md "${PLUGIN_DIR}/"
+          cp requirements.txt "${PLUGIN_DIR}/"
+          cp .env.sample "${PLUGIN_DIR}/"
 
-          # Create tarball
-          cd skill-package
-          tar -czf agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz agent-smith/
-          cd ..
+          # Copy source code
+          cp -r scripts "${PLUGIN_DIR}/"
+          cp -r .claude "${PLUGIN_DIR}/"
+          cp -r ai_docs "${PLUGIN_DIR}/"
+          cp -r docs/guides "${PLUGIN_DIR}/docs/" 2>/dev/null || mkdir -p "${PLUGIN_DIR}/docs"
 
-          echo "Skill package created: skill-package/agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz"
+          # Copy data templates (not actual data)
+          mkdir -p "${PLUGIN_DIR}/data"
+          cp data/config.json "${PLUGIN_DIR}/data/" 2>/dev/null || echo '{}' > "${PLUGIN_DIR}/data/config.json"
 
-      - name: Upload skill package to release
+          # Create installation script
+          cat > "${PLUGIN_DIR}/install.sh" << 'INSTALL_EOF'
+          #!/bin/bash
+          set -e
+
+          echo "Installing Agent Smith Plugin..."
+
+          # Check for Python
+          if ! command -v python3 &> /dev/null; then
+              echo "Error: Python 3 is required but not installed."
+              exit 1
+          fi
+
+          # Install dependencies
+          pip install -r requirements.txt
+
+          # Check for .env file
+          if [ ! -f .env ]; then
+              cp .env.sample .env
+              echo ""
+              echo "Created .env file from template."
+              echo "Please edit .env and add your POCKETSMITH_API_KEY"
+          fi
+
+          echo ""
+          echo "Agent Smith Plugin installed successfully!"
+          echo "Use /agent-smith to get started."
+          INSTALL_EOF
+          chmod +x "${PLUGIN_DIR}/install.sh"
+
+          # Create plugin tarball
+          tar -czf "agent-smith-plugin-${VERSION}.tar.gz" "${PLUGIN_DIR}/"
+
+          # Create plugin zip for Windows users
+          zip -r "agent-smith-plugin-${VERSION}.zip" "${PLUGIN_DIR}/"
+
+          echo "Plugin packages created:"
+          ls -la agent-smith-plugin-${VERSION}.*
+
+      - name: Upload plugin packages to release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.version-and-release.outputs.tag }}
-          files: skill-package/agent-smith-${{ needs.version-and-release.outputs.version }}.skill.tar.gz
+          files: |
+            agent-smith-plugin-${{ needs.version-and-release.outputs.version }}.tar.gz
+            agent-smith-plugin-${{ needs.version-and-release.outputs.version }}.zip
+
+      - name: Update release notes with installation instructions
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.version-and-release.outputs.tag }}
+          allowUpdates: true
+          omitBodyDuringUpdate: false
+          body: |
+            ## Installation
+
+            ### From Git Repository (Recommended)
+            ```bash
+            # Clone the repository
+            git clone https://github.com/slamb2k/agent-smith.git
+            cd agent-smith
+
+            # Install dependencies
+            pip install -r requirements.txt
+
+            # Configure API key
+            cp .env.sample .env
+            # Edit .env and add your POCKETSMITH_API_KEY
+            ```
+
+            ### From Release Package
+            1. Download `agent-smith-plugin-${{ needs.version-and-release.outputs.version }}.tar.gz` or `.zip`
+            2. Extract to your desired location
+            3. Run `./install.sh` (Unix) or install manually
+            4. Configure your PocketSmith API key in `.env`
+
+            ### Quick Start
+            ```bash
+            /agent-smith-health --full  # Check your PocketSmith setup health
+            /agent-smith                 # Start the main assistant
+            ```
+
+            ## What's Changed
