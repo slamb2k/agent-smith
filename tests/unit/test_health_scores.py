@@ -515,3 +515,83 @@ class TestAutomationScorer:
         # Should recommend enabling auto-categorization and scheduled reports
         assert any("auto" in r.lower() or "categoriz" in r.lower() for r in result.recommendations)
         assert any("report" in r.lower() or "schedule" in r.lower() for r in result.recommendations)
+
+
+class TestBudgetAlignmentScorer:
+    """Tests for BudgetAlignmentScorer."""
+
+    def test_on_budget_high_score(self):
+        """Spending on budget = excellent score."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 10,
+            "categories_on_track": 9,
+            "categories_over_budget": 1,
+            "total_budget": 5000.00,
+            "total_spent": 4800.00,
+            "goals_on_track": 3,
+            "goals_total": 3,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "budget_alignment"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_overspending_penalized(self):
+        """Significant overspending reduces score."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 10,
+            "categories_on_track": 3,
+            "categories_over_budget": 7,
+            "total_budget": 5000.00,
+            "total_spent": 7000.00,  # 40% over
+            "goals_on_track": 1,
+            "goals_total": 3,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 60
+        assert any("over" in issue.lower() or "budget" in issue.lower() for issue in result.issues)
+
+    def test_no_budgets_penalized(self):
+        """No budgets set = lower score with recommendation."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 0,
+            "categories_on_track": 0,
+            "categories_over_budget": 0,
+            "total_budget": 0,
+            "total_spent": 3000.00,
+            "goals_on_track": 0,
+            "goals_total": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 50
+        assert any("budget" in r.lower() for r in result.recommendations)
+
+    def test_goals_behind_flagged(self):
+        """Goals behind schedule should be flagged."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 5,
+            "categories_on_track": 5,
+            "categories_over_budget": 0,
+            "total_budget": 3000.00,
+            "total_spent": 2800.00,
+            "goals_on_track": 1,
+            "goals_total": 4,  # 3 goals behind
+        }
+
+        result = scorer.calculate(data)
+        assert any("goal" in issue.lower() for issue in result.issues)

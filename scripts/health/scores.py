@@ -561,6 +561,103 @@ class AutomationScorer(BaseScorer):
         )
 
 
-# Placeholder exports for __init__.py imports
-# These will be implemented in subsequent tasks
-BudgetAlignmentScorer = None
+class BudgetAlignmentScorer(BaseScorer):
+    """Scores budget alignment: spending vs budget, goal progress."""
+
+    dimension = "budget_alignment"
+
+    SPENDING_WEIGHT = 0.5
+    CATEGORY_WEIGHT = 0.3
+    GOALS_WEIGHT = 0.2
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate budget alignment score.
+
+        Args:
+            data: Dict with keys:
+                - categories_with_budget: int
+                - categories_on_track: int
+                - categories_over_budget: int
+                - total_budget: float
+                - total_spent: float
+                - goals_on_track: int
+                - goals_total: int
+
+        Returns:
+            HealthScore for budget alignment dimension
+        """
+        cats_budgeted = data.get("categories_with_budget", 0)
+        cats_on_track = data.get("categories_on_track", 0)
+        cats_over = data.get("categories_over_budget", 0)
+        total_budget = data.get("total_budget", 0)
+        total_spent = data.get("total_spent", 0)
+        goals_on_track = data.get("goals_on_track", 0)
+        goals_total = data.get("goals_total", 0)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        # No budgets set
+        if cats_budgeted == 0:
+            return HealthScore(
+                dimension=self.dimension,
+                score=30,  # Base score for having no budgets
+                issues=["No category budgets configured"],
+                recommendations=[
+                    "Set up budgets for major spending categories",
+                    "Use /agent-smith-analyze spending to identify budget targets",
+                ],
+            )
+
+        # Spending alignment score (0-50 points)
+        if total_budget > 0:
+            spend_ratio = total_spent / total_budget
+            if spend_ratio <= 1.0:
+                spending_score = 100 * self.SPENDING_WEIGHT
+            else:
+                # Penalize overspending
+                over_percent = (spend_ratio - 1.0) * 100
+                penalty = min(50, over_percent)
+                spending_score = max(0, (100 - penalty) * self.SPENDING_WEIGHT)
+                issues.append(f"Overall spending {over_percent:.0f}% over budget")
+                recommendations.append("Review spending in over-budget categories")
+        else:
+            spending_score = 50 * self.SPENDING_WEIGHT
+
+        # Category tracking score (0-30 points)
+        if cats_budgeted > 0:
+            track_rate = cats_on_track / cats_budgeted
+            category_score = track_rate * 100 * self.CATEGORY_WEIGHT
+
+            if cats_over > 0:
+                issues.append(f"{cats_over} categories over budget")
+        else:
+            category_score = 0
+
+        # Goals score (0-20 points)
+        if goals_total > 0:
+            goal_rate = goals_on_track / goals_total
+            goals_score = goal_rate * 100 * self.GOALS_WEIGHT
+
+            behind = goals_total - goals_on_track
+            if behind > 0:
+                issues.append(f"{behind} financial goals behind schedule")
+                recommendations.append("Review goal progress and adjust contributions")
+        else:
+            goals_score = 100 * self.GOALS_WEIGHT  # No goals = full points (optional feature)
+
+        total_score = int(spending_score + category_score + goals_score)
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "spend_ratio": total_spent / total_budget if total_budget > 0 else 0,
+                "categories_on_track_rate": (
+                    cats_on_track / cats_budgeted if cats_budgeted > 0 else 0
+                ),
+                "goals_on_track_rate": goals_on_track / goals_total if goals_total > 0 else 1,
+            },
+        )
