@@ -188,3 +188,49 @@ def test_shared_expense_tracker_generate_settlements():
     # Find Charlie -> Bob settlement
     charlie_to_bob = next(s for s in settlements if s.from_user == "charlie" and s.to_user == "bob")
     assert charlie_to_bob.amount == 10.00
+
+
+def test_shared_expense_tracker_rejects_unknown_payer():
+    """Test that add_expense rejects unknown payer."""
+    tracker = SharedExpenseTracker(users=["alice", "bob"])
+
+    with pytest.raises(ValueError, match="Unknown payer: unknown not in users list"):
+        tracker.add_expense(
+            transaction_id=1,
+            amount=100.00,
+            description="Dinner",
+            paid_by="unknown",
+            date=datetime(2025, 11, 15),
+            split_equally=True,
+        )
+
+
+def test_shared_expense_tracker_validates_split_ratios_sum():
+    """Test that add_expense validates split_ratios sum to 1.0."""
+    tracker = SharedExpenseTracker(users=["alice", "bob"])
+
+    # Test ratios that don't sum to 1.0
+    with pytest.raises(ValueError, match="Split ratios must sum to 1.0, got 0.8000"):
+        tracker.add_expense(
+            transaction_id=1,
+            amount=100.00,
+            description="Dinner",
+            paid_by="alice",
+            date=datetime(2025, 11, 15),
+            split_ratios={"alice": 0.5, "bob": 0.3},
+        )
+
+
+def test_shared_expense_tracker_validates_split_ratios_users():
+    """Test that add_expense validates split_ratios only include known users."""
+    tracker = SharedExpenseTracker(users=["alice", "bob"])
+
+    with pytest.raises(ValueError, match="Unknown users in split_ratios: charlie"):
+        tracker.add_expense(
+            transaction_id=1,
+            amount=120.00,
+            description="Dinner",
+            paid_by="alice",
+            date=datetime(2025, 11, 15),
+            split_ratios={"alice": 0.5, "bob": 0.25, "charlie": 0.25},
+        )

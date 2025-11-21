@@ -80,11 +80,32 @@ class SharedExpenseTracker:
 
         Returns:
             Created SharedExpense
+
+        Raises:
+            ValueError: If paid_by is not in users list
+            ValueError: If split_ratios sum is not approximately 1.0
+            ValueError: If split_ratios contains unknown users
         """
+        # Validate paid_by is in users list
+        if paid_by not in self.users:
+            raise ValueError(f"Unknown payer: {paid_by} not in users list")
+
         if split_equally:
             split_amount = amount / len(self.users)
             splits = {user: split_amount for user in self.users}
         elif split_ratios:
+            # Validate split_ratios sum to 1.0
+            ratio_sum = sum(split_ratios.values())
+            if not (0.99 <= ratio_sum <= 1.01):
+                raise ValueError(f"Split ratios must sum to 1.0, got {ratio_sum:.4f}")
+
+            # Validate all users in split_ratios are in self.users
+            unknown_users = set(split_ratios.keys()) - set(self.users)
+            if unknown_users:
+                raise ValueError(
+                    f"Unknown users in split_ratios: {', '.join(sorted(unknown_users))}"
+                )
+
             splits = {user: amount * ratio for user, ratio in split_ratios.items()}
         else:
             raise ValueError("Must specify either split_equally or split_ratios")
