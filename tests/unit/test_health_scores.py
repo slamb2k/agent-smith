@@ -120,3 +120,88 @@ class TestBaseScorer:
         result = scorer.calculate({})
         assert result.dimension == "test_dimension"
         assert result.score == 100
+
+
+class TestDataQualityScorer:
+    """Tests for DataQualityScorer."""
+
+    def test_perfect_data_quality(self):
+        """All transactions categorized = 100 score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 100,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "data_quality"
+        assert result.score == 100
+        assert result.status == HealthStatus.EXCELLENT
+        assert len(result.issues) == 0
+
+    def test_uncategorized_transactions_reduce_score(self):
+        """Uncategorized transactions reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 80,
+            "transactions_with_payee": 100,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert "uncategorized" in result.issues[0].lower()
+
+    def test_duplicates_reduce_score(self):
+        """Duplicate transactions reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 100,
+            "duplicate_count": 10,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert any("duplicate" in issue.lower() for issue in result.issues)
+
+    def test_missing_payees_reduce_score(self):
+        """Missing payee names reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 70,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert any("payee" in issue.lower() for issue in result.issues)
+
+    def test_empty_data_returns_zero(self):
+        """No transactions = 0 score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 0,
+            "categorized_transactions": 0,
+            "transactions_with_payee": 0,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score == 0

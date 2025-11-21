@@ -111,9 +111,88 @@ class BaseScorer(ABC):
         return f"{self.__class__.__name__}(dimension={self.dimension})"
 
 
+class DataQualityScorer(BaseScorer):
+    """Scores data quality: categorization, completeness, duplicates."""
+
+    dimension = "data_quality"
+
+    # Weight factors for each component
+    CATEGORIZATION_WEIGHT = 0.5
+    PAYEE_WEIGHT = 0.3
+    DUPLICATE_WEIGHT = 0.2
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate data quality score.
+
+        Args:
+            data: Dict with keys:
+                - total_transactions: int
+                - categorized_transactions: int
+                - transactions_with_payee: int
+                - duplicate_count: int
+
+        Returns:
+            HealthScore for data quality dimension
+        """
+        total = data.get("total_transactions", 0)
+        categorized = data.get("categorized_transactions", 0)
+        with_payee = data.get("transactions_with_payee", 0)
+        duplicates = data.get("duplicate_count", 0)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        if total == 0:
+            return HealthScore(
+                dimension=self.dimension,
+                score=0,
+                issues=["No transactions found"],
+                recommendations=["Import transactions from PocketSmith"],
+            )
+
+        # Calculate component scores
+        cat_rate = categorized / total
+        payee_rate = with_payee / total
+        dup_rate = duplicates / total if total > 0 else 0
+
+        # Categorization score (0-50 points)
+        cat_score = cat_rate * 100 * self.CATEGORIZATION_WEIGHT
+        if cat_rate < 1.0:
+            uncategorized = total - categorized
+            issues.append(f"{uncategorized} uncategorized transactions ({(1-cat_rate)*100:.1f}%)")
+            recommendations.append("Run /agent-smith-categorize to categorize transactions")
+
+        # Payee completeness score (0-30 points)
+        payee_score = payee_rate * 100 * self.PAYEE_WEIGHT
+        if payee_rate < 0.95:
+            missing = total - with_payee
+            issues.append(f"{missing} transactions missing payee name")
+            recommendations.append("Review transactions with missing payee information")
+
+        # Duplicate penalty (0-20 points, deducted for duplicates)
+        dup_penalty = min(dup_rate * 100 * 5, 20)  # Max 20 point penalty
+        dup_score = (100 * self.DUPLICATE_WEIGHT) - dup_penalty
+        if duplicates > 0:
+            issues.append(f"{duplicates} potential duplicate transactions detected")
+            recommendations.append("Review and merge duplicate transactions")
+
+        total_score = int(cat_score + payee_score + max(0, dup_score))
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "categorization_rate": cat_rate,
+                "payee_rate": payee_rate,
+                "duplicate_rate": dup_rate,
+            },
+        )
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-DataQualityScorer = None
 CategoryStructureScorer = None
 RuleEngineScorer = None
 TaxReadinessScorer = None
