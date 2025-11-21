@@ -1,0 +1,64 @@
+{
+  "$schema": "https://claude.ai/schemas/plugin-v1.json",
+  "id": "agent-smith-plugin",
+  "name": "Agent Smith",
+  "version": "1.0.0",
+  "description": "Intelligent financial management with PocketSmith API integration",
+  "permissions": [
+    "network",
+    "filesystem"
+  ],
+  "installation": {
+    "type": "git",
+    "postInstall": [
+      "pip install -r requirements.txt"
+    ]
+  },
+  "paths": {
+    "commands": ".claude/commands",
+    "skills": ".claude/skills",
+    "agents": ".claude/agents",
+    "scripts": "scripts",
+    "docs": "ai_docs"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "echo 'Agent Smith plugin loaded. Use /agent-smith to get started.'",
+        "timeout": 5
+      }
+    ]
+  },
+  "settings": {
+    "contextIncludes": [
+      "ai_docs/pocketsmith-api-documentation.md",
+      "docs/guides/health-check-guide.md"
+    ],
+    "autoLoadSkills": true
+  },
+  "exports": {
+    "commands": [
+      "agent-smith",
+      "agent-smith-categorize",
+      "agent-smith-analyze",
+      "agent-smith-scenario",
+      "agent-smith-report",
+      "agent-smith-optimize",
+      "agent-smith-tax",
+      "agent-smith-health"
+    ],
+    "skills": [
+      "financial-analysis",
+      "tax-intelligence",
+      "transaction-categorization"
+    ]
+  },
+  "dependencies": {
+    "python": {
+      "requests": ">=2.31.0",
+      "python-dateutil": ">=2.8.2",
+      "python-dotenv": ">=1.0.0"
+    }
+  }
+}

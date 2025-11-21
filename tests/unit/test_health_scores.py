@@ -1,0 +1,597 @@
+"""Unit tests for health score system."""
+
+import pytest
+
+from scripts.health.scores import BaseScorer, HealthStatus, HealthScore
+
+
+class TestHealthStatus:
+    """Tests for HealthStatus enum."""
+
+    def test_status_from_score_excellent(self):
+        """Score 90-100 should be EXCELLENT."""
+        assert HealthStatus.from_score(90) == HealthStatus.EXCELLENT
+        assert HealthStatus.from_score(100) == HealthStatus.EXCELLENT
+
+    def test_status_from_score_good(self):
+        """Score 70-89 should be GOOD."""
+        assert HealthStatus.from_score(70) == HealthStatus.GOOD
+        assert HealthStatus.from_score(89) == HealthStatus.GOOD
+
+    def test_status_from_score_fair(self):
+        """Score 50-69 should be FAIR."""
+        assert HealthStatus.from_score(50) == HealthStatus.FAIR
+        assert HealthStatus.from_score(69) == HealthStatus.FAIR
+
+    def test_status_from_score_poor(self):
+        """Score below 50 should be POOR."""
+        assert HealthStatus.from_score(0) == HealthStatus.POOR
+        assert HealthStatus.from_score(49) == HealthStatus.POOR
+
+    def test_emoji_property(self):
+        """Each status should have correct emoji."""
+        assert HealthStatus.EXCELLENT.emoji == "✅"
+        assert HealthStatus.GOOD.emoji == "👍"
+        assert HealthStatus.FAIR.emoji == "⚠️"
+        assert HealthStatus.POOR.emoji == "❌"
+
+    def test_from_score_clamps_high_values(self):
+        """Scores above 100 should be clamped to 100 (EXCELLENT)."""
+        assert HealthStatus.from_score(101) == HealthStatus.EXCELLENT
+        assert HealthStatus.from_score(150) == HealthStatus.EXCELLENT
+        assert HealthStatus.from_score(1000) == HealthStatus.EXCELLENT
+
+    def test_from_score_clamps_negative_values(self):
+        """Negative scores should be clamped to 0 (POOR)."""
+        assert HealthStatus.from_score(-1) == HealthStatus.POOR
+        assert HealthStatus.from_score(-50) == HealthStatus.POOR
+        assert HealthStatus.from_score(-1000) == HealthStatus.POOR
+
+
+class TestHealthScore:
+    """Tests for HealthScore dataclass."""
+
+    def test_health_score_creation(self):
+        """Test creating a health score."""
+        score = HealthScore(
+            dimension="data_quality",
+            score=85,
+            max_score=100,
+            issues=["10 uncategorized transactions"],
+            recommendations=["Categorize remaining transactions"],
+        )
+
+        assert score.dimension == "data_quality"
+        assert score.score == 85
+        assert score.status == HealthStatus.GOOD
+        assert len(score.issues) == 1
+        assert len(score.recommendations) == 1
+
+    def test_health_score_percentage(self):
+        """Test percentage calculation."""
+        score = HealthScore(dimension="test", score=75, max_score=100)
+        assert score.percentage == 75.0
+
+        score2 = HealthScore(dimension="test", score=15, max_score=20)
+        assert score2.percentage == 75.0
+
+    def test_health_score_to_dict(self):
+        """Test serialization to dict."""
+        score = HealthScore(
+            dimension="rule_engine",
+            score=60,
+            max_score=100,
+            issues=["Low coverage"],
+        )
+
+        data = score.to_dict()
+        assert data["dimension"] == "rule_engine"
+        assert data["score"] == 60
+        assert data["status"] == "fair"
+        assert "timestamp" in data
+
+
+class TestBaseScorer:
+    """Tests for BaseScorer abstract class."""
+
+    def test_concrete_scorer_must_implement_calculate(self):
+        """Concrete scorers must implement calculate method."""
+
+        class IncompleteScorer(BaseScorer):
+            dimension = "incomplete"
+
+        with pytest.raises(TypeError):
+            IncompleteScorer()
+
+    def test_concrete_scorer_works(self):
+        """A properly implemented scorer should work."""
+
+        class TestScorer(BaseScorer):
+            dimension = "test_dimension"
+
+            def calculate(self, data):
+                return HealthScore(
+                    dimension=self.dimension,
+                    score=100,
+                    max_score=100,
+                )
+
+        scorer = TestScorer()
+        result = scorer.calculate({})
+        assert result.dimension == "test_dimension"
+        assert result.score == 100
+
+
+class TestDataQualityScorer:
+    """Tests for DataQualityScorer."""
+
+    def test_perfect_data_quality(self):
+        """All transactions categorized = 100 score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 100,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "data_quality"
+        assert result.score == 100
+        assert result.status == HealthStatus.EXCELLENT
+        assert len(result.issues) == 0
+
+    def test_uncategorized_transactions_reduce_score(self):
+        """Uncategorized transactions reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 80,
+            "transactions_with_payee": 100,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert "uncategorized" in result.issues[0].lower()
+
+    def test_duplicates_reduce_score(self):
+        """Duplicate transactions reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 100,
+            "duplicate_count": 10,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert any("duplicate" in issue.lower() for issue in result.issues)
+
+    def test_missing_payees_reduce_score(self):
+        """Missing payee names reduce score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 100,
+            "categorized_transactions": 100,
+            "transactions_with_payee": 70,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 100
+        assert any("payee" in issue.lower() for issue in result.issues)
+
+    def test_empty_data_returns_zero(self):
+        """No transactions = 0 score."""
+        from scripts.health.scores import DataQualityScorer
+
+        scorer = DataQualityScorer()
+        data = {
+            "total_transactions": 0,
+            "categorized_transactions": 0,
+            "transactions_with_payee": 0,
+            "duplicate_count": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score == 0
+
+
+class TestCategoryStructureScorer:
+    """Tests for CategoryStructureScorer."""
+
+    def test_good_category_structure(self):
+        """Well-organized categories score high."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 30,
+            "categories_with_transactions": 25,
+            "max_depth": 3,
+            "categories_at_root": 8,
+            "ato_mapped_categories": 20,
+            "empty_categories": 5,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "category_structure"
+        assert result.score >= 70
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_too_many_root_categories_penalized(self):
+        """Too many root categories indicates poor organization."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 50,
+            "categories_with_transactions": 50,
+            "max_depth": 1,  # All flat
+            "categories_at_root": 50,  # All at root
+            "ato_mapped_categories": 10,
+            "empty_categories": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any(
+            "root" in issue.lower() or "hierarchy" in issue.lower() for issue in result.issues
+        )
+
+    def test_many_empty_categories_penalized(self):
+        """Many unused categories reduce score."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 50,
+            "categories_with_transactions": 10,
+            "max_depth": 3,
+            "categories_at_root": 10,
+            "ato_mapped_categories": 10,
+            "empty_categories": 40,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any("empty" in issue.lower() or "unused" in issue.lower() for issue in result.issues)
+
+    def test_poor_ato_mapping_penalized(self):
+        """Poor ATO category mapping reduces tax readiness."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 30,
+            "categories_with_transactions": 30,
+            "max_depth": 3,
+            "categories_at_root": 8,
+            "ato_mapped_categories": 5,  # Only 5 of 30 mapped
+            "empty_categories": 0,
+        }
+
+        result = scorer.calculate(data)
+        # Score should be reduced due to poor ATO mapping
+        assert any("ato" in issue.lower() or "tax" in issue.lower() for issue in result.issues)
+
+
+class TestRuleEngineScorer:
+    """Tests for RuleEngineScorer."""
+
+    def test_high_coverage_high_accuracy(self):
+        """High rule coverage and accuracy = excellent score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 48,
+            "auto_categorization_rate": 0.85,
+            "rule_accuracy": 0.95,
+            "conflicting_rules": 0,
+            "stale_rules": 2,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "rule_engine"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_low_coverage_penalized(self):
+        """Low auto-categorization rate reduces score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 10,
+            "active_rules": 10,
+            "auto_categorization_rate": 0.20,  # Only 20% auto-categorized
+            "rule_accuracy": 0.90,
+            "conflicting_rules": 0,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any("coverage" in issue.lower() for issue in result.issues)
+
+    def test_conflicting_rules_penalized(self):
+        """Conflicting rules reduce score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 50,
+            "auto_categorization_rate": 0.80,
+            "rule_accuracy": 0.90,
+            "conflicting_rules": 10,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 90
+        assert any("conflict" in issue.lower() for issue in result.issues)
+
+    def test_low_accuracy_penalized(self):
+        """Low rule accuracy (high override rate) reduces score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 50,
+            "auto_categorization_rate": 0.80,
+            "rule_accuracy": 0.60,  # 40% override rate
+            "conflicting_rules": 0,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        # Low accuracy (60%) significantly reduces the score compared to high accuracy (95%)
+        # Coverage: 40pts, Accuracy: 24pts (60% * 40), Health: 20pts = 84 total
+        assert result.score < 90  # Below excellent threshold due to low accuracy
+        assert any(
+            "accuracy" in issue.lower() or "override" in issue.lower() for issue in result.issues
+        )
+
+
+class TestTaxReadinessScorer:
+    """Tests for TaxReadinessScorer."""
+
+    def test_tax_ready_high_score(self):
+        """Full tax compliance = excellent score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 95,
+            "ato_category_coverage": 0.90,
+            "cgt_events_tracked": 10,
+            "cgt_events_total": 10,
+            "missing_documentation_count": 5,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "tax_readiness"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_poor_substantiation_penalized(self):
+        """Poor receipt/documentation tracking reduces score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 30,  # Only 30%
+            "ato_category_coverage": 0.80,
+            "cgt_events_tracked": 5,
+            "cgt_events_total": 5,
+            "missing_documentation_count": 70,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any(
+            "substantiation" in issue.lower() or "documentation" in issue.lower()
+            for issue in result.issues
+        )
+
+    def test_eofy_urgency_affects_recommendations(self):
+        """Close to EOFY should generate urgent recommendations."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 60,
+            "ato_category_coverage": 0.70,
+            "cgt_events_tracked": 5,
+            "cgt_events_total": 5,
+            "missing_documentation_count": 40,
+            "days_to_eofy": 30,  # One month to EOFY
+        }
+
+        result = scorer.calculate(data)
+        # Should have EOFY-related recommendations
+        assert (
+            any(
+                "eofy" in r.lower() or "june" in r.lower() or "urgent" in r.lower()
+                for r in result.recommendations
+            )
+            or result.score < 70
+        )
+
+    def test_untracked_cgt_events_penalized(self):
+        """Untracked CGT events reduce score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 90,
+            "ato_category_coverage": 0.85,
+            "cgt_events_tracked": 2,
+            "cgt_events_total": 10,  # 8 untracked
+            "missing_documentation_count": 10,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 90
+        assert any("cgt" in issue.lower() or "capital" in issue.lower() for issue in result.issues)
+
+
+class TestAutomationScorer:
+    """Tests for AutomationScorer."""
+
+    def test_high_automation_utilization(self):
+        """High usage of automation features = excellent score."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": True,
+            "scheduled_reports_count": 3,
+            "active_alerts_count": 5,
+            "rule_auto_apply_rate": 0.85,
+            "manual_operations_30d": 10,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "automation"
+        assert result.score >= 75
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_no_automation_low_score(self):
+        """No automation features used = poor score."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": False,
+            "scheduled_reports_count": 0,
+            "active_alerts_count": 0,
+            "rule_auto_apply_rate": 0.0,
+            "manual_operations_30d": 100,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 50
+        assert result.status == HealthStatus.POOR
+
+    def test_recommendations_for_unused_features(self):
+        """Should recommend enabling unused automation features."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": False,
+            "scheduled_reports_count": 0,
+            "active_alerts_count": 2,
+            "rule_auto_apply_rate": 0.50,
+            "manual_operations_30d": 50,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        # Should recommend enabling auto-categorization and scheduled reports
+        assert any("auto" in r.lower() or "categoriz" in r.lower() for r in result.recommendations)
+        assert any("report" in r.lower() or "schedule" in r.lower() for r in result.recommendations)
+
+
+class TestBudgetAlignmentScorer:
+    """Tests for BudgetAlignmentScorer."""
+
+    def test_on_budget_high_score(self):
+        """Spending on budget = excellent score."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 10,
+            "categories_on_track": 9,
+            "categories_over_budget": 1,
+            "total_budget": 5000.00,
+            "total_spent": 4800.00,
+            "goals_on_track": 3,
+            "goals_total": 3,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "budget_alignment"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_overspending_penalized(self):
+        """Significant overspending reduces score."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 10,
+            "categories_on_track": 3,
+            "categories_over_budget": 7,
+            "total_budget": 5000.00,
+            "total_spent": 7000.00,  # 40% over
+            "goals_on_track": 1,
+            "goals_total": 3,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 60
+        assert any("over" in issue.lower() or "budget" in issue.lower() for issue in result.issues)
+
+    def test_no_budgets_penalized(self):
+        """No budgets set = lower score with recommendation."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 0,
+            "categories_on_track": 0,
+            "categories_over_budget": 0,
+            "total_budget": 0,
+            "total_spent": 3000.00,
+            "goals_on_track": 0,
+            "goals_total": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 50
+        assert any("budget" in r.lower() for r in result.recommendations)
+
+    def test_goals_behind_flagged(self):
+        """Goals behind schedule should be flagged."""
+        from scripts.health.scores import BudgetAlignmentScorer
+
+        scorer = BudgetAlignmentScorer()
+        data = {
+            "categories_with_budget": 5,
+            "categories_on_track": 5,
+            "categories_over_budget": 0,
+            "total_budget": 3000.00,
+            "total_spent": 2800.00,
+            "goals_on_track": 1,
+            "goals_total": 4,  # 3 goals behind
+        }
+
+        result = scorer.calculate(data)
+        assert any("goal" in issue.lower() for issue in result.issues)

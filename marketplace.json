@@ -1,0 +1,108 @@
+{
+  "$schema": "https://claude.ai/schemas/marketplace-plugin-v1.json",
+  "name": "agent-smith-plugin",
+  "displayName": "Agent Smith - Financial Intelligence",
+  "version": "1.0.0",
+  "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
+  "author": {
+    "name": "slamb2k",
+    "url": "https://github.com/slamb2k"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slamb2k/agent-smith.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "pocketsmith",
+    "finance",
+    "financial-management",
+    "tax",
+    "budgeting",
+    "categorization",
+    "ai",
+    "australian-tax"
+  ],
+  "categories": [
+    "finance",
+    "productivity",
+    "automation"
+  ],
+  "engines": {
+    "claude-code": ">=1.0.0"
+  },
+  "main": "plugin.json",
+  "commands": [
+    {
+      "name": "agent-smith",
+      "description": "Main conversational entry point for financial management"
+    },
+    {
+      "name": "agent-smith-categorize",
+      "description": "Categorize transactions with AI assistance"
+    },
+    {
+      "name": "agent-smith-analyze",
+      "description": "Run financial analysis on PocketSmith data"
+    },
+    {
+      "name": "agent-smith-scenario",
+      "description": "Model financial scenarios with what-if analysis"
+    },
+    {
+      "name": "agent-smith-report",
+      "description": "Generate comprehensive reports"
+    },
+    {
+      "name": "agent-smith-optimize",
+      "description": "AI-assisted optimization"
+    },
+    {
+      "name": "agent-smith-tax",
+      "description": "Tax intelligence and compliance"
+    },
+    {
+      "name": "agent-smith-health",
+      "description": "Evaluate PocketSmith setup health"
+    }
+  ],
+  "configuration": {
+    "required": [
+      {
+        "key": "POCKETSMITH_API_KEY",
+        "description": "Your PocketSmith Developer API key",
+        "type": "secret"
+      }
+    ],
+    "optional": [
+      {
+        "key": "TAX_INTELLIGENCE_LEVEL",
+        "description": "Tax intelligence mode: reference, smart, or full",
+        "type": "string",
+        "default": "smart"
+      },
+      {
+        "key": "DEFAULT_INTELLIGENCE_MODE",
+        "description": "Categorization mode: conservative, smart, or aggressive",
+        "type": "string",
+        "default": "smart"
+      },
+      {
+        "key": "TAX_JURISDICTION",
+        "description": "Tax jurisdiction (currently AU supported)",
+        "type": "string",
+        "default": "AU"
+      }
+    ]
+  },
+  "features": {
+    "hybridRuleEngine": "Platform-native + enhanced local rules with performance tracking",
+    "taxIntelligence": "3-tier Australian ATO tax compliance (Reference, Smart, Full)",
+    "scenarioAnalysis": "Historical analysis, projections, optimization, tax planning",
+    "healthChecks": "6-dimension health scoring with recommendations",
+    "smartOrchestration": "Context-preserving subagent architecture"
+  },
+  "minimumRequirements": {
+    "python": ">=3.9"
+  }
+}
