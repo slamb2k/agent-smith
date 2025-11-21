@@ -472,7 +472,95 @@ class TaxReadinessScorer(BaseScorer):
         )
 
 
+class AutomationScorer(BaseScorer):
+    """Scores automation utilization: auto-categorization, alerts, reports."""
+
+    dimension = "automation"
+
+    FEATURES_WEIGHT = 0.4
+    EFFICIENCY_WEIGHT = 0.4
+    UTILIZATION_WEIGHT = 0.2
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate automation score.
+
+        Args:
+            data: Dict with keys:
+                - auto_categorization_enabled: bool
+                - scheduled_reports_count: int
+                - active_alerts_count: int
+                - rule_auto_apply_rate: float (0-1)
+                - manual_operations_30d: int
+                - total_operations_30d: int
+
+        Returns:
+            HealthScore for automation dimension
+        """
+        auto_cat = data.get("auto_categorization_enabled", False)
+        scheduled_reports = data.get("scheduled_reports_count", 0)
+        active_alerts = data.get("active_alerts_count", 0)
+        auto_apply = data.get("rule_auto_apply_rate", 0)
+        manual_ops = data.get("manual_operations_30d", 0)
+        total_ops = data.get("total_operations_30d", 1)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        # Features score (0-40 points)
+        features_enabled: float = 0
+        max_features = 4
+
+        if auto_cat:
+            features_enabled += 1
+        else:
+            issues.append("Auto-categorization not enabled")
+            recommendations.append("Enable auto-categorization in Smart mode")
+
+        if scheduled_reports > 0:
+            features_enabled += 1
+        else:
+            recommendations.append("Set up scheduled reports for regular financial summaries")
+
+        if active_alerts >= 3:
+            features_enabled += 1
+        elif active_alerts > 0:
+            features_enabled += 0.5
+        else:
+            recommendations.append("Configure alerts for budget monitoring and tax deadlines")
+
+        if auto_apply >= 0.70:
+            features_enabled += 1
+        elif auto_apply >= 0.40:
+            features_enabled += 0.5
+
+        features_score = (features_enabled / max_features) * 100 * self.FEATURES_WEIGHT
+
+        # Efficiency score (0-40 points)
+        automation_rate = 1 - (manual_ops / total_ops) if total_ops > 0 else 0
+        efficiency_score = automation_rate * 100 * self.EFFICIENCY_WEIGHT
+
+        if automation_rate < 0.50:
+            issues.append(f"High manual operation rate ({manual_ops}/{total_ops} operations)")
+            recommendations.append("Create rules to automate repetitive categorization tasks")
+
+        # Utilization score (0-20 points)
+        utilization = auto_apply * 100 * self.UTILIZATION_WEIGHT
+
+        total_score = int(features_score + efficiency_score + utilization)
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "features_enabled": features_enabled,
+                "automation_rate": automation_rate,
+                "auto_apply_rate": auto_apply,
+            },
+        )
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-AutomationScorer = None
 BudgetAlignmentScorer = None

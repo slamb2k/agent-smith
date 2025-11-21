@@ -455,3 +455,63 @@ class TestTaxReadinessScorer:
         result = scorer.calculate(data)
         assert result.score < 90
         assert any("cgt" in issue.lower() or "capital" in issue.lower() for issue in result.issues)
+
+
+class TestAutomationScorer:
+    """Tests for AutomationScorer."""
+
+    def test_high_automation_utilization(self):
+        """High usage of automation features = excellent score."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": True,
+            "scheduled_reports_count": 3,
+            "active_alerts_count": 5,
+            "rule_auto_apply_rate": 0.85,
+            "manual_operations_30d": 10,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "automation"
+        assert result.score >= 75
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_no_automation_low_score(self):
+        """No automation features used = poor score."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": False,
+            "scheduled_reports_count": 0,
+            "active_alerts_count": 0,
+            "rule_auto_apply_rate": 0.0,
+            "manual_operations_30d": 100,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 50
+        assert result.status == HealthStatus.POOR
+
+    def test_recommendations_for_unused_features(self):
+        """Should recommend enabling unused automation features."""
+        from scripts.health.scores import AutomationScorer
+
+        scorer = AutomationScorer()
+        data = {
+            "auto_categorization_enabled": False,
+            "scheduled_reports_count": 0,
+            "active_alerts_count": 2,
+            "rule_auto_apply_rate": 0.50,
+            "manual_operations_30d": 50,
+            "total_operations_30d": 100,
+        }
+
+        result = scorer.calculate(data)
+        # Should recommend enabling auto-categorization and scheduled reports
+        assert any("auto" in r.lower() or "categoriz" in r.lower() for r in result.recommendations)
+        assert any("report" in r.lower() or "schedule" in r.lower() for r in result.recommendations)
