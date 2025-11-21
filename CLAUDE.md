@@ -185,3 +185,4 @@ Agent Smith will provide 8 slash commands in `.claude/commands/`:
 - **Tax advice disclaimer required** - All Level 3 tax outputs must include professional advice disclaimer
 - **INDEX.md must be current** - Update whenever files are created/modified/deleted
 - Complete design specification is the source of truth: `docs/design/2025-11-20-agent-smith-design.md`
+- Always create a feature branch and use a PR to merge changes to main.
