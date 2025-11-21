@@ -286,9 +286,96 @@ class CategoryStructureScorer(BaseScorer):
         )
 
 
+class RuleEngineScorer(BaseScorer):
+    """Scores rule engine: coverage, accuracy, conflicts."""
+
+    dimension = "rule_engine"
+
+    COVERAGE_WEIGHT = 0.4
+    ACCURACY_WEIGHT = 0.4
+    HEALTH_WEIGHT = 0.2
+
+    TARGET_COVERAGE = 0.70  # 70% auto-categorization target
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate rule engine score.
+
+        Args:
+            data: Dict with keys:
+                - total_rules: int
+                - active_rules: int
+                - auto_categorization_rate: float (0-1)
+                - rule_accuracy: float (0-1)
+                - conflicting_rules: int
+                - stale_rules: int
+
+        Returns:
+            HealthScore for rule engine dimension
+        """
+        total_rules = data.get("total_rules", 0)
+        active_rules = data.get("active_rules", 0)
+        coverage = data.get("auto_categorization_rate", 0)
+        accuracy = data.get("rule_accuracy", 1.0)
+        conflicts = data.get("conflicting_rules", 0)
+        stale = data.get("stale_rules", 0)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        # Coverage score (0-40 points)
+        coverage_score = min(coverage / self.TARGET_COVERAGE, 1.0) * 100 * self.COVERAGE_WEIGHT
+
+        if coverage < 0.50:
+            issues.append(f"Low auto-categorization coverage ({coverage*100:.0f}%)")
+            recommendations.append("Create more rules to improve coverage (target: 70%)")
+        elif coverage < self.TARGET_COVERAGE:
+            issues.append(f"Auto-categorization coverage at {coverage*100:.0f}% (target: 70%)")
+
+        # Accuracy score (0-40 points)
+        accuracy_score = accuracy * 100 * self.ACCURACY_WEIGHT
+
+        if accuracy < 0.80:
+            override_rate = (1 - accuracy) * 100
+            issues.append(
+                f"Rule accuracy at {accuracy*100:.0f}% ({override_rate:.0f}% override rate)"
+            )
+            recommendations.append("Review and refine rules with high override rates")
+
+        # Health score (0-20 points) - conflicts and staleness
+        health_score = 100 * self.HEALTH_WEIGHT
+
+        if conflicts > 0:
+            penalty = min(10, conflicts * 2)
+            health_score -= penalty
+            issues.append(f"{conflicts} conflicting rules detected")
+            recommendations.append("Resolve rule conflicts to avoid categorization issues")
+
+        if stale > 5:
+            penalty = min(5, stale * 0.5)
+            health_score -= penalty
+            issues.append(f"{stale} stale rules (no recent matches)")
+            recommendations.append("Review and archive rules that no longer match transactions")
+
+        total_score = int(coverage_score + accuracy_score + max(0, health_score))
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "coverage": coverage,
+                "accuracy": accuracy,
+                "total_rules": total_rules,
+                "active_rules": active_rules,
+                "conflicts": conflicts,
+                "stale_rules": stale,
+            },
+        )
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-RuleEngineScorer = None
 TaxReadinessScorer = None
 AutomationScorer = None
 BudgetAlignmentScorer = None

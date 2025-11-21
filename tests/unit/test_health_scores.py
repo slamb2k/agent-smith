@@ -284,3 +284,84 @@ class TestCategoryStructureScorer:
         result = scorer.calculate(data)
         # Score should be reduced due to poor ATO mapping
         assert any("ato" in issue.lower() or "tax" in issue.lower() for issue in result.issues)
+
+
+class TestRuleEngineScorer:
+    """Tests for RuleEngineScorer."""
+
+    def test_high_coverage_high_accuracy(self):
+        """High rule coverage and accuracy = excellent score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 48,
+            "auto_categorization_rate": 0.85,
+            "rule_accuracy": 0.95,
+            "conflicting_rules": 0,
+            "stale_rules": 2,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "rule_engine"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_low_coverage_penalized(self):
+        """Low auto-categorization rate reduces score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 10,
+            "active_rules": 10,
+            "auto_categorization_rate": 0.20,  # Only 20% auto-categorized
+            "rule_accuracy": 0.90,
+            "conflicting_rules": 0,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any("coverage" in issue.lower() for issue in result.issues)
+
+    def test_conflicting_rules_penalized(self):
+        """Conflicting rules reduce score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 50,
+            "auto_categorization_rate": 0.80,
+            "rule_accuracy": 0.90,
+            "conflicting_rules": 10,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 90
+        assert any("conflict" in issue.lower() for issue in result.issues)
+
+    def test_low_accuracy_penalized(self):
+        """Low rule accuracy (high override rate) reduces score."""
+        from scripts.health.scores import RuleEngineScorer
+
+        scorer = RuleEngineScorer()
+        data = {
+            "total_rules": 50,
+            "active_rules": 50,
+            "auto_categorization_rate": 0.80,
+            "rule_accuracy": 0.60,  # 40% override rate
+            "conflicting_rules": 0,
+            "stale_rules": 0,
+        }
+
+        result = scorer.calculate(data)
+        # Low accuracy (60%) significantly reduces the score compared to high accuracy (95%)
+        # Coverage: 40pts, Accuracy: 24pts (60% * 40), Health: 20pts = 84 total
+        assert result.score < 90  # Below excellent threshold due to low accuracy
+        assert any(
+            "accuracy" in issue.lower() or "override" in issue.lower() for issue in result.issues
+        )
