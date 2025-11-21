@@ -15,12 +15,27 @@
 git clone https://github.com/slamb2k/agent-smith.git
 cd agent-smith
 
-# Install Python dependencies
+# Install dependencies with uv (recommended)
+uv sync
+
+# OR install with pip
 pip install -r requirements.txt
+
+# OR install package in development mode
+uv pip install -e .
 
 # Configure your API key
 cp .env.sample .env
 # Edit .env and add your POCKETSMITH_API_KEY
+```
+
+**Note:** Agent Smith uses `uv` for fast, reliable dependency management. If you don't have `uv` installed:
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or with pip
+pip install uv
 ```
 
 ### Method 2: Install from Release Package
@@ -102,12 +117,26 @@ Agent Smith works with **all** PocketSmith subscription tiers. The table below i
 After installation, verify everything is working:
 
 ```bash
-# Run a quick health check
-/agent-smith-health --quick
+# Verify dependencies are installed
+uv pip list | grep -E "requests|python-dateutil|python-dotenv"
 
-# Test API connection
+# Test API connection (using uv)
+uv run python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmithClient(); print(f'Connected as: {c.get_user()[\"login\"]}')"
+
+# OR activate virtual environment first
+source .venv/bin/activate  # Unix/macOS
+# .venv\Scripts\activate   # Windows
 python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmithClient(); print(f'Connected as: {c.get_user()[\"login\"]}')"
+
+# Run a quick health check via Claude Code
+/agent-smith-health --quick
 ```
+
+**Important:** When running Python scripts directly, always use:
+- `uv run python script.py` (recommended), OR
+- Activate the venv first: `source .venv/bin/activate`
+
+This ensures scripts use the installed dependencies instead of system Python.
 
 ## Available Commands
 
@@ -147,6 +176,11 @@ Once installed, you have access to these slash commands:
 ```bash
 cd agent-smith
 git pull origin main
+
+# Update dependencies with uv (recommended)
+uv sync
+
+# OR with pip
 pip install -r requirements.txt
 ```
 
@@ -161,14 +195,31 @@ Download and extract the new version, then run `./install.sh` again.
 - Ensure your firewall allows HTTPS connections to api.pocketsmith.com
 
 ### Python Issues
+
+**"ModuleNotFoundError: No module named 'requests'"**
+- This means Python is not using the virtual environment
+- **Solution 1:** Use `uv run` for all Python commands:
+  ```bash
+  uv run python your_script.py
+  ```
+- **Solution 2:** Activate the virtual environment:
+  ```bash
+  source .venv/bin/activate  # Unix/macOS
+  .venv\Scripts\activate     # Windows
+  ```
+- **Solution 3:** Install dependencies if missing:
+  ```bash
+  uv sync  # Recommended
+  # OR
+  pip install -r requirements.txt
+  ```
+
+**General Python Issues:**
 - Ensure Python 3.9+ is installed: `python --version`
 - Try using `python3` explicitly if `python` doesn't work
-- Consider using a virtual environment:
+- Verify dependencies are installed:
   ```bash
-  python -m venv .venv
-  source .venv/bin/activate  # Unix
-  .venv\Scripts\activate     # Windows
-  pip install -r requirements.txt
+  uv pip list | grep -E "requests|python-dateutil|python-dotenv"
   ```
 
 ### Permission Issues
