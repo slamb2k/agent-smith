@@ -133,10 +133,14 @@ python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmit
 ```
 
 **Important:** When running Python scripts directly, always use:
-- `uv run python script.py` (recommended), OR
-- Activate the venv first: `source .venv/bin/activate`
+- `uv run python -u script.py` (recommended - unbuffered output), OR
+- Activate the venv first: `source .venv/bin/activate && python -u script.py`
 
-This ensures scripts use the installed dependencies instead of system Python.
+This ensures:
+1. Scripts use the installed dependencies instead of system Python
+2. Output appears in real-time (unbuffered) so you can monitor progress
+
+**Why `-u`?** Python buffers output by default. The `-u` flag disables buffering, showing progress immediately. Essential for long-running operations like health checks and categorization.
 
 ## Available Commands
 
