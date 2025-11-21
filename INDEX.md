@@ -1,6 +1,6 @@
 # Budget Smith - Repository Index
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-21
 
 This index provides a comprehensive overview of the repository structure for both human readers and AI agents.
 
@@ -38,6 +38,7 @@ Contains all project documentation including design specifications and operation
 | `docs/operations/2025-11-20_phase3_completion.md` | Phase 3 completion operation log | Operation Log |
 | `docs/operations/2025-11-20_phase4_completion.md` | Phase 4 completion operation log | Operation Log |
 | `docs/operations/2025-11-21_phase5_completion.md` | Phase 5 completion operation log | Operation Log |
+| `docs/operations/2025-11-21_phase6_completion.md` | Phase 6 completion operation log | Operation Log |
 
 **Purpose:** Central location for all project documentation, design specs, implementation guides, and user documentation.
 
@@ -83,9 +84,21 @@ Contains reference materials from previous PocketSmith migration work. This dire
 
 Claude Code configuration directory (managed by Claude Code itself).
 
+| Path | Description | Type |
+|------|-------------|------|
+| `.claude/commands/agent-smith.md` | Main conversational entry point | Slash Command |
+| `.claude/commands/agent-smith-categorize.md` | Transaction categorization | Slash Command |
+| `.claude/commands/agent-smith-analyze.md` | Financial analysis | Slash Command |
+| `.claude/commands/agent-smith-scenario.md` | Scenario modeling | Slash Command |
+| `.claude/commands/agent-smith-report.md` | Report generation | Slash Command |
+| `.claude/commands/agent-smith-optimize.md` | Optimization operations | Slash Command |
+| `.claude/commands/agent-smith-tax.md` | Tax intelligence | Slash Command |
+| `.claude/commands/agent-smith-health.md` | Health check | Slash Command |
+| `.claude/commands/INDEX.md` | Command reference | Index |
+
 **Purpose:** Stores Claude Code settings, slash commands, and skill configurations.
 
-**Note:** Will contain Agent Smith slash commands once implementation begins.
+**Status:** 8 slash commands implemented (Phase 6)
 
 ---
 
@@ -112,6 +125,10 @@ Contains all Python source code organized by function.
 | `scripts/scenarios/tax_scenarios.py` | Tax planning and optimization scenarios (Phase 5) | Scenarios |
 | `scripts/scenarios/cash_flow.py` | Cash flow forecasting and emergency fund (Phase 5) | Scenarios |
 | `scripts/scenarios/goals.py` | Goal tracking and progress monitoring (Phase 5) | Scenarios |
+| `scripts/orchestration/conductor.py` | Subagent conductor with smart delegation (Phase 6) | Orchestration |
+| `scripts/orchestration/INDEX.md` | Orchestration API reference | Index |
+| `scripts/workflows/categorization.py` | Interactive categorization workflow (Phase 6) | Workflows |
+| `scripts/workflows/INDEX.md` | Workflow API reference | Index |
 | `scripts/operations/categorize.py` | Transaction categorization workflow (Phase 2) | Operations |
 | `scripts/utils/backup.py` | Backup/restore utilities | Utility |
 | `scripts/utils/validation.py` | Data validation functions | Utility |
@@ -126,6 +143,12 @@ Contains all Python source code organized by function.
 - `reporting/` - Report generation and formatting
 - `tax/` - Tax intelligence (3-tier: Reference, Smart, Full compliance)
 - `scenarios/` - Scenario analysis (what-if, projections, optimization, goals)
+- `orchestration/` - Subagent conductor and orchestration logic (26 files, Phase 6)
+  - `conductor.py` - Smart delegation, complexity estimation, context management
+  - `INDEX.md` - Orchestration API reference
+- `workflows/` - Interactive workflows for guided operations (15 files, Phase 6)
+  - `categorization.py` - Categorization workflow with subagent delegation
+  - `INDEX.md` - Workflow API reference
 - `operations/` - High-level operations (categorization, analysis, etc.)
 - `utils/` - Utility functions (backup, validation, logging, etc.)
 
@@ -182,8 +205,14 @@ Contains all unit and integration tests.
 | `tests/integration/test_analysis_integration.py` | Analysis workflow integration tests (Phase 3) | Integration Test |
 | `tests/integration/test_tax_intelligence.py` | Tax intelligence integration tests (Phase 4) | Integration Test |
 | `tests/integration/test_scenario_analysis.py` | Scenario analysis integration tests (Phase 5) | Integration Test |
+| `tests/unit/test_conductor.py` | Subagent conductor unit tests (Phase 6) | Unit Test |
+| `tests/unit/test_context_preservation.py` | Context preservation unit tests (Phase 6) | Unit Test |
+| `tests/unit/test_categorization_workflow.py` | Categorization workflow unit tests (Phase 6) | Unit Test |
+| `tests/integration/test_orchestration.py` | Orchestration integration tests (Phase 6) | Integration Test |
 
-**Test Coverage:** 194 tests (167 unit + 27 integration), all passing
+**Test Coverage:** 227 tests (186 unit + 41 integration), all passing
+- Phase 1-5: 194 tests
+- Phase 6: 31 tests (25 unit + 6 integration)
 
 **Purpose:** Comprehensive test coverage for all Agent Smith functionality.
 
@@ -240,5 +269,5 @@ Contains all unit and integration tests.
 
 ---
 
-**Last Updated:** 2025-11-20
-**Repository Version:** Design Phase (Pre-Implementation)
+**Last Updated:** 2025-11-21
+**Repository Version:** Phase 6 Complete (75% Implementation)

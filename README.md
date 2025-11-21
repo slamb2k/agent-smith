@@ -81,6 +81,10 @@ agent-smith/
 │   │   ├── tax_scenarios.py     # Tax planning scenarios ✓
 │   │   ├── cash_flow.py         # Cash flow forecasting ✓
 │   │   └── goals.py             # Goal tracking ✓
+│   ├── orchestration/           # Subagent orchestration ✓
+│   │   └── conductor.py         # Smart delegation & context mgmt ✓
+│   ├── workflows/               # Interactive workflows ✓
+│   │   └── categorization.py    # Categorization workflow ✓
 │   ├── operations/              # Operations
 │   │   └── categorize.py        # Transaction categorization ✓
 │   └── utils/                   # Utilities
@@ -94,7 +98,7 @@ agent-smith/
 │   └── integration/             # Integration tests
 │
 └── .claude/                     # Claude Code configuration
-    └── commands/                # Slash commands (future)
+    └── commands/                # Slash commands (8 commands) ✓
 ```
 
 ## Quick Start
@@ -257,14 +261,16 @@ Git hooks (via lefthook) run automatically:
 
 ### Implementation Roadmap
 
-- ✅ **Phase 1:** Foundation (Weeks 1-2) - **COMPLETE**
-- ✅ **Phase 2:** Rule Engine (Weeks 3-4) - **COMPLETE**
-- ✅ **Phase 3:** Analysis & Reporting (Weeks 5-6) - **COMPLETE**
-- ✅ **Phase 4:** Tax Intelligence (Weeks 7-8) - **COMPLETE**
-- ✅ **Phase 5:** Scenario Analysis (Weeks 9-10) - **COMPLETE**
-- [ ] **Phase 6:** Orchestration & UX (Weeks 11-12)
-- [ ] **Phase 7:** Advanced Features (Weeks 13-14)
-- [ ] **Phase 8:** Health Check & Polish (Weeks 15-16)
+- ✅ **Phase 1:** Foundation (Weeks 1-2) - API client, utilities, backups
+- ✅ **Phase 2:** Rule Engine (Weeks 3-4) - Hybrid platform + local rules
+- ✅ **Phase 3:** Analysis & Reporting (Weeks 5-6) - Spending analysis, tax reports
+- ✅ **Phase 4:** Tax Intelligence (Weeks 7-8) - 3-tier tax system, deductions, BAS
+- ✅ **Phase 5:** Scenario Analysis (Weeks 9-10) - What-if, projections, optimization
+- ✅ **Phase 6:** Orchestration & UX (Weeks 11-12) - Subagent conductor, slash commands
+- ⏳ **Phase 7:** Advanced Features (Weeks 13-14) - Alerts, merchant intelligence
+- ⏳ **Phase 8:** Health Check & Polish (Weeks 15-16) - Health scores, optimization
+
+**Progress:** 6/8 phases complete (75%)
 
 ### Phase 3: Analysis & Reporting ✅
 
@@ -411,13 +417,66 @@ print(f"Potential savings: ${optimizations['potential_annual_savings']:.2f}")
 **Test Coverage:** 194 tests (167 unit + 27 integration), all passing
 - Phase 5 specific: 30 tests (23 unit + 7 integration)
 
+### Phase 6: Orchestration & UX ✅
+
+**Intelligent Orchestration:**
+```python
+from scripts.orchestration.conductor import SubagentConductor, OperationType
+
+# Smart delegation based on complexity
+conductor = SubagentConductor()
+should_delegate = conductor.should_delegate_operation(
+    operation_type=OperationType.CATEGORIZATION,
+    transaction_count=150  # > 100 triggers delegation
+)
+
+# Context preservation
+from scripts.orchestration.conductor import ContextManager
+context = ContextManager(user_id="12345")
+context.set_preference("intelligence_mode", "smart")
+context.set_preference("tax_level", "full")
+```
+
+**Slash Commands (8 commands):**
+```bash
+# Main conversational entry
+/agent-smith
+
+# Quick operations
+/agent-smith-categorize --mode=smart --period=2025-11
+/agent-smith-analyze spending --period=2025
+/agent-smith-scenario historical "What if I cut dining by 25%?"
+/agent-smith-report tax --period=2024-25 --tax-level=full
+/agent-smith-optimize subscriptions
+/agent-smith-tax deductions --period=2024-25
+/agent-smith-health --full
+```
+
+**Interactive Workflows:**
+- Guided categorization with AI assistance
+- Multi-step scenario planning
+- Smart recommendations with context
+- Progress tracking and feedback
+
+**Features:**
+- Smart subagent delegation (>100 transactions, >5000 tokens)
+- Context preservation across operations
+- Parallel processing for multi-period analysis
+- Result aggregation from distributed subagents
+- 8 specialized slash commands
+- Interactive workflows with user approval
+- Natural language scenario descriptions
+
+**Test Coverage:** 227 tests (186 unit + 41 integration), all passing
+- Phase 6 specific: 31 tests (25 unit + 6 integration)
+
 ### Next Phase
 
-**Phase 6:** Orchestration & UX (Weeks 11-12)
-- Subagent orchestration system
-- Slash commands implementation
-- Conversational workflows
-- User experience refinement
+**Phase 7:** Advanced Features (Weeks 13-14)
+- Smart alerts and notifications
+- Merchant intelligence
+- Receipt and document management
+- Comparative benchmarking
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
