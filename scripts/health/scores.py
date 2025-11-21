@@ -191,9 +191,103 @@ class DataQualityScorer(BaseScorer):
         )
 
 
+class CategoryStructureScorer(BaseScorer):
+    """Scores category structure: hierarchy, usage, ATO alignment."""
+
+    dimension = "category_structure"
+
+    HIERARCHY_WEIGHT = 0.3
+    USAGE_WEIGHT = 0.4
+    ATO_WEIGHT = 0.3
+
+    IDEAL_ROOT_CATEGORIES = 10
+    IDEAL_MAX_DEPTH = 3
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate category structure score.
+
+        Args:
+            data: Dict with keys:
+                - total_categories: int
+                - categories_with_transactions: int
+                - max_depth: int
+                - categories_at_root: int
+                - ato_mapped_categories: int
+                - empty_categories: int
+
+        Returns:
+            HealthScore for category structure dimension
+        """
+        total = data.get("total_categories", 0)
+        used = data.get("categories_with_transactions", 0)
+        max_depth = data.get("max_depth", 1)
+        root_count = data.get("categories_at_root", 0)
+        ato_mapped = data.get("ato_mapped_categories", 0)
+        empty = data.get("empty_categories", 0)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        if total == 0:
+            return HealthScore(
+                dimension=self.dimension,
+                score=0,
+                issues=["No categories found"],
+                recommendations=["Set up category structure in PocketSmith"],
+            )
+
+        # Hierarchy score (0-30 points)
+        hierarchy_score = 100 * self.HIERARCHY_WEIGHT
+
+        # Penalize too many root categories
+        if root_count > self.IDEAL_ROOT_CATEGORIES * 2:
+            penalty = min(15, (root_count - self.IDEAL_ROOT_CATEGORIES) * 0.5)
+            hierarchy_score -= penalty
+            issues.append(
+                f"{root_count} root-level categories (ideal: {self.IDEAL_ROOT_CATEGORIES})"
+            )
+            recommendations.append("Consolidate categories into a hierarchical structure")
+
+        # Penalize flat structure
+        if max_depth < 2 and total > 15:
+            hierarchy_score -= 10
+            issues.append("Flat category structure lacks hierarchy")
+            recommendations.append("Create parent categories to organize related expenses")
+
+        # Usage score (0-40 points)
+        usage_rate = used / total if total > 0 else 0
+        usage_score = usage_rate * 100 * self.USAGE_WEIGHT
+
+        if empty > total * 0.3:
+            issues.append(f"{empty} empty/unused categories ({empty/total*100:.0f}%)")
+            recommendations.append("Archive or delete unused categories")
+
+        # ATO alignment score (0-30 points)
+        ato_rate = ato_mapped / used if used > 0 else 0
+        ato_score = ato_rate * 100 * self.ATO_WEIGHT
+
+        if ato_rate < 0.5:
+            issues.append(f"Only {ato_mapped} categories mapped to ATO tax categories")
+            recommendations.append("Map categories to ATO expense types for tax reporting")
+
+        total_score = int(hierarchy_score + usage_score + ato_score)
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "usage_rate": usage_rate,
+                "ato_mapping_rate": ato_rate,
+                "hierarchy_depth": max_depth,
+                "root_categories": root_count,
+            },
+        )
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-CategoryStructureScorer = None
 RuleEngineScorer = None
 TaxReadinessScorer = None
 AutomationScorer = None

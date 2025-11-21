@@ -205,3 +205,82 @@ class TestDataQualityScorer:
 
         result = scorer.calculate(data)
         assert result.score == 0
+
+
+class TestCategoryStructureScorer:
+    """Tests for CategoryStructureScorer."""
+
+    def test_good_category_structure(self):
+        """Well-organized categories score high."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 30,
+            "categories_with_transactions": 25,
+            "max_depth": 3,
+            "categories_at_root": 8,
+            "ato_mapped_categories": 20,
+            "empty_categories": 5,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "category_structure"
+        assert result.score >= 70
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_too_many_root_categories_penalized(self):
+        """Too many root categories indicates poor organization."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 50,
+            "categories_with_transactions": 50,
+            "max_depth": 1,  # All flat
+            "categories_at_root": 50,  # All at root
+            "ato_mapped_categories": 10,
+            "empty_categories": 0,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any(
+            "root" in issue.lower() or "hierarchy" in issue.lower() for issue in result.issues
+        )
+
+    def test_many_empty_categories_penalized(self):
+        """Many unused categories reduce score."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 50,
+            "categories_with_transactions": 10,
+            "max_depth": 3,
+            "categories_at_root": 10,
+            "ato_mapped_categories": 10,
+            "empty_categories": 40,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any("empty" in issue.lower() or "unused" in issue.lower() for issue in result.issues)
+
+    def test_poor_ato_mapping_penalized(self):
+        """Poor ATO category mapping reduces tax readiness."""
+        from scripts.health.scores import CategoryStructureScorer
+
+        scorer = CategoryStructureScorer()
+        data = {
+            "total_categories": 30,
+            "categories_with_transactions": 30,
+            "max_depth": 3,
+            "categories_at_root": 8,
+            "ato_mapped_categories": 5,  # Only 5 of 30 mapped
+            "empty_categories": 0,
+        }
+
+        result = scorer.calculate(data)
+        # Score should be reduced due to poor ATO mapping
+        assert any("ato" in issue.lower() or "tax" in issue.lower() for issue in result.issues)
