@@ -210,7 +210,7 @@ Contains all unit and integration tests.
 | `tests/unit/test_categorization_workflow.py` | Categorization workflow unit tests (Phase 6) | Unit Test |
 | `tests/integration/test_orchestration.py` | Orchestration integration tests (Phase 6) | Integration Test |
 
-**Test Coverage:** 227 tests (186 unit + 41 integration), all passing
+**Test Coverage:** 227 tests (189 unit + 38 integration), all passing
 - Phase 1-5: 194 tests
 - Phase 6: 31 tests (25 unit + 6 integration)
 

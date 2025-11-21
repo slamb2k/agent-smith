@@ -87,7 +87,7 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 - Unit tests: 25 (19 orchestration + 7 workflows - 1 duplicate)
 - Integration tests: 6
 - Total Phase 6 tests: 31
-- Overall tests: 227 (186 unit + 41 integration)
+- Overall tests: 227 (189 unit + 38 integration)
 - Pass rate: 100%
 
 **Documentation:**
@@ -163,7 +163,7 @@ tests/unit/test_categorization_workflow.py ..... (7 tests)
 tests/integration/test_orchestration.py ........ (6 tests)
 
 Total Phase 6: 31 tests (25 unit + 6 integration)
-Overall: 227 tests (186 unit + 41 integration)
+Overall: 227 tests (189 unit + 38 integration)
 Pass rate: 100%
 ```
 
@@ -218,7 +218,7 @@ Planned features:
 **Progress:** 6/8 phases (75% complete)
 
 **Overall Statistics:**
-- Total tests: 227 (186 unit + 41 integration)
+- Total tests: 227 (189 unit + 38 integration)
 - Total modules: 30+
 - Total slash commands: 8
 - Lines of code: ~12,000

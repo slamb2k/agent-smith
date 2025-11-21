@@ -467,7 +467,7 @@ context.set_preference("tax_level", "full")
 - Interactive workflows with user approval
 - Natural language scenario descriptions
 
-**Test Coverage:** 227 tests (186 unit + 41 integration), all passing
+**Test Coverage:** 227 tests (189 unit + 38 integration), all passing
 - Phase 6 specific: 31 tests (25 unit + 6 integration)
 
 ### Next Phase
