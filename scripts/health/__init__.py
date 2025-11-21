@@ -3,6 +3,7 @@
 from scripts.health.scores import (
     HealthScore,
     HealthStatus,
+    BaseScorer,
     DataQualityScorer,
     CategoryStructureScorer,
     RuleEngineScorer,
@@ -10,12 +11,19 @@ from scripts.health.scores import (
     AutomationScorer,
     BudgetAlignmentScorer,
 )
-from scripts.health.engine import HealthCheckEngine
+from scripts.health.engine import HealthCheckEngine, HealthCheckResult
 from scripts.health.collector import HealthDataCollector
+from scripts.health.recommendations import (
+    RecommendationEngine,
+    Recommendation,
+    RecommendationPriority,
+    RecommendationCategory,
+)
 
 __all__ = [
     "HealthScore",
     "HealthStatus",
+    "BaseScorer",
     "DataQualityScorer",
     "CategoryStructureScorer",
     "RuleEngineScorer",
@@ -23,5 +31,10 @@ __all__ = [
     "AutomationScorer",
     "BudgetAlignmentScorer",
     "HealthCheckEngine",
+    "HealthCheckResult",
     "HealthDataCollector",
+    "RecommendationEngine",
+    "Recommendation",
+    "RecommendationPriority",
+    "RecommendationCategory",
 ]
