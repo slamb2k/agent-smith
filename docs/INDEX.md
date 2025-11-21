@@ -91,5 +91,5 @@ As implementation progresses, this directory will expand to include:
 
 ---
 
-**Document Count:** 1 design specification
-**Total Size:** ~37KB
+**Document Count:** 2 documents (1 design specification + 1 user guide)
+**Total Size:** ~51KB

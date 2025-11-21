@@ -139,7 +139,7 @@ pytest --cov=scripts tests/
 
 ### Usage
 
-Currently in development. Phase 1 foundation is complete.
+Phase 8 (Health Check & Polish) is complete. All 8 phases implemented.
 
 Python usage example:
 
@@ -268,9 +268,9 @@ Git hooks (via lefthook) run automatically:
 - ✅ **Phase 5:** Scenario Analysis (Weeks 9-10) - What-if, projections, optimization
 - ✅ **Phase 6:** Orchestration & UX (Weeks 11-12) - Subagent conductor, slash commands
 - ✅ **Phase 7:** Advanced Features (Weeks 13-14) - Alerts, merchant intelligence, audit trail
-- ⏳ **Phase 8:** Health Check & Polish (Weeks 15-16) - Health scores, optimization
+- ✅ **Phase 8:** Health Check & Polish (Weeks 15-16) - Health scores, monitoring, optimization
 
-**Progress:** 7/8 phases complete (87.5%)
+**Progress:** 8/8 phases complete (100%)
 
 ### Phase 3: Analysis & Reporting ✅
 
@@ -597,13 +597,48 @@ can_undo = logger.can_undo(entry.entry_id)
 **Test Coverage:** 287 tests (243 unit + 44 integration), all passing
 - Phase 7 specific: 60 tests (54 unit + 6 integration)
 
-### Next Phase
+### Phase 8: Health Check & Polish ✅
 
-**Phase 8:** Health Check & Polish (Weeks 15-16)
-- Health check system with 6 health scores
-- Recommendation engine
-- Automated monitoring
-- Performance optimization
+**Health Check System:**
+```python
+from scripts.health.engine import HealthCheckEngine
+from scripts.health.recommendations import RecommendationEngine
+from scripts.health.monitoring import HealthMonitor
+
+# Run comprehensive health check
+engine = HealthCheckEngine()
+result = engine.run_health_check(user_id="user_123")
+print(f"Overall Score: {result.overall_score}/100 ({result.overall_status.value})")
+
+# Get prioritized recommendations
+rec_engine = RecommendationEngine()
+recommendations = rec_engine.generate_recommendations(result)
+for rec in recommendations[:5]:
+    print(f"- [{rec.priority.value}] {rec.title}: {rec.description}")
+
+# Set up automated monitoring
+monitor = HealthMonitor(user_id="user_123")
+monitor.schedule_weekly_check()
+alerts = monitor.check_thresholds(result)
+```
+
+**6 Health Dimensions:**
+- Data Quality (25%) - Uncategorized rate, duplicates, gaps
+- Category Structure (20%) - Depth, unused categories, distribution
+- Rule Engine (15%) - Coverage, efficiency, conflicts
+- Tax Readiness (15%) - Tax categorization, compliance
+- Automation (10%) - Savings automation, bill scheduling
+- Budget Alignment (15%) - Variance, overspending
+
+**Features:**
+- HealthCheckEngine for orchestrated scoring across all dimensions
+- RecommendationEngine for prioritized improvement suggestions
+- HealthMonitor for automated weekly checks and alerts
+- HealthCheckCache for performance optimization
+- User guide at docs/guides/health-check-guide.md
+
+**Test Coverage:** 350 tests (all passing)
+- Phase 8 specific: 63 tests across 6 test files
 
 See [design document](docs/design/2025-11-20-agent-smith-design.md) for complete roadmap.
 
