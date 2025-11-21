@@ -62,6 +62,27 @@ cp .env.sample .env
 git worktree add ../agent-smith-dev -b feature/phase-1-foundation
 ```
 
+### Running Python Scripts
+
+**CRITICAL: Always use `uv run` when executing Python scripts in this repository.**
+
+```bash
+# ✅ CORRECT - Use uv run to execute scripts
+uv run python scripts/some_script.py
+uv run python -c "from scripts.core.api_client import PocketSmithClient; ..."
+
+# ❌ WRONG - Do not run Python directly (dependencies won't be found)
+python scripts/some_script.py  # Will get ModuleNotFoundError
+```
+
+**Why:** Dependencies (`requests`, `python-dateutil`, `python-dotenv`) are installed in the `.venv` virtual environment. Using `uv run` ensures Python uses the venv automatically.
+
+**Alternative:** Activate the venv first, then run Python normally:
+```bash
+source .venv/bin/activate  # Unix/macOS
+python scripts/some_script.py
+```
+
 ### Implementation Phases
 
 **Current Phase:** Foundation (Phase 1 of 8)
