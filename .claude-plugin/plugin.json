@@ -1,0 +1,36 @@
+{
+  "name": "agent-smith-plugin",
+  "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
+  "version": "1.0.0",
+  "author": {
+    "name": "slamb2k",
+    "email": "slamb2k@users.noreply.github.com"
+  },
+  "repository": "https://github.com/slamb2k/agent-smith",
+  "license": "MIT",
+  "keywords": [
+    "pocketsmith",
+    "finance",
+    "financial-management",
+    "tax",
+    "budgeting",
+    "categorization",
+    "australian-tax"
+  ],
+  "commands": [
+    "./.claude/commands/agent-smith.md",
+    "./.claude/commands/agent-smith-categorize.md",
+    "./.claude/commands/agent-smith-analyze.md",
+    "./.claude/commands/agent-smith-scenario.md",
+    "./.claude/commands/agent-smith-report.md",
+    "./.claude/commands/agent-smith-optimize.md",
+    "./.claude/commands/agent-smith-tax.md",
+    "./.claude/commands/agent-smith-health.md"
+  ],
+  "agents": [
+    "./.claude/agents/graphite-ops-template.md"
+  ],
+  "hooks": [
+    "./.claude-plugin/hooks.json"
+  ]
+}
