@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "echo 'Agent Smith plugin loaded. Use /agent-smith to get started.'",
+        "timeout": 5
+      }
+    ]
+  }
+}

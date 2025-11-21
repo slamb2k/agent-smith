@@ -110,16 +110,10 @@ jobs:
         run: |
           NEW_VERSION="${{ steps.version.outputs.version }}"
 
-          # Update marketplace.json
-          if [ -f marketplace.json ]; then
-            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" marketplace.json
-            echo "Updated marketplace.json to version $NEW_VERSION"
-          fi
-
-          # Update plugin.json
-          if [ -f plugin.json ]; then
-            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" plugin.json
-            echo "Updated plugin.json to version $NEW_VERSION"
+          # Update .claude-plugin/plugin.json
+          if [ -f .claude-plugin/plugin.json ]; then
+            sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" .claude-plugin/plugin.json
+            echo "Updated .claude-plugin/plugin.json to version $NEW_VERSION"
           fi
 
           # Update pyproject.toml
@@ -138,7 +132,7 @@ jobs:
           if git diff --quiet; then
             echo "No version file changes to commit"
           else
-            git add marketplace.json plugin.json pyproject.toml
+            git add .claude-plugin/plugin.json pyproject.toml
             git commit -m "chore: bump version to ${{ steps.version.outputs.version }} [skip ci]"
             git push origin main
           fi
@@ -178,14 +172,14 @@ jobs:
           # Create plugin package directory
           mkdir -p "${PLUGIN_DIR}"
 
-          # Copy plugin manifest files
-          cp marketplace.json "${PLUGIN_DIR}/"
-          cp plugin.json "${PLUGIN_DIR}/"
+          # Copy plugin manifest and config
+          cp -r .claude-plugin "${PLUGIN_DIR}/"
           cp README.md "${PLUGIN_DIR}/"
+          cp INSTALL.md "${PLUGIN_DIR}/"
           cp requirements.txt "${PLUGIN_DIR}/"
           cp .env.sample "${PLUGIN_DIR}/"
 
-          # Copy source code
+          # Copy source code and commands
           cp -r scripts "${PLUGIN_DIR}/"
           cp -r .claude "${PLUGIN_DIR}/"
           cp -r ai_docs "${PLUGIN_DIR}/"
