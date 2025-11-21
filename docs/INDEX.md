@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-22
 
 This directory contains all project documentation for Agent Smith.
 
@@ -11,8 +11,13 @@ This directory contains all project documentation for Agent Smith.
 ```
 docs/
 ├── INDEX.md                               # This file
-└── design/                                # Design specifications
-    └── 2025-11-20-agent-smith-design.md  # Complete Agent Smith design
+├── design/                                # Design specifications
+│   └── 2025-11-20-agent-smith-design.md  # Complete Agent Smith design
+├── guides/                                # User guides
+│   ├── backup-and-restore-guide.md       # Backup & Restore System guide
+│   └── health-check-guide.md             # Health Check System guide
+└── research/                              # Research documents
+    └── pocketsmith-backup-and-limitations-research.md  # PocketSmith capabilities research
 ```
 
 ---
@@ -70,6 +75,59 @@ Comprehensive guide covering:
 
 **Size:** ~14KB
 
+### [guides/backup-and-restore-guide.md](guides/backup-and-restore-guide.md)
+
+**Backup & Restore System User Guide**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Comprehensive guide covering:
+- What can/cannot be backed up and restored
+- Activity-specific backup operations (9 activity types)
+- Rollback capabilities and limitations
+- PocketSmith subscription tiers and API access
+- Usage examples with Python API
+- Best practices and troubleshooting
+
+**Key Features:**
+- Activity-based backup metadata
+- Clear rollback capability indicators
+- API limitation warnings (category rules cannot be updated/deleted)
+- Tier requirement notifications (API works on all tiers)
+
+**Size:** ~12KB
+
+---
+
+## Research Documents
+
+### [research/pocketsmith-backup-and-limitations-research.md](research/pocketsmith-backup-and-limitations-research.md)
+
+**PocketSmith Backup, Subscription Tiers, and API Limitations Research**
+
+**Status:** Complete
+**Date:** 2025-11-22
+**Version:** 1.0
+
+Comprehensive research covering:
+- **Backup Best Practices** - What can/cannot be backed up via API and web interface
+- **Subscription Tiers** - Feature comparison across Free, Foundation, Flourish, Fortune
+- **Category Rules & Optimization** - API limitations, management, and backup strategies
+- **Reconciliation** - PocketSmith's approach vs traditional accounting reconciliation
+- **Key Takeaways** - Critical implementation guidance for Agent Smith
+
+**Key Findings:**
+- API access is free and unrestricted for all subscription tiers
+- Category rules cannot be backed up via CSV export (must track separately)
+- No PUT/DELETE API endpoints for category rules (create-only)
+- PocketSmith has no traditional reconciliation (uses balance verification instead)
+- Attachments not included in CSV backups (must download via API)
+- Budgets excluded from CSV backups
+
+**Size:** ~23KB
+**Sources:** 20+ official PocketSmith documentation pages and API references
+
 ---
 
 ## Future Documentation
@@ -91,5 +149,5 @@ As implementation progresses, this directory will expand to include:
 
 ---
 
-**Document Count:** 2 documents (1 design specification + 1 user guide)
-**Total Size:** ~51KB
+**Document Count:** 4 documents (1 design specification + 2 user guides + 1 research document)
+**Total Size:** ~86KB

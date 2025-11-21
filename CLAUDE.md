@@ -62,6 +62,44 @@ cp .env.sample .env
 git worktree add ../agent-smith-dev -b feature/phase-1-foundation
 ```
 
+### Running Python Scripts
+
+**CRITICAL: Always use `uv run` when executing Python scripts in this repository.**
+
+```bash
+# ✅ CORRECT - Use uv run with unbuffered output
+uv run python -u scripts/some_script.py
+
+# ✅ For background tasks with real-time output
+uv run python -u scripts/some_script.py &
+
+# ✅ For one-liners
+uv run python -u -c "from scripts.core.api_client import PocketSmithClient; ..."
+
+# ❌ WRONG - Do not run Python directly (dependencies won't be found)
+python scripts/some_script.py  # Will get ModuleNotFoundError
+```
+
+**Why use `uv run`:** Dependencies (`requests`, `python-dateutil`, `python-dotenv`) are installed in the `.venv` virtual environment. Using `uv run` ensures Python uses the venv automatically.
+
+**Why use `-u` flag:** Python buffers output by default, hiding progress during long operations. The `-u` flag enables unbuffered output so you see results in real-time. This is especially important for:
+- Long-running categorization tasks
+- Health checks analyzing large datasets
+- Multi-step workflows with progress indicators
+- Background tasks where you need to monitor progress
+
+**Alternative:** Activate the venv first, then run Python with `-u`:
+```bash
+source .venv/bin/activate  # Unix/macOS
+python -u scripts/some_script.py
+```
+
+**Or set environment variable:**
+```bash
+export PYTHONUNBUFFERED=1  # Unix/macOS
+uv run python scripts/some_script.py
+```
+
 ### Implementation Phases
 
 **Current Phase:** Foundation (Phase 1 of 8)

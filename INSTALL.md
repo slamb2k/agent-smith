@@ -15,12 +15,27 @@
 git clone https://github.com/slamb2k/agent-smith.git
 cd agent-smith
 
-# Install Python dependencies
+# Install dependencies with uv (recommended)
+uv sync
+
+# OR install with pip
 pip install -r requirements.txt
+
+# OR install package in development mode
+uv pip install -e .
 
 # Configure your API key
 cp .env.sample .env
 # Edit .env and add your POCKETSMITH_API_KEY
+```
+
+**Note:** Agent Smith uses `uv` for fast, reliable dependency management. If you don't have `uv` installed:
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or with pip
+pip install uv
 ```
 
 ### Method 2: Install from Release Package
@@ -45,7 +60,11 @@ cp .env.sample .env
 
 ### Required: PocketSmith API Key
 
-1. Log in to your PocketSmith account
+**✅ Works with ALL PocketSmith tiers** (including Free)
+
+API access is available on all subscription levels with no restrictions.
+
+1. Log in to your PocketSmith account (any tier)
 2. Go to **Settings** > **Security** > **Developer API Keys**
 3. Generate a new API key
 4. Add it to your `.env` file:
@@ -71,17 +90,57 @@ TAX_JURISDICTION=AU
 FINANCIAL_YEAR_END=06-30
 ```
 
+## PocketSmith Subscription Tiers
+
+Agent Smith works with **all** PocketSmith subscription tiers. The table below is for reference only - there are no API restrictions.
+
+| Feature | Free | Foundation | Flourish | Fortune |
+|---------|------|------------|----------|---------|
+| **Price (Annual)** | Free | $9.99/mo AUD | $16.66/mo AUD | $26.66/mo AUD |
+| **API Access** | ✅ Full | ✅ Full | ✅ Full | ✅ Full |
+| **Agent Smith** | ✅ Works | ✅ Works | ✅ Works | ✅ Works |
+| **Accounts** | 2 | Unlimited | Unlimited | Unlimited |
+| **Bank Connections** | Manual | 6 (1 country) | 18 (all) | Unlimited |
+| **Automatic Feeds** | ❌ | ✅ | ✅ | ✅ |
+| **Budgets** | 12 | Unlimited | Unlimited | Unlimited |
+| **Forecast** | 6 months | 10 years | 30 years | 60 years |
+| **Support** | - | Email | Email | Priority |
+
+**Key Points:**
+- ✅ API access available on **all** tiers (including Free)
+- ✅ Agent Smith has **no feature restrictions** based on tier
+- ⚠️ Category rules created via API can only be modified/deleted via PocketSmith web interface (API limitation)
+- 💡 Free tier limited to 2 accounts and manual imports only
+
 ## Verification
 
 After installation, verify everything is working:
 
 ```bash
-# Run a quick health check
-/agent-smith-health --quick
+# Verify dependencies are installed
+uv pip list | grep -E "requests|python-dateutil|python-dotenv"
 
-# Test API connection
+# Test API connection (using uv)
+uv run python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmithClient(); print(f'Connected as: {c.get_user()[\"login\"]}')"
+
+# OR activate virtual environment first
+source .venv/bin/activate  # Unix/macOS
+# .venv\Scripts\activate   # Windows
 python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmithClient(); print(f'Connected as: {c.get_user()[\"login\"]}')"
+
+# Run a quick health check via Claude Code
+/agent-smith-health --quick
 ```
+
+**Important:** When running Python scripts directly, always use:
+- `uv run python -u script.py` (recommended - unbuffered output), OR
+- Activate the venv first: `source .venv/bin/activate && python -u script.py`
+
+This ensures:
+1. Scripts use the installed dependencies instead of system Python
+2. Output appears in real-time (unbuffered) so you can monitor progress
+
+**Why `-u`?** Python buffers output by default. The `-u` flag disables buffering, showing progress immediately. Essential for long-running operations like health checks and categorization.
 
 ## Available Commands
 
@@ -121,6 +180,11 @@ Once installed, you have access to these slash commands:
 ```bash
 cd agent-smith
 git pull origin main
+
+# Update dependencies with uv (recommended)
+uv sync
+
+# OR with pip
 pip install -r requirements.txt
 ```
 
@@ -135,14 +199,31 @@ Download and extract the new version, then run `./install.sh` again.
 - Ensure your firewall allows HTTPS connections to api.pocketsmith.com
 
 ### Python Issues
+
+**"ModuleNotFoundError: No module named 'requests'"**
+- This means Python is not using the virtual environment
+- **Solution 1:** Use `uv run` for all Python commands:
+  ```bash
+  uv run python your_script.py
+  ```
+- **Solution 2:** Activate the virtual environment:
+  ```bash
+  source .venv/bin/activate  # Unix/macOS
+  .venv\Scripts\activate     # Windows
+  ```
+- **Solution 3:** Install dependencies if missing:
+  ```bash
+  uv sync  # Recommended
+  # OR
+  pip install -r requirements.txt
+  ```
+
+**General Python Issues:**
 - Ensure Python 3.9+ is installed: `python --version`
 - Try using `python3` explicitly if `python` doesn't work
-- Consider using a virtual environment:
+- Verify dependencies are installed:
   ```bash
-  python -m venv .venv
-  source .venv/bin/activate  # Unix
-  .venv\Scripts\activate     # Windows
-  pip install -r requirements.txt
+  uv pip list | grep -E "requests|python-dateutil|python-dotenv"
   ```
 
 ### Permission Issues

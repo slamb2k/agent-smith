@@ -3,7 +3,7 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "echo 'Agent Smith plugin loaded. Use /agent-smith to get started.'",
+        "command": "echo '✅ Agent Smith plugin loaded. Use /agent-smith to get started.\n\n⚠️  IMPORTANT: Always use \"uv run python\" when executing Python scripts in this project.\n    Dependencies are in .venv - direct python execution will fail with ModuleNotFoundError.'",
         "timeout": 5
       }
     ]
