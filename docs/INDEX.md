@@ -52,12 +52,31 @@ docs/
 
 ---
 
+## User Guides
+
+### [guides/health-check-guide.md](guides/health-check-guide.md)
+
+**Health Check System User Guide**
+
+**Status:** Complete
+**Date:** 2025-11-21
+
+Comprehensive guide covering:
+- The 6 health dimensions and their weights
+- How to run health checks
+- Interpreting scores and recommendations
+- Automated monitoring configuration
+- Example output and troubleshooting
+
+**Size:** ~14KB
+
+---
+
 ## Future Documentation
 
 As implementation progresses, this directory will expand to include:
 
 - **Implementation Guides** - Step-by-step development documentation
-- **User Guides** - End-user documentation for Agent Smith features
 - **API Documentation** - Internal API docs for Agent Smith modules
 - **Testing Documentation** - Test plans and results
 - **Operations Guides** - Deployment and operational procedures
