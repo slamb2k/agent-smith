@@ -374,8 +374,105 @@ class RuleEngineScorer(BaseScorer):
         )
 
 
+class TaxReadinessScorer(BaseScorer):
+    """Scores tax readiness: substantiation, ATO compliance, CGT tracking."""
+
+    dimension = "tax_readiness"
+
+    SUBSTANTIATION_WEIGHT = 0.35
+    ATO_COVERAGE_WEIGHT = 0.30
+    CGT_WEIGHT = 0.20
+    DOCUMENTATION_WEIGHT = 0.15
+
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate tax readiness score.
+
+        Args:
+            data: Dict with keys:
+                - deductible_transactions: int
+                - substantiated_transactions: int
+                - ato_category_coverage: float (0-1)
+                - cgt_events_tracked: int
+                - cgt_events_total: int
+                - missing_documentation_count: int
+                - days_to_eofy: int
+
+        Returns:
+            HealthScore for tax readiness dimension
+        """
+        deductible = data.get("deductible_transactions", 0)
+        substantiated = data.get("substantiated_transactions", 0)
+        ato_coverage = data.get("ato_category_coverage", 0)
+        cgt_tracked = data.get("cgt_events_tracked", 0)
+        cgt_total = data.get("cgt_events_total", 0)
+        missing_docs = data.get("missing_documentation_count", 0)
+        days_to_eofy = data.get("days_to_eofy", 365)
+
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        # Substantiation score (0-35 points)
+        sub_rate = substantiated / deductible if deductible > 0 else 1.0
+        sub_score = sub_rate * 100 * self.SUBSTANTIATION_WEIGHT
+
+        if sub_rate < 0.80:
+            missing = deductible - substantiated
+            issues.append(
+                f"{missing} deductible transactions lack substantiation ({(1-sub_rate)*100:.0f}%)"
+            )
+            if days_to_eofy <= 60:
+                recommendations.append(
+                    "URGENT: Gather receipts for deductible expenses before EOFY"
+                )
+            else:
+                recommendations.append("Attach receipts to deductible transactions over $300")
+
+        # ATO coverage score (0-30 points)
+        ato_score = ato_coverage * 100 * self.ATO_COVERAGE_WEIGHT
+
+        if ato_coverage < 0.70:
+            issues.append(f"ATO category coverage at {ato_coverage*100:.0f}%")
+            recommendations.append("Map more categories to ATO expense types")
+
+        # CGT tracking score (0-20 points)
+        cgt_rate = cgt_tracked / cgt_total if cgt_total > 0 else 1.0
+        cgt_score = cgt_rate * 100 * self.CGT_WEIGHT
+
+        if cgt_total > 0 and cgt_rate < 1.0:
+            untracked = cgt_total - cgt_tracked
+            issues.append(f"{untracked} CGT events not fully tracked")
+            recommendations.append("Complete CGT register entries for all asset sales")
+
+        # Documentation score (0-15 points)
+        doc_penalty = min(15, missing_docs * 0.5)
+        doc_score = (100 * self.DOCUMENTATION_WEIGHT) - doc_penalty
+
+        if missing_docs > 10:
+            issues.append(f"{missing_docs} transactions missing required documentation")
+
+        total_score = int(sub_score + ato_score + cgt_score + max(0, doc_score))
+
+        # EOFY urgency
+        if days_to_eofy <= 30 and total_score < 80:
+            recommendations.insert(
+                0, f"Only {days_to_eofy} days to EOFY - prioritize tax preparation"
+            )
+
+        return HealthScore(
+            dimension=self.dimension,
+            score=min(100, max(0, total_score)),
+            issues=issues,
+            recommendations=recommendations,
+            details={
+                "substantiation_rate": sub_rate,
+                "ato_coverage": ato_coverage,
+                "cgt_tracking_rate": cgt_rate,
+                "days_to_eofy": days_to_eofy,
+            },
+        )
+
+
 # Placeholder exports for __init__.py imports
 # These will be implemented in subsequent tasks
-TaxReadinessScorer = None
 AutomationScorer = None
 BudgetAlignmentScorer = None

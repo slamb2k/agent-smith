@@ -365,3 +365,93 @@ class TestRuleEngineScorer:
         assert any(
             "accuracy" in issue.lower() or "override" in issue.lower() for issue in result.issues
         )
+
+
+class TestTaxReadinessScorer:
+    """Tests for TaxReadinessScorer."""
+
+    def test_tax_ready_high_score(self):
+        """Full tax compliance = excellent score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 95,
+            "ato_category_coverage": 0.90,
+            "cgt_events_tracked": 10,
+            "cgt_events_total": 10,
+            "missing_documentation_count": 5,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.dimension == "tax_readiness"
+        assert result.score >= 80
+        assert result.status in [HealthStatus.GOOD, HealthStatus.EXCELLENT]
+
+    def test_poor_substantiation_penalized(self):
+        """Poor receipt/documentation tracking reduces score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 30,  # Only 30%
+            "ato_category_coverage": 0.80,
+            "cgt_events_tracked": 5,
+            "cgt_events_total": 5,
+            "missing_documentation_count": 70,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 70
+        assert any(
+            "substantiation" in issue.lower() or "documentation" in issue.lower()
+            for issue in result.issues
+        )
+
+    def test_eofy_urgency_affects_recommendations(self):
+        """Close to EOFY should generate urgent recommendations."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 60,
+            "ato_category_coverage": 0.70,
+            "cgt_events_tracked": 5,
+            "cgt_events_total": 5,
+            "missing_documentation_count": 40,
+            "days_to_eofy": 30,  # One month to EOFY
+        }
+
+        result = scorer.calculate(data)
+        # Should have EOFY-related recommendations
+        assert (
+            any(
+                "eofy" in r.lower() or "june" in r.lower() or "urgent" in r.lower()
+                for r in result.recommendations
+            )
+            or result.score < 70
+        )
+
+    def test_untracked_cgt_events_penalized(self):
+        """Untracked CGT events reduce score."""
+        from scripts.health.scores import TaxReadinessScorer
+
+        scorer = TaxReadinessScorer()
+        data = {
+            "deductible_transactions": 100,
+            "substantiated_transactions": 90,
+            "ato_category_coverage": 0.85,
+            "cgt_events_tracked": 2,
+            "cgt_events_total": 10,  # 8 untracked
+            "missing_documentation_count": 10,
+            "days_to_eofy": 180,
+        }
+
+        result = scorer.calculate(data)
+        assert result.score < 90
+        assert any("cgt" in issue.lower() or "capital" in issue.lower() for issue in result.issues)
