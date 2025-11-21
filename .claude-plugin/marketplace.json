@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-smith-marketplace",
+  "version": "1.0.0",
+  "description": "Agent Smith - Intelligent financial management skill for Claude Code",
+  "owner": {
+    "name": "slamb2k",
+    "email": "slamb2k@users.noreply.github.com"
+  },
+  "plugins": [
+    {
+      "name": "agent-smith-plugin",
+      "description": "Intelligent financial management with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
+      "source": "./",
+      "category": "finance",
+      "tags": [
+        "pocketsmith",
+        "finance",
+        "tax",
+        "budgeting",
+        "australian-tax"
+      ]
+    }
+  ]
+}
