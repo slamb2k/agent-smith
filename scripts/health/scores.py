@@ -16,11 +16,13 @@ class HealthStatus(Enum):
         """Determine status from numeric score.
 
         Args:
-            score: Health score (0-100)
+            score: Health score (0-100). Values outside range are clamped.
 
         Returns:
             Corresponding HealthStatus
         """
+        # Clamp score to valid range
+        score = max(0, min(100, score))
         if score >= 90:
             return cls.EXCELLENT
         elif score >= 70:
