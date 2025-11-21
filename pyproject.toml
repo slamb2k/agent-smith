@@ -91,3 +91,8 @@ dev = [
 Homepage = "https://github.com/slamb2k/agent-smith"
 Repository = "https://github.com/slamb2k/agent-smith"
 Issues = "https://github.com/slamb2k/agent-smith/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scripts*"]
+exclude = ["tests*", "docs*", "build*", "ai_docs*", "data*", "logs*", "reports*", "backups*"]
