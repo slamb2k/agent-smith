@@ -1,6 +1,8 @@
 """Unit tests for health score system."""
 
-from scripts.health.scores import HealthStatus, HealthScore
+import pytest
+
+from scripts.health.scores import BaseScorer, HealthStatus, HealthScore
 
 
 class TestHealthStatus:
@@ -87,3 +89,34 @@ class TestHealthScore:
         assert data["score"] == 60
         assert data["status"] == "fair"
         assert "timestamp" in data
+
+
+class TestBaseScorer:
+    """Tests for BaseScorer abstract class."""
+
+    def test_concrete_scorer_must_implement_calculate(self):
+        """Concrete scorers must implement calculate method."""
+
+        class IncompleteScorer(BaseScorer):
+            dimension = "incomplete"
+
+        with pytest.raises(TypeError):
+            IncompleteScorer()
+
+    def test_concrete_scorer_works(self):
+        """A properly implemented scorer should work."""
+
+        class TestScorer(BaseScorer):
+            dimension = "test_dimension"
+
+            def calculate(self, data):
+                return HealthScore(
+                    dimension=self.dimension,
+                    score=100,
+                    max_score=100,
+                )
+
+        scorer = TestScorer()
+        result = scorer.calculate({})
+        assert result.dimension == "test_dimension"
+        assert result.score == 100

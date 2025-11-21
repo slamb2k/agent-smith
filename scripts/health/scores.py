@@ -1,5 +1,6 @@
 """Health score definitions and base classes."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -87,6 +88,27 @@ class HealthScore:
             "details": self.details,
             "timestamp": self.timestamp.isoformat(),
         }
+
+
+class BaseScorer(ABC):
+    """Abstract base class for health dimension scorers."""
+
+    dimension: str = "base"
+
+    @abstractmethod
+    def calculate(self, data: Dict[str, Any]) -> HealthScore:
+        """Calculate health score for this dimension.
+
+        Args:
+            data: Input data for score calculation
+
+        Returns:
+            HealthScore for this dimension
+        """
+        pass
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(dimension={self.dimension})"
 
 
 # Placeholder exports for __init__.py imports
