@@ -24,6 +24,7 @@ from scripts.health.monitoring import (
     MonitoringConfig,
     HealthAlert,
 )
+from scripts.health.cache import HealthCheckCache, CacheEntry
 
 __all__ = [
     "HealthScore",
@@ -45,4 +46,6 @@ __all__ = [
     "HealthMonitor",
     "MonitoringConfig",
     "HealthAlert",
+    "HealthCheckCache",
+    "CacheEntry",
 ]
