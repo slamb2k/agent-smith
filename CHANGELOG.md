@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Living Templates Refactored to Label-Based Approach**
+  - Removed special categories from `shared-hybrid` and `separated-parents` templates
+  - Now use standard expense categories (Bills, Groceries, Medical, Education, etc.)
+  - Account context indicates whether expense is shared
+  - Labels track who paid (Contributor: Partner A/B, Parent A/B)
+  - Labels identify child-related expenses (Kids Expense, Child Support, etc.)
+  - Benefits: Cleaner category structure, better alignment with existing PocketSmith setups
+
 ## [1.3.1] - 2025-11-23
 
 ### Changed
