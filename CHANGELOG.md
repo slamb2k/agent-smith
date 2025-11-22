@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2025-11-23
+
+### Changed
+- **Multi-Living Arrangement Support** - Living layer now allows multiple selections
+  - Removed conflict between `shared-hybrid` and `separated-parents` templates
+  - Users can now select both templates for complex situations (e.g., divorced with kids + living with new partner)
+  - Updated onboarding documentation to clarify multi-select capability
+  - Example use case: Track both child support/custody expenses AND shared household expenses
+
 ## [1.3.0] - 2025-11-23
 
 ### Removed
@@ -142,7 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/slamb2k/agent-smith/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/slamb2k/agent-smith/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/slamb2k/agent-smith/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/slamb2k/agent-smith/compare/v1.1.0...v1.1.1
