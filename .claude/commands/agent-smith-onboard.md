@@ -118,30 +118,183 @@ run_agent_smith "onboarding/discovery.py"
 
 ### Stage 3: Template Selection
 
-Based on discovery, recommend a template:
+Agent Smith uses a **composable template system** with three layers. Users select:
+1. **Primary Income** (ONE choice) - How you earn most of your income
+2. **Living Arrangement** (ONE choice) - How you manage household finances
+3. **Additional Income** (MULTIPLE choices) - Extra income sources beyond your primary
+
+**Step 3a: Select Primary Income Template**
+
+Present discovery recommendation, then let user select ONE:
 
 ```bash
-run_agent_smith "setup/template_selector.py"
+echo "Select your PRIMARY income structure (choose ONE):"
+run_agent_smith "setup/template_selector.py" --layer=primary --interactive
 ```
 
-**Templates:**
-- `simple` - Single person, basic tracking
-- `separated-families` - Child support, custody tracking
-- `shared-household` - Joint accounts, shared expenses
-- `advanced` - Investments, business expenses, tax optimization
+**Available primary templates:**
+- `payg-employee` - Salary/wage earner, PAYG tax withheld
+- `sole-trader` - ABN holder, contractor, quarterly BAS
 
-**User chooses template** - Applied to `data/rules.yaml`
+**Step 3b: Select Living Arrangement Template**
 
-### Stage 4: Template Customization
+Present discovery recommendation, then let user select ONE:
 
-Guide the user to customize the template:
+```bash
+echo "Select your LIVING arrangement (choose ONE):"
+run_agent_smith "setup/template_selector.py" --layer=living --interactive
+```
 
-1. **Account Mapping**: Map template account names to their actual accounts
-2. **Category Validation**: Check if template categories exist in PocketSmith
-3. **Merchant Localization**: Update merchant patterns for their region (AU/US/etc.)
+**Available living templates:**
+- `single` - Managing finances alone
+- `shared-hybrid` - Some joint accounts, some separate (partners/couples)
+- `separated-parents` - Child support, shared custody expenses
 
-**For now:** Inform user they need to manually edit `data/rules.yaml`
-**Future:** Interactive customization script will automate this
+**Step 3c: Select Additional Income Templates**
+
+Present discovery recommendations, then let user select MULTIPLE:
+
+```bash
+echo "Select ADDITIONAL income sources (select all that apply):"
+run_agent_smith "setup/template_selector.py" --layer=additional --multiple --interactive
+```
+
+**Available additional templates:**
+- `property-investor` - Rental income, negative gearing, CGT tracking
+- `share-investor` - Dividends, franking credits, share CGT
+
+**Step 3d: Configure Template Labels (if applicable)**
+
+For templates with configurable labels, prompt for customization:
+
+**If Shared Hybrid selected:**
+```bash
+echo "Who are the two contributors in your household?"
+read -p "Contributor 1 name (e.g., Alex): " CONTRIBUTOR_1
+read -p "Contributor 2 name (e.g., Jordan): " CONTRIBUTOR_2
+```
+
+**If Separated Parents selected:**
+```bash
+echo "Who are the two parents for custody tracking?"
+read -p "Parent 1 name (e.g., Sarah): " PARENT_1
+read -p "Parent 2 name (e.g., David): " PARENT_2
+```
+
+**If Property Investor selected:**
+```bash
+read -p "Property address (optional, for multi-property tracking): " PROPERTY_ADDRESS
+```
+
+Save configurations to `data/template_config.json` for use during merge.
+
+### Stage 4: Template Merging & Application Strategy
+
+**Step 4a: Merge Selected Templates**
+
+Combine the selected templates using priority-based merging:
+
+```bash
+echo "Merging selected templates..."
+run_agent_smith "setup/template_merger.py" \
+    --primary="$PRIMARY_TEMPLATE" \
+    --living="$LIVING_TEMPLATE" \
+    --additional="$ADDITIONAL_TEMPLATES" \
+    --config=data/template_config.json \
+    --output=data/merged_template.json
+```
+
+**Step 4b: Select Application Strategy**
+
+Ask user how to handle existing PocketSmith data:
+
+```
+How should we apply the templates to your PocketSmith account?
+
+1. Add New Only (RECOMMENDED)
+   - Keep all your existing categories and rules
+   - Add only NEW categories and rules from templates
+   - Safest option, nothing gets overwritten
+
+2. Smart Merge
+   - Intelligently match template categories to existing ones
+   - Add new categories where no match found
+   - Deduplicate rules based on payee patterns
+   - Good for accounts with some setup already
+
+3. Archive & Replace
+   - Create backup of existing setup
+   - Apply templates fresh (existing categories remain but unused)
+   - Use this if starting over completely
+   - Note: PocketSmith API doesn't delete categories, so old ones remain
+
+Choose strategy (1/2/3):
+```
+
+Save user choice to `data/onboarding_state.json`.
+
+**Step 4c: Preview Before Apply**
+
+Show what will be created/changed:
+
+```bash
+echo "Previewing changes (dry run)..."
+run_agent_smith "setup/template_applier.py" \
+    --template=data/merged_template.json \
+    --strategy="$STRATEGY" \
+    --dry-run
+```
+
+**Expected output:**
+```
+Template Application Preview
+=============================
+Strategy: Add New Only
+
+Summary:
+  • 23 categories will be created
+  • 12 categories already exist (will reuse)
+  • 47 rules will be added
+  • 0 rules will be skipped (duplicates)
+  • Backup will be created at: data/backups/2025-11-22_143022_template_application
+
+Templates Applied:
+  ✓ PAYG Employee (primary, priority 1)
+  ✓ Shared Household - Hybrid (living, priority 2)
+  ✓ Property Investor (additional, priority 3)
+
+Proceed with application? (y/n):
+```
+
+**Step 4d: Apply Templates**
+
+If user confirms, apply the merged template:
+
+```bash
+echo "Applying templates to PocketSmith..."
+run_agent_smith "setup/template_applier.py" \
+    --template=data/merged_template.json \
+    --strategy="$STRATEGY" \
+    --apply
+```
+
+**Show results:**
+```
+Template Application Complete!
+==============================
+
+✓ Created 23 new categories
+✓ Reused 12 existing categories
+✓ Created 47 new rules
+✓ Backup saved: data/backups/2025-11-22_143022_template_application
+
+Your PocketSmith account is now configured with:
+  • PAYG Employee income tracking
+  • Shared household expense splitting
+  • Property investment tracking
+
+Next: Run categorization to apply these rules to your transactions.
+```
 
 ### Stage 5: Intelligence Mode Selection
 
