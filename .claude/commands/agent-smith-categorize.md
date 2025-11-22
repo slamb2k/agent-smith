@@ -1,34 +1,91 @@
 Categorize transactions using the hybrid rule + LLM workflow.
 
-You are the Agent Smith categorization assistant. Your job is to:
+You are the Agent Smith categorization assistant with real LLM integration. Your job is to:
 
 1. Ask the user for:
    - Period to process (YYYY-MM or "last-30-days")
    - Intelligence mode (conservative/smart/aggressive)
    - Whether to apply changes or dry-run
 
-2. Execute the categorization workflow:
-   ```python
-   import subprocess
-   import sys
+2. Execute the categorization workflow with LLM orchestration:
 
-   # Build command with user-provided parameters
-   cmd = [
-       "uv", "run", "python",
-       "scripts/operations/categorize_batch.py",
-       "--period", period,
-       "--mode", mode,
-   ]
+   **Step 2a:** Fetch and categorize transactions using Python:
+   ```bash
+   uv run python -c "
+import sys
+import json
+from datetime import datetime, timedelta
+from scripts.core.api_client import PocketSmithClient
+from scripts.workflows.categorization import CategorizationWorkflow
 
-   if dry_run:
-       cmd.append("--dry-run")
+# Parameters (will be substituted)
+period = '${period}'
+mode = '${mode}'
+dry_run = ${dry_run}
 
-   # Execute
-   result = subprocess.run(cmd, capture_output=True, text=True)
-   print(result.stdout)
-   if result.stderr:
-       print(result.stderr, file=sys.stderr)
+# Parse period
+if period == 'last-30-days':
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+else:
+    year, month = period.split('-')
+    start_date = datetime(int(year), int(month), 1)
+    if int(month) == 12:
+        end_date = datetime(int(year) + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_date = datetime(int(year), int(month) + 1, 1) - timedelta(days=1)
+
+# Fetch transactions
+client = PocketSmithClient()
+user = client.get_user()
+transactions = client.get_transactions(
+    user_id=user['id'],
+    start_date=start_date.strftime('%Y-%m-%d'),
+    end_date=end_date.strftime('%Y-%m-%d'),
+)
+
+# Filter uncategorized
+needs_categorization = [
+    t for t in transactions
+    if not t.get('category') or t.get('needs_review')
+]
+
+if not needs_categorization:
+    print(json.dumps({'status': 'no_transactions'}))
+    sys.exit(0)
+
+# Get categories
+categories = client.get_categories(user['id'])
+
+# Run categorization workflow (in production mode)
+workflow = CategorizationWorkflow(client=client, mode=mode)
+workflow.llm_orchestrator.test_mode = False  # Enable production mode
+
+result = workflow.categorize_transactions_batch(needs_categorization, categories)
+
+# Output results as JSON
+output = {
+    'status': 'success',
+    'stats': result['stats'],
+    'results': result['results'],
+    'transactions': needs_categorization,
+    'categories': categories,
+    'dry_run': dry_run
+}
+print(json.dumps(output))
+"
    ```
+
+   **Step 2b:** Parse the JSON output and handle LLM needs:
+   - If workflow returns marker dicts (indicated by logging warnings), those indicate LLM prompts that need execution
+   - For each prompt that needs execution:
+     - Extract the prompt text
+     - Execute it directly using your LLM capabilities
+     - Parse the response using the service's parsing methods
+
+   **Step 2c:** Apply results to PocketSmith (if not dry-run):
+   - For each categorized transaction, update via API
+   - Track success/failure counts
 
 3. After processing, show the user:
    - How many transactions were processed
