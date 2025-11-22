@@ -171,10 +171,10 @@ Recommend starting with recent transactions:
 **Run categorization:**
 ```bash
 # Dry run first
-run_agent_smith "operations/batch_categorize.py" --mode=dry_run --period=2025-11
+run_agent_smith "operations/categorize_batch.py" --mode=dry_run --period=2025-11
 
 # Apply if satisfied
-run_agent_smith "operations/batch_categorize.py" --mode=apply --period=2025-11
+run_agent_smith "operations/categorize_batch.py" --mode=apply --period=2025-11
 ```
 
 **After each batch:**
@@ -235,9 +235,9 @@ run_agent_smith() {
     if [ -f "./scripts/$script_path" ]; then
         # Repository mode
         uv run python -u "scripts/$script_path" "$@"
-    elif [ -f "$HOME/.claude-plugin/plugins/agent-smith-plugin/scripts/$script_path" ]; then
+    elif [ -f "$HOME/.claude/plugins/agent-smith-plugin/scripts/$script_path" ]; then
         # Plugin mode
-        (cd "$HOME/.claude-plugin/plugins/agent-smith-plugin" && USER_CWD="$user_cwd" uv run python -u "scripts/$script_path" "$@")
+        (cd "$HOME/.claude/plugins/agent-smith-plugin" && USER_CWD="$user_cwd" uv run python -u "scripts/$script_path" "$@")
     else
         echo "Error: Agent Smith script not found: $script_path"
         return 1
@@ -248,7 +248,7 @@ run_agent_smith() {
 Then call scripts like:
 ```bash
 run_agent_smith "onboarding/discovery.py"
-run_agent_smith "operations/batch_categorize.py" --mode=dry_run --period=2025-11
+run_agent_smith "operations/categorize_batch.py" --mode=dry_run --period=2025-11
 ```
 
 ## Execution
