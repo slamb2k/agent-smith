@@ -199,7 +199,9 @@ class DiscoveryAnalyzer:
             "school fees",
             "custody",
         }
-        if any(indicator in category_titles for indicator in separated_indicators):
+        if any(
+            indicator in title for title in category_titles for indicator in separated_indicators
+        ):
             return "separated-families"
 
         # Check for advanced indicators
@@ -214,14 +216,18 @@ class DiscoveryAnalyzer:
             "shares",
         }
         business_accounts = any("business" in name for name in account_names)
-        has_investments = any(indicator in category_titles for indicator in advanced_indicators)
+        has_investments = any(
+            indicator in title for title in category_titles for indicator in advanced_indicators
+        )
 
         if has_investments or business_accounts:
             return "advanced"
 
         # Check for shared household indicators
         shared_indicators = {"shared", "joint", "household", "split"}
-        has_shared = any(indicator in category_titles for indicator in shared_indicators)
+        has_shared = any(
+            indicator in title for title in category_titles for indicator in shared_indicators
+        )
         joint_accounts = any("joint" in name or "shared" in name for name in account_names)
 
         if has_shared or (joint_accounts and len(accounts) > 1):

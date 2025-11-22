@@ -222,3 +222,58 @@ def test_recommend_template_advanced():
     recommendation = analyzer._recommend_template(accounts, categories)
 
     assert recommendation == "advanced"
+
+
+def test_recommend_template_separated_families_substring():
+    """Test separated families with substring matching."""
+    accounts = [AccountSummary(100, "Personal", "Bank", 50, 10)]
+    categories = [
+        CategorySummary(300, "Child Support Payments", None, 10, Decimal("-800")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "separated-families"
+
+
+def test_recommend_template_advanced_substring():
+    """Test advanced template with substring matching for 'My Investment Portfolio'."""
+    accounts = [AccountSummary(100, "Personal", "Bank", 100, 20)]
+    categories = [
+        CategorySummary(300, "My Investment Portfolio", None, 15, Decimal("5000")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "advanced"
+
+
+def test_recommend_template_shared_household_substring():
+    """Test shared household with substring matching for 'Joint Household Bills'."""
+    accounts = [
+        AccountSummary(100, "Personal", "Bank", 50, 10),
+        AccountSummary(200, "Other", "Bank", 30, 5),
+    ]
+    categories = [
+        CategorySummary(300, "Joint Household Bills", None, 15, Decimal("-300")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "shared-household"
+
+
+def test_recommend_template_case_insensitive_substring():
+    """Test case-insensitive substring matching with 'MY INVESTMENT ACCOUNT'."""
+    accounts = [AccountSummary(100, "Personal", "Bank", 100, 20)]
+    categories = [
+        CategorySummary(300, "MY INVESTMENT ACCOUNT", None, 15, Decimal("5000")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "advanced"
