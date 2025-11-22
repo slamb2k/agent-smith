@@ -1,6 +1,8 @@
 ---
 name: agent-smith:categorize
 description: Categorize transactions using the hybrid rule + LLM workflow
+argument-hints:
+  - "[--mode=conservative|smart|aggressive] [--period=YYYY-MM] [--account=ID] [--dry-run]"
 ---
 
 Categorize transactions using the hybrid rule + LLM workflow.

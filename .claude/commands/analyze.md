@@ -1,6 +1,8 @@
 ---
 name: agent-smith:analyze
 description: Run financial analysis on your PocketSmith data
+argument-hints:
+  - "<spending|trends|category|tax|insights> [--period=PERIOD] [--category=NAME] [--compare=PERIOD] [--tax-level=LEVEL]"
 ---
 
 Run financial analysis on your PocketSmith data.

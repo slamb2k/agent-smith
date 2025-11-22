@@ -147,7 +147,7 @@ This ensures:
 After installation and verification, run Agent Smith:
 
 ```bash
-/agent-smith:init
+/agent-smith:install
 ```
 
 **What it does (first-time users):**
@@ -193,7 +193,7 @@ Once installed, you have access to these slash commands:
 
 | Command | Description |
 |---------|-------------|
-| `/agent-smith:init` | Main assistant with onboarding and intelligent suggestions |
+| `/agent-smith:install` | Main assistant with onboarding and intelligent suggestions |
 | `/agent-smith:categorize` | Categorize transactions |
 | `/agent-smith:analyze` | Financial analysis |
 | `/agent-smith:scenario` | What-if scenarios |

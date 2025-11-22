@@ -1,6 +1,8 @@
 ---
 name: agent-smith:tax
 description: Tax-focused analysis and compliance for Australian tax requirements
+argument-hints:
+  - "<deductions|cgt|bas|eofy|scenario> [--period=PERIOD] [--level=LEVEL] [--output=FORMAT]"
 ---
 
 Tax-focused analysis and compliance for Australian tax requirements.

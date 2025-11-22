@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-11-23
+
+### Changed
+- **Main Command Renamed**
+  - Renamed `/agent-smith:init` to `/agent-smith:install` for clarity
+  - More accurately reflects that this command handles initial installation/setup
+  - All documentation updated to reflect new command name
+
+- **Command Files Simplified**
+  - Removed `agent-smith-` prefix from all command filenames
+  - `agent-smith.md` → `install.md`
+  - `agent-smith-categorize.md` → `categorize.md`
+  - `agent-smith-analyze.md` → `analyze.md`
+  - `agent-smith-scenario.md` → `scenario.md`
+  - `agent-smith-report.md` → `report.md`
+  - `agent-smith-optimize.md` → `optimize.md`
+  - `agent-smith-tax.md` → `tax.md`
+  - `agent-smith-health.md` → `health.md`
+
+### Added
+- **Reset Functionality**
+  - Added `--reset` argument to `/agent-smith:install` command
+  - Allows users to delete all onboarding state and data to start fresh
+  - Requires user confirmation before deleting data directory
+
+- **Argument Hints**
+  - Added `argument-hints` to all command frontmatters
+  - Provides autocomplete-friendly syntax hints for command arguments
+  - Improves discoverability of command options and usage patterns
+
 ## [1.3.5] - 2025-11-23
 
 ### Changed
@@ -202,7 +232,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.5...HEAD
+[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.6...HEAD
+[1.3.6]: https://github.com/slamb2k/agent-smith/compare/v1.3.5...v1.3.6
 [1.3.5]: https://github.com/slamb2k/agent-smith/compare/v1.3.4...v1.3.5
 [1.3.4]: https://github.com/slamb2k/agent-smith/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/slamb2k/agent-smith/compare/v1.3.1...v1.3.3

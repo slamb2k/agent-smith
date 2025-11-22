@@ -1,6 +1,8 @@
 ---
 name: agent-smith:health
 description: Evaluate your PocketSmith setup and get optimization recommendations
+argument-hints:
+  - "[--full] [--quick] [--category=categories|rules|tax|data]"
 ---
 
 Evaluate your PocketSmith setup and get optimization recommendations.

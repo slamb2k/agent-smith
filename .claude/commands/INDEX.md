@@ -4,7 +4,7 @@ Quick-access commands for common financial management operations.
 
 ## All Commands
 
-1. `/agent-smith:init` - Main entry point with onboarding and intelligent suggestions
+1. `/agent-smith:install` - Main entry point with onboarding and intelligent suggestions
 2. `/agent-smith:categorize` - Transaction categorization
 3. `/agent-smith:analyze` - Financial analysis
 4. `/agent-smith:scenario` - Scenario modeling
@@ -15,7 +15,7 @@ Quick-access commands for common financial management operations.
 
 ## Command Descriptions
 
-### /agent-smith:init
+### /agent-smith:install
 
 Main entry point for Agent Smith with integrated onboarding and intelligent suggestions.
 
@@ -47,7 +47,7 @@ Main entry point for Agent Smith with integrated onboarding and intelligent sugg
 
 **Example:**
 ```bash
-/agent-smith:init
+/agent-smith:install
 ```
 
 **Note:** Your progress is saved in `data/onboarding_state.json`. If onboarding is complete, this command will skip directly to intelligent suggestions.
@@ -183,7 +183,7 @@ Use specialized commands for single-purpose operations:
 
 Use main command for multi-step guidance:
 ```bash
-/agent-smith:init
+/agent-smith:install
 # Then describe your needs in natural language
 ```
 

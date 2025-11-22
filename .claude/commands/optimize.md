@@ -1,6 +1,8 @@
 ---
 name: agent-smith:optimize
 description: AI-assisted optimization for categories, rules, spending, and subscriptions
+argument-hints:
+  - "<categories|rules|spending|subscriptions> [--aggressive] [--preview] [--focus=AREA]"
 ---
 
 AI-assisted optimization for categories, rules, spending, and subscriptions.

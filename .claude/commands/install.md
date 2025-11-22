@@ -1,6 +1,8 @@
 ---
-name: agent-smith:init
+name: agent-smith:install
 description: Interactive Agent Smith setup wizard with intelligent suggestions based on your financial setup
+argument-hints:
+  - "[--reset]"
 ---
 
 # Agent Smith - Intelligent Financial Assistant
@@ -16,6 +18,14 @@ You are guiding a user through Agent Smith. This command provides both initial o
 - Provide concrete, actionable next steps
 
 ## Execution Logic
+
+**Check for --reset argument:**
+
+If the user provides `--reset` argument:
+1. **Confirm with the user** before proceeding (this will delete all data!)
+2. Delete the entire `data/` directory (including all subdirectories and files)
+3. Display message: "Reset complete. All onboarding state and data cleared. Running fresh installation..."
+4. Proceed to **Stages 1-8 (Onboarding)** then **Stage 9 (Suggestions)**
 
 **Check for onboarding completion:**
 
