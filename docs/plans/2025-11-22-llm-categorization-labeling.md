@@ -707,127 +707,734 @@ git commit -m "feat: implement two-phase categorization and labeling execution"
 
 ---
 
-## Task 4: Sample YAML Rules File
+## Task 4: Preset Hierarchy Templates
 
 **Files:**
-- Create: `data/rules.yaml.sample`
+- Create: `data/templates/simple.yaml`
+- Create: `data/templates/separated-families.yaml`
+- Create: `data/templates/shared-household.yaml`
+- Create: `data/templates/advanced.yaml`
+- Create: `data/templates/INDEX.md`
+- Create: `scripts/setup/template_selector.py`
 
-**Step 1: Create sample rules file**
+**Step 1: Create Simple template (single person, basic categories)**
 
-Create `data/rules.yaml.sample`:
+Create `data/templates/simple.yaml`:
 
 ```yaml
-# Agent Smith Unified Rules - Categories & Labels
-#
-# Execution: Phase 1 (categorization) → Phase 2 (labeling)
-# Logic: OR within arrays, AND between when conditions
+# Simple Template - Single Person Finances
+# Best for: Individuals managing personal finances only
+
+metadata:
+  template_name: Simple
+  description: Basic categories and labels for individual financial tracking
+  target_users: Single person, no shared expenses, basic needs
 
 rules:
   # ═══════════════════════════════════════════════════════════
-  # GROCERIES FLOW
+  # INCOME
   # ═══════════════════════════════════════════════════════════
 
   - type: category
-    name: WOOLWORTHS → Groceries
-    patterns: [WOOLWORTHS, COLES, ALDI, IGA, FOODWORKS]
-    category: Groceries
+    name: Salary Income
+    patterns: [SALARY, WAGES, EMPLOYER]
+    category: Income > Salary
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # ESSENTIAL EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI, IGA]
+    category: Food & Dining > Groceries
     confidence: 95
 
   - type: label
-    name: Personal Groceries
+    name: Essential Spending
     when:
-      categories: [Groceries]
-      accounts: [Personal]
-    labels: [Personal, Essential]
+      categories: [Groceries, Utilities, Rent, Insurance]
+    labels: [Essential]
 
-  - type: label
-    name: Shared Groceries
-    when:
-      categories: [Groceries]
-      accounts: [Shared Bills]
-    labels: [Shared Expense, Needs Approval]
+  - type: category
+    name: Utilities
+    patterns: [AGL, ORIGIN, ENERGY AUSTRALIA, TELSTRA, OPTUS]
+    category: Bills > Utilities
+    confidence: 90
 
   # ═══════════════════════════════════════════════════════════
-  # TRANSPORT FLOW
+  # DISCRETIONARY
   # ═══════════════════════════════════════════════════════════
 
   - type: category
-    name: UBER → Transport
-    patterns: [UBER]
-    exclude_patterns: [UBER EATS]
-    category: Transport
+    name: Dining Out
+    patterns: [RESTAURANT, CAFE, UBER EATS, DELIVEROO]
+    category: Food & Dining > Dining Out
     confidence: 90
 
   - type: label
-    name: Personal Transport
+    name: Discretionary Spending
     when:
-      categories: [Transport]
-      accounts: [Personal]
-    labels: [Personal, Discretionary]
+      categories: [Dining Out, Entertainment, Shopping]
+    labels: [Discretionary]
 
-  - type: label
-    name: Work Transport - Reimbursable
-    when:
-      categories: [Transport]
-      accounts: [Work Account, Personal]
-      amount_operator: "<"
-      amount_value: 0
-    labels: [Work Related, Reimbursable]
+  - type: category
+    name: Entertainment
+    patterns: [NETFLIX, SPOTIFY, CINEMA, STEAM]
+    category: Entertainment
+    confidence: 95
 
   # ═══════════════════════════════════════════════════════════
-  # DINING FLOW
+  # TRANSPORT
   # ═══════════════════════════════════════════════════════════
 
   - type: category
-    name: UBER EATS → Dining Out
-    patterns: [UBER EATS, DELIVEROO, DOORDASH, MENULOG]
-    category: Dining Out
-    confidence: 95
-
-  - type: label
-    name: Discretionary Dining
-    when:
-      categories: [Dining Out]
-    labels: [Discretionary, Personal]
+    name: Transport
+    patterns: [UBER, TRAIN, BUS, PETROL]
+    exclude_patterns: [UBER EATS]
+    category: Transport
+    confidence: 90
 
   # ═══════════════════════════════════════════════════════════
   # CROSS-CATEGORY LABELS
   # ═══════════════════════════════════════════════════════════
 
   - type: label
-    name: Tax Deductible Work Expenses
-    when:
-      categories: [Software & Apps, Professional Development, Home Office Equipment]
-    labels: [Tax Deductible, ATO: D1]
-
-  - type: label
-    name: Large Purchases Need Review
+    name: Large Purchase Review
     when:
       amount_operator: ">"
-      amount_value: 500
-    labels: [Large Purchase, Review Required]
+      amount_value: 200
+    labels: [Large Purchase, Review]
 
   - type: label
-    name: Flag Uncategorized for Review
+    name: Flag Uncategorized
+    when:
+      uncategorized: true
+    labels: [Needs Categorization]
+```
+
+**Step 2: Create Separated Families template**
+
+Create `data/templates/separated-families.yaml`:
+
+```yaml
+# Separated Families Template
+# Best for: Divorced/separated parents managing shared kid expenses
+
+metadata:
+  template_name: Separated Families
+  description: Track kids expenses, child support, and contributor accountability
+  target_users: Separated parents with shared custody and expenses
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # INCOME & TRANSFERS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Child Support Received
+    patterns: [CHILD SUPPORT, CSA, CENTRELINK]
+    category: Income > Child Support
+    confidence: 95
+
+  - type: label
+    name: Child Support Income
+    when:
+      categories: [Income > Child Support]
+      amount_operator: ">"
+      amount_value: 0
+    labels: [Child Support, Income]
+
+  # ═══════════════════════════════════════════════════════════
+  # KIDS EXPENSES - ESSENTIAL
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Kids School Expenses
+    patterns: [SCHOOL, UNIFORM, TEXTBOOK, EXCURSION]
+    category: Kids > Education
+    confidence: 90
+
+  - type: label
+    name: Kids Essential Expense
+    when:
+      categories: [Kids > Education, Kids > Medical, Kids > Clothing]
+    labels: [Kids Expense, Essential, Shared Responsibility]
+
+  - type: category
+    name: Kids Medical
+    patterns: [DOCTOR, DENTIST, PHARMACY, CHEMIST]
+    accounts: [Kids Account]
+    category: Kids > Medical
+    confidence: 85
+
+  - type: category
+    name: Kids Activities
+    patterns: [SPORT, MUSIC LESSONS, SWIMMING, DANCE]
+    category: Kids > Activities
+    confidence: 85
+
+  - type: label
+    name: Kids Discretionary
+    when:
+      categories: [Kids > Activities, Kids > Entertainment]
+    labels: [Kids Expense, Discretionary]
+
+  # ═══════════════════════════════════════════════════════════
+  # CONTRIBUTOR TRACKING
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Parent 1 Contribution
+    when:
+      accounts: [Parent1 Account, Joint Account]
+      amount_operator: ">"
+      amount_value: 0
+    labels: [Contributor: Parent1]
+
+  - type: label
+    name: Parent 2 Contribution
+    when:
+      accounts: [Parent2 Account]
+      amount_operator: ">"
+      amount_value: 0
+    labels: [Contributor: Parent2]
+
+  # ═══════════════════════════════════════════════════════════
+  # EXPENSE SPLITTING & RECONCILIATION
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Needs Reconciliation - Large Kids Expense
+    when:
+      categories: [Kids > Education, Kids > Medical, Kids > Activities]
+      amount_operator: ">"
+      amount_value: 100
+    labels: [Needs Reconciliation, Shared Responsibility]
+
+  - type: label
+    name: Flag Uncategorized Kids Account
+    when:
+      accounts: [Kids Account]
+      uncategorized: true
+    labels: [Needs Categorization, Kids Related]
+```
+
+**Step 3: Create Shared Household template**
+
+Create `data/templates/shared-household.yaml`:
+
+```yaml
+# Shared Household Template
+# Best for: Couples, roommates, or families with shared expenses
+
+metadata:
+  template_name: Shared Household
+  description: Manage shared expenses with contributor tracking and approval workflows
+  target_users: Couples, roommates, or families sharing bills
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # SHARED EXPENSES - ESSENTIAL
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Shared Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI, IGA]
+    accounts: [Shared Bills, Joint Account]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: label
+    name: Shared Essential Expense
+    when:
+      categories: [Groceries, Utilities, Rent, Insurance]
+      accounts: [Shared Bills, Joint Account]
+    labels: [Shared Expense, Essential]
+
+  - type: category
+    name: Rent/Mortgage
+    patterns: [RENT, MORTGAGE, REAL ESTATE]
+    category: Housing > Rent
+    confidence: 95
+
+  - type: label
+    name: Major Shared Expense
+    when:
+      categories: [Housing > Rent, Housing > Mortgage]
+    labels: [Shared Expense, Major, Essential]
+
+  - type: category
+    name: Utilities
+    patterns: [AGL, ORIGIN, ENERGY, WATER, GAS, TELSTRA, INTERNET]
+    category: Bills > Utilities
+    confidence: 90
+
+  # ═══════════════════════════════════════════════════════════
+  # CONTRIBUTOR TRACKING
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Person A Contribution
+    when:
+      accounts: [Shared Bills, Joint Account]
+      categories: []  # Applies to all categories
+      amount_operator: ">"
+      amount_value: 0
+    labels: [Contributor: PersonA]
+
+  - type: label
+    name: Person B Contribution
+    when:
+      accounts: [Shared Bills]
+      patterns: [PERSONB NAME, TRANSFER FROM PERSONB]
+      amount_operator: ">"
+      amount_value: 0
+    labels: [Contributor: PersonB]
+
+  # ═══════════════════════════════════════════════════════════
+  # PERSONAL EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Personal Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI]
+    accounts: [Personal, PersonA Account, PersonB Account]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: label
+    name: Personal Expense
+    when:
+      accounts: [Personal, PersonA Account, PersonB Account]
+    labels: [Personal, Individual]
+
+  # ═══════════════════════════════════════════════════════════
+  # APPROVAL WORKFLOWS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Needs Approval - Large Shared Purchase
+    when:
+      accounts: [Shared Bills, Joint Account]
+      amount_operator: ">"
+      amount_value: 150
+    labels: [Needs Approval, Review Required]
+
+  - type: label
+    name: Needs Approval - Discretionary Shared
+    when:
+      accounts: [Shared Bills, Joint Account]
+      categories: [Dining Out, Entertainment, Shopping]
+    labels: [Needs Approval, Discretionary]
+
+  # ═══════════════════════════════════════════════════════════
+  # RECONCILIATION
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Monthly Reconciliation Item
+    when:
+      accounts: [Shared Bills, Joint Account]
+      categories: [Groceries, Utilities, Dining Out, Entertainment]
+    labels: [Monthly Reconciliation]
+
+  - type: label
+    name: Flag Uncategorized Shared
+    when:
+      accounts: [Shared Bills, Joint Account]
+      uncategorized: true
+    labels: [Needs Categorization, Shared Account]
+```
+
+**Step 4: Create Advanced template**
+
+Create `data/templates/advanced.yaml`:
+
+```yaml
+# Advanced Template
+# Best for: Complex households with investments, tax optimization, business expenses
+
+metadata:
+  template_name: Advanced
+  description: Comprehensive tracking with tax optimization and investment management
+  target_users: High-income households, business owners, investors
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # INCOME STREAMS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Salary Income
+    patterns: [SALARY, WAGES, EMPLOYER]
+    category: Income > Employment
+    confidence: 95
+
+  - type: label
+    name: Taxable Income
+    when:
+      categories: [Income > Employment, Income > Business, Income > Rental]
+    labels: [Taxable Income, ATO: Income]
+
+  - type: category
+    name: Investment Income
+    patterns: [DIVIDEND, DISTRIBUTION, INTEREST, INVESTMENT]
+    category: Income > Investment
+    confidence: 90
+
+  - type: label
+    name: Investment Income Tax
+    when:
+      categories: [Income > Investment]
+    labels: [Taxable Income, ATO: Investment, CGT Relevant]
+
+  - type: category
+    name: Business Income
+    patterns: [INVOICE, CLIENT, BUSINESS]
+    category: Income > Business
+    confidence: 85
+
+  # ═══════════════════════════════════════════════════════════
+  # TAX DEDUCTIBLE EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Home Office
+    patterns: [OFFICE SUPPLIES, DESK, CHAIR, MONITOR, OFFICEWORKS]
+    category: Work Expenses > Home Office
+    confidence: 85
+
+  - type: label
+    name: Tax Deductible - Home Office
+    when:
+      categories: [Work Expenses > Home Office]
+    labels: [Tax Deductible, ATO: D2 - Work Expenses]
+
+  - type: category
+    name: Professional Development
+    patterns: [COURSE, TRAINING, CONFERENCE, SEMINAR, UDEMY, COURSERA]
+    category: Work Expenses > Professional Development
+    confidence: 90
+
+  - type: label
+    name: Tax Deductible - Self Education
+    when:
+      categories: [Work Expenses > Professional Development]
+    labels: [Tax Deductible, ATO: D5 - Self Education]
+
+  - type: category
+    name: Work Travel
+    patterns: [FLIGHT, HOTEL, ACCOMMODATION]
+    accounts: [Work, Business]
+    category: Work Expenses > Travel
+    confidence: 85
+
+  - type: label
+    name: Tax Deductible - Work Travel
+    when:
+      categories: [Work Expenses > Travel]
+    labels: [Tax Deductible, ATO: D1 - Work Travel, Requires Documentation]
+
+  - type: category
+    name: Charitable Donations
+    patterns: [DONATION, CHARITY, FOUNDATION, GIVIT]
+    category: Charity
+    confidence: 90
+
+  - type: label
+    name: Tax Deductible - Donation
+    when:
+      categories: [Charity]
+    labels: [Tax Deductible, ATO: D9 - Donations, Requires Receipt]
+
+  # ═══════════════════════════════════════════════════════════
+  # INVESTMENT MANAGEMENT
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Share Purchase
+    patterns: [COMMSEC, ETRADE, SELFWEALTH, SHARE PURCHASE]
+    category: Investment > Shares
+    confidence: 90
+
+  - type: label
+    name: Capital Gains Tracking
+    when:
+      categories: [Investment > Shares, Investment > Property, Investment > Crypto]
+    labels: [CGT Relevant, Investment, Requires Cost Base Tracking]
+
+  - type: category
+    name: Investment Fees
+    patterns: [PLATFORM FEE, MANAGEMENT FEE, BROKERAGE]
+    category: Investment > Fees
+    confidence: 85
+
+  - type: label
+    name: Tax Deductible - Investment Fees
+    when:
+      categories: [Investment > Fees]
+    labels: [Tax Deductible, ATO: D4 - Investment Management]
+
+  # ═══════════════════════════════════════════════════════════
+  # RENTAL PROPERTY
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Rental Property Expenses
+    patterns: [PROPERTY MANAGEMENT, MAINTENANCE, REPAIRS]
+    accounts: [Investment Property]
+    category: Investment > Rental Property > Expenses
+    confidence: 85
+
+  - type: label
+    name: Tax Deductible - Rental Property
+    when:
+      categories: [Investment > Rental Property > Expenses]
+    labels: [Tax Deductible, ATO: Rental Property, Negative Gearing]
+
+  - type: category
+    name: Rental Income
+    patterns: [RENT RECEIVED, RENTAL INCOME]
+    category: Income > Rental
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # BUSINESS EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Business Software
+    patterns: [SLACK, ADOBE, MICROSOFT, SOFTWARE SUBSCRIPTION]
+    accounts: [Business]
+    category: Business Expenses > Software
+    confidence: 90
+
+  - type: label
+    name: Tax Deductible - Business Expense
+    when:
+      accounts: [Business]
+      categories: [Business Expenses > Software, Business Expenses > Equipment]
+    labels: [Tax Deductible, Business Expense, GST Claimable]
+
+  # ═══════════════════════════════════════════════════════════
+  # CROSS-CATEGORY RULES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Large Transaction - Requires Documentation
+    when:
+      amount_operator: ">"
+      amount_value: 1000
+    labels: [Large Transaction, Requires Documentation]
+
+  - type: label
+    name: End of Financial Year Review
+    when:
+      categories: [Income > Investment, Work Expenses, Investment, Charity]
+    labels: [EOFY Review Required]
+
+  - type: label
+    name: Flag Uncategorized
     when:
       uncategorized: true
     labels: [Needs Categorization, Review Required]
 ```
 
-**Step 2: Add to .env.sample**
+**Step 5: Create template index**
 
-Add to `.env.sample`:
+Create `data/templates/INDEX.md`:
 
-```bash
-# Rule Configuration
-RULES_FILE=data/rules.yaml
+```markdown
+# Rule Templates
+
+Preset rule hierarchies for different household types. Select the template that best matches your situation during initial setup.
+
+## Available Templates
+
+| Template | Best For | Key Features |
+|----------|----------|--------------|
+| **simple.yaml** | Single person | Basic categories, essential/discretionary labels |
+| **separated-families.yaml** | Separated parents | Kids expense tracking, contributor tracking, child support |
+| **shared-household.yaml** | Couples/roommates | Shared expense tracking, approval workflows, reconciliation |
+| **advanced.yaml** | Complex finances | Tax optimization, investment tracking, business expenses |
+
+## Template Metadata
+
+Each template includes:
+- **Category hierarchy** - Organized category structure
+- **Label taxonomy** - Labels for tracking and workflows
+- **Sample rules** - Pre-configured patterns for common merchants
+
+## Customization
+
+After selecting a template:
+1. Copy to `data/rules.yaml`
+2. Update merchant patterns for your region
+3. Adjust account names to match your setup
+4. Add custom rules as needed
+
+## Template Details
+
+### Simple
+- **Target:** Individual managing personal finances
+- **Categories:** Income, Groceries, Utilities, Dining, Entertainment, Transport
+- **Labels:** Essential, Discretionary, Large Purchase
+
+### Separated Families
+- **Target:** Divorced/separated parents with shared custody
+- **Categories:** Child Support, Kids Education, Kids Medical, Kids Activities
+- **Labels:** Contributor tracking, Shared Responsibility, Needs Reconciliation
+
+### Shared Household
+- **Target:** Couples, roommates, or families with joint expenses
+- **Categories:** Shared Groceries, Rent, Utilities, Personal expenses
+- **Labels:** Contributor tracking, Needs Approval, Monthly Reconciliation
+
+### Advanced
+- **Target:** High-income households, business owners, investors
+- **Categories:** Multiple income streams, Investment categories, Business expenses
+- **Labels:** Tax deductible (ATO codes), CGT tracking, EOFY review, Documentation requirements
 ```
 
-**Step 3: Commit**
+**Step 6: Create template selector script**
+
+Create `scripts/setup/template_selector.py`:
+
+```python
+"""Template selector for initial Agent Smith setup."""
+
+import shutil
+from pathlib import Path
+from typing import Dict, Any
+
+
+class TemplateSelector:
+    """Select and apply rule templates based on household type."""
+
+    def __init__(self):
+        """Initialize template selector."""
+        self.templates_dir = Path(__file__).parent.parent.parent / "data" / "templates"
+        self.rules_file = Path(__file__).parent.parent.parent / "data" / "rules.yaml"
+
+    def list_templates(self) -> Dict[str, Dict[str, str]]:
+        """List available templates with metadata.
+
+        Returns:
+            Dict mapping template names to metadata
+        """
+        templates = {
+            "simple": {
+                "name": "Simple - Single Person",
+                "description": "Basic categories for individual financial tracking",
+                "best_for": "Single person, no shared expenses",
+            },
+            "separated-families": {
+                "name": "Separated Families",
+                "description": "Kids expenses, child support, contributor tracking",
+                "best_for": "Divorced/separated parents with shared custody",
+            },
+            "shared-household": {
+                "name": "Shared Household",
+                "description": "Shared expense tracking with approval workflows",
+                "best_for": "Couples, roommates, or families",
+            },
+            "advanced": {
+                "name": "Advanced",
+                "description": "Tax optimization and investment management",
+                "best_for": "Business owners, investors, complex finances",
+            },
+        }
+
+        return templates
+
+    def apply_template(self, template_name: str, backup: bool = True) -> None:
+        """Apply a template to rules.yaml.
+
+        Args:
+            template_name: Name of template (simple, separated-families, etc.)
+            backup: Whether to backup existing rules.yaml
+        """
+        template_file = self.templates_dir / f"{template_name}.yaml"
+
+        if not template_file.exists():
+            raise FileNotFoundError(f"Template not found: {template_name}")
+
+        # Backup existing rules if requested
+        if backup and self.rules_file.exists():
+            backup_file = self.rules_file.with_suffix(".yaml.backup")
+            shutil.copy(self.rules_file, backup_file)
+            print(f"Backed up existing rules to {backup_file}")
+
+        # Copy template to rules.yaml
+        shutil.copy(template_file, self.rules_file)
+        print(f"Applied template: {template_name}")
+        print(f"Rules file: {self.rules_file}")
+
+
+def main():
+    """Interactive template selection."""
+    selector = TemplateSelector()
+
+    print("=" * 70)
+    print("Agent Smith - Rule Template Setup")
+    print("=" * 70)
+    print()
+
+    templates = selector.list_templates()
+
+    print("Available templates:")
+    for i, (key, info) in enumerate(templates.items(), 1):
+        print(f"\n{i}. {info['name']}")
+        print(f"   {info['description']}")
+        print(f"   Best for: {info['best_for']}")
+
+    print()
+    choice = input("Select template (1-4): ").strip()
+
+    template_map = {
+        "1": "simple",
+        "2": "separated-families",
+        "3": "shared-household",
+        "4": "advanced",
+    }
+
+    template_name = template_map.get(choice)
+
+    if not template_name:
+        print("Invalid choice. Exiting.")
+        return
+
+    print()
+    print(f"Applying template: {templates[template_name]['name']}")
+    selector.apply_template(template_name)
+
+    print()
+    print("✓ Template applied successfully!")
+    print()
+    print("Next steps:")
+    print("1. Review data/rules.yaml and customize for your needs")
+    print("2. Update merchant patterns for your region")
+    print("3. Adjust account names to match your PocketSmith setup")
+    print("4. Run: /agent-smith-categorize --mode=dry-run to test")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+**Step 7: Commit**
 
 ```bash
-git add data/rules.yaml.sample .env.sample
-git commit -m "docs: add sample YAML rules file with examples"
+git add data/templates/ scripts/setup/template_selector.py
+git commit -m "feat: add preset rule templates for different household types
+
+- Simple template: single person, basic categories
+- Separated families: kids expenses, child support, contributor tracking
+- Shared household: shared expenses, approval workflows, reconciliation
+- Advanced: tax optimization, investments, business expenses
+- Template selector script for interactive setup"
 ```
 
 ---
