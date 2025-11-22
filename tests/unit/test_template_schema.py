@@ -275,3 +275,84 @@ def test_load_payg_employee_template():
 
     # Verify conflicts
     assert "sole-trader" in template["dependencies"]["conflicts_with"]
+
+
+def test_load_sole_trader_template():
+    """Test loading the sole trader template."""
+    loader = TemplateLoader()
+
+    template_path = Path("templates/primary/sole-trader.yaml")
+    template = loader.load_from_file(template_path)
+
+    # Verify structure
+    assert template["name"] == "Sole Trader / Contractor"
+    assert template["layer"] == "primary"
+    assert len(template["categories"]) == 9
+    assert len(template["rules"]) == 5
+    assert len(template["alerts"]) == 3
+
+    # Verify labels section
+    assert "labels" in template
+    assert len(template["labels"]) == 5
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Tax Deductible" in label_names
+    assert "GST Applicable" in label_names
+    assert "Business Use" in label_names
+    assert "Home Office" in label_names
+    assert "Input Tax Credit" in label_names
+
+    # Verify GST Applicable is auto-apply
+    gst_label = next(label for label in template["labels"] if label["name"] == "GST Applicable")
+    assert gst_label["auto_apply"] is True
+
+    # Verify Business Use is auto-apply
+    business_label = next(label for label in template["labels"] if label["name"] == "Business Use")
+    assert business_label["auto_apply"] is True
+
+    # Verify rules have appropriate labels
+    abn_payment_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "abn-payment-detection"
+    )
+    assert "labels" in abn_payment_rule
+    assert "Business Use" in abn_payment_rule["labels"]
+    assert "GST Applicable" in abn_payment_rule["labels"]
+
+    home_office_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "home-office-percentage"
+    )
+    assert "labels" in home_office_rule
+    assert "Tax Deductible" in home_office_rule["labels"]
+    assert "Business Use" in home_office_rule["labels"]
+    assert "Home Office" in home_office_rule["labels"]
+
+    office_supplies_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "office-supplies"
+    )
+    assert "labels" in office_supplies_rule
+    assert "Tax Deductible" in office_supplies_rule["labels"]
+    assert "Business Use" in office_supplies_rule["labels"]
+    assert "GST Applicable" in office_supplies_rule["labels"]
+
+    professional_dev_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "professional-development"
+    )
+    assert "labels" in professional_dev_rule
+    assert "Tax Deductible" in professional_dev_rule["labels"]
+    assert "Business Use" in professional_dev_rule["labels"]
+    assert "GST Applicable" in professional_dev_rule["labels"]
+
+    marketing_rule = next(rule for rule in template["rules"] if rule["id"] == "marketing-expense")
+    assert "labels" in marketing_rule
+    assert "Tax Deductible" in marketing_rule["labels"]
+    assert "Business Use" in marketing_rule["labels"]
+    assert "GST Applicable" in marketing_rule["labels"]
+
+    # Verify BAS tracking
+    assert template["tax_tracking"]["bas_enabled"] is True
+    assert template["tax_tracking"]["bas_frequency"] == "quarterly"
+    assert template["tax_tracking"]["gst_method"] == "cash"
+    assert template["tax_tracking"]["instant_asset_threshold"] == 20000
+
+    # Verify conflicts
+    assert "payg-employee" in template["dependencies"]["conflicts_with"]
+    assert "small-business" in template["dependencies"]["conflicts_with"]
