@@ -1,3 +1,8 @@
+---
+name: agent-smith:report
+description: Generate comprehensive financial reports in various formats
+---
+
 Generate comprehensive financial reports in various formats.
 
 ## Usage

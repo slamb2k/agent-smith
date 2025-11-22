@@ -8,7 +8,7 @@ Agent Smith provides comprehensive PocketSmith API integration with advanced AI-
 
 ✅ **Implementation Complete** - All 8 phases implemented and tested
 
-📦 **Version:** 1.3.4
+📦 **Version:** 1.3.5
 
 📋 **Design Document:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
 
@@ -122,7 +122,7 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 **Launch Agent Smith with integrated onboarding:**
 
 ```bash
-/agent-smith
+/agent-smith:init
 ```
 
 **First-time users:** This guided 8-stage onboarding process will:

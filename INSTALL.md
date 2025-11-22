@@ -129,7 +129,7 @@ source .venv/bin/activate  # Unix/macOS
 python -c "from scripts.core.api_client import PocketSmithClient; c = PocketSmithClient(); print(f'Connected as: {c.get_user()[\"login\"]}')"
 
 # Run a quick health check via Claude Code
-/agent-smith-health --quick
+/agent-smith:health --quick
 ```
 
 **Important:** When running Python scripts directly, always use:
@@ -147,7 +147,7 @@ This ensures:
 After installation and verification, run Agent Smith:
 
 ```bash
-/agent-smith
+/agent-smith:init
 ```
 
 **What it does (first-time users):**
@@ -182,7 +182,7 @@ uv run python scripts/operations/batch_categorize.py --mode=dry_run --period=202
 uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-11
 
 # 5. Health Check
-/agent-smith-health --full
+/agent-smith:health --full
 ```
 
 **For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
@@ -193,30 +193,30 @@ Once installed, you have access to these slash commands:
 
 | Command | Description |
 |---------|-------------|
-| `/agent-smith` | Main assistant with onboarding and intelligent suggestions |
-| `/agent-smith-categorize` | Categorize transactions |
-| `/agent-smith-analyze` | Financial analysis |
-| `/agent-smith-scenario` | What-if scenarios |
-| `/agent-smith-report` | Generate reports |
-| `/agent-smith-optimize` | Optimization suggestions |
-| `/agent-smith-tax` | Tax intelligence |
-| `/agent-smith-health` | Setup health check |
+| `/agent-smith:init` | Main assistant with onboarding and intelligent suggestions |
+| `/agent-smith:categorize` | Categorize transactions |
+| `/agent-smith:analyze` | Financial analysis |
+| `/agent-smith:scenario` | What-if scenarios |
+| `/agent-smith:report` | Generate reports |
+| `/agent-smith:optimize` | Optimization suggestions |
+| `/agent-smith:tax` | Tax intelligence |
+| `/agent-smith:health` | Setup health check |
 
 ## Getting Started
 
 1. **Run a health check** to see the state of your PocketSmith setup:
    ```
-   /agent-smith-health --full
+   /agent-smith:health --full
    ```
 
 2. **Categorize uncategorized transactions**:
    ```
-   /agent-smith-categorize --mode=smart
+   /agent-smith:categorize --mode=smart
    ```
 
 3. **Analyze your spending**:
    ```
-   /agent-smith-analyze spending --period=2025
+   /agent-smith:analyze spending --period=2025
    ```
 
 ## Updating

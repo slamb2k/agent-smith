@@ -1,5 +1,5 @@
 ---
-name: agent-smith
+name: agent-smith:init
 description: Interactive Agent Smith setup wizard with intelligent suggestions based on your financial setup
 ---
 

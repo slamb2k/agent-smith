@@ -1,3 +1,8 @@
+---
+name: agent-smith:analyze
+description: Run financial analysis on your PocketSmith data
+---
+
 Run financial analysis on your PocketSmith data.
 
 ## Usage

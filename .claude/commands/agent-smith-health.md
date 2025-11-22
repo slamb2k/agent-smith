@@ -1,3 +1,8 @@
+---
+name: agent-smith:health
+description: Evaluate your PocketSmith setup and get optimization recommendations
+---
+
 Evaluate your PocketSmith setup and get optimization recommendations.
 
 ## Usage

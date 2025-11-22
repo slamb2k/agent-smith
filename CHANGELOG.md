@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.5] - 2025-11-23
+
+### Changed
+- **Command Namespace Refactor**
+  - All slash commands now use `agent-smith:` namespace pattern
+  - Main command renamed from `/agent-smith` to `/agent-smith:init`
+  - Specialized commands use last word as name (e.g., `/agent-smith:categorize`, `/agent-smith:analyze`)
+  - Consistent frontmatter added to all command files
+  - Updated all documentation (INDEX.md, README.md, INSTALL.md) to reflect new command names
+  - **BREAKING CHANGE:** Old command names (e.g., `/agent-smith-categorize`) no longer work
+
+### Technical
+- Command name format: `agent-smith:<action>` where action is: init, categorize, analyze, scenario, report, optimize, tax, health
+
 ## [1.3.4] - 2025-11-23
 
 ### Changed
@@ -188,7 +202,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/slamb2k/agent-smith/compare/v1.3.5...HEAD
+[1.3.5]: https://github.com/slamb2k/agent-smith/compare/v1.3.4...v1.3.5
+[1.3.4]: https://github.com/slamb2k/agent-smith/compare/v1.3.3...v1.3.4
+[1.3.3]: https://github.com/slamb2k/agent-smith/compare/v1.3.1...v1.3.3
 [1.3.1]: https://github.com/slamb2k/agent-smith/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/slamb2k/agent-smith/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/slamb2k/agent-smith/compare/v1.1.1...v1.2.0

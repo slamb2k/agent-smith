@@ -1,3 +1,8 @@
+---
+name: agent-smith:tax
+description: Tax-focused analysis and compliance for Australian tax requirements
+---
+
 Tax-focused analysis and compliance for Australian tax requirements.
 
 ## Usage

@@ -1,3 +1,8 @@
+---
+name: agent-smith:scenario
+description: Model financial scenarios with what-if analysis, projections, and optimization
+---
+
 Model financial scenarios with what-if analysis, projections, and optimization.
 
 ## Usage

@@ -1,3 +1,8 @@
+---
+name: agent-smith:optimize
+description: AI-assisted optimization for categories, rules, spending, and subscriptions
+---
+
 AI-assisted optimization for categories, rules, spending, and subscriptions.
 
 ## Usage
