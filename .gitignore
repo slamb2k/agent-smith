@@ -29,10 +29,11 @@ backups/*
 !backups/INDEX.md
 reports/*
 !reports/INDEX.md
-data/cache/
-data/templates/
 logs/*
 !logs/INDEX.md
+
+# Runtime data directory (initialized from assets/ on first run)
+data/
 
 # Skill build artifacts (scripts are copied during build)
 agent-smith-plugin/skills/agent-smith/scripts/
