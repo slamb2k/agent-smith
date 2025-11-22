@@ -72,21 +72,21 @@ def test_discovery_analyzer_fetch_accounts():
         "id": 12345,
         "login": "test@example.com",
     }
-    mock_client.get_accounts.return_value = [
+    mock_client.get_transaction_accounts.return_value = [
         {
             "id": 100,
-            "title": "Checking",
+            "name": "Checking",
             "institution": {"title": "Test Bank"},
         },
         {
             "id": 200,
-            "title": "Savings",
+            "name": "Savings",
             "institution": {"title": "Test Bank"},
         },
     ]
 
     analyzer = DiscoveryAnalyzer(client=mock_client)
-    accounts = analyzer._fetch_accounts()
+    accounts = analyzer._fetch_accounts(user_id=12345)
 
     assert len(accounts) == 2
     assert accounts[0].id == 100
@@ -112,7 +112,7 @@ def test_discovery_analyzer_fetch_categories():
     ]
 
     analyzer = DiscoveryAnalyzer(client=mock_client)
-    categories = analyzer._fetch_categories()
+    categories = analyzer._fetch_categories(user_id=12345)
 
     assert len(categories) == 2
     assert categories[0].id == 300
@@ -144,7 +144,7 @@ def test_discovery_analyzer_fetch_transactions():
     ]
 
     analyzer = DiscoveryAnalyzer(client=mock_client)
-    summary = analyzer._fetch_transaction_summary()
+    summary = analyzer._fetch_transaction_summary(user_id=12345)
 
     assert summary.total_count == 2
     assert summary.uncategorized_count == 1
@@ -286,8 +286,8 @@ def test_discovery_analyzer_analyze():
         "id": 12345,
         "login": "test@example.com",
     }
-    mock_client.get_accounts.return_value = [
-        {"id": 100, "title": "Checking", "institution": {"title": "Test Bank"}},
+    mock_client.get_transaction_accounts.return_value = [
+        {"id": 100, "name": "Checking", "institution": {"title": "Test Bank"}},
     ]
     mock_client.get_categories.return_value = [
         {"id": 300, "title": "Groceries", "parent_id": None},
