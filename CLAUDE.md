@@ -41,7 +41,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `docs/design/` - Complete design specifications (start here for understanding)
 - `ai_docs/` - Documentation for AI agents/subagents (PocketSmith API reference, future tax guidelines)
-- `build/` - **Temporary** reference materials from previous migration work (40+ Python scripts, 9 docs). Extract patterns/insights, then remove before publication.
 - `.env` - API configuration (**NEVER commit**, protected by .gitignore)
 
 **Navigation:**
@@ -114,24 +113,11 @@ Refer to `docs/design/2025-11-20-agent-smith-design.md` Section 11 for complete 
 7. Advanced Features (weeks 13-14)
 8. Health Check & Polish (weeks 15-16)
 
-### Working with Reference Materials
+### Reference Materials
 
-The `build/` directory contains valuable reference from previous PocketSmith migration work:
+Insights from previous PocketSmith migration work have been incorporated into Agent Smith's design.
 
-**Extract these patterns from `build/scripts/`:**
-- API client error handling and rate limiting
-- Backup/restore utilities
-- Pattern matching algorithms for transaction categorization
-- Merchant normalization logic
-- Batch processing strategies
-
-**Extract these insights from `build/docs/`:**
-- Category hierarchy optimization strategies
-- Common PocketSmith API quirks and workarounds
-- Rule creation patterns
-- Migration edge cases
-
-**See:** `build/INDEX.md` for extraction checklist
+**See:** `docs/design/LESSONS_LEARNED.md` for detailed patterns, API quirks, and best practices extracted from prior migration experience.
 
 ## Key Technical Decisions
 
@@ -219,7 +205,6 @@ Agent Smith will provide 8 slash commands in `.claude/commands/`:
 
 - **Never commit `.env`** - Contains sensitive API keys (protected by .gitignore)
 - **Always backup before mutations** - Use timestamped backup directories
-- **Build directory is temporary** - Extract value, then remove before publication
 - **Tax advice disclaimer required** - All Level 3 tax outputs must include professional advice disclaimer
 - **INDEX.md must be current** - Update whenever files are created/modified/deleted
 - Complete design specification is the source of truth: `docs/design/2025-11-20-agent-smith-design.md`

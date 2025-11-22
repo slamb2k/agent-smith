@@ -733,4 +733,4 @@ For questions or issues, please refer to the design documentation or create an i
 
 ---
 
-**Note:** This project is in active development. The `build/` directory contains reference materials from previous migration work and will be removed before final publication.
+**Note:** For insights from previous PocketSmith migration work that informed this project, see [Lessons Learned](docs/design/LESSONS_LEARNED.md).
