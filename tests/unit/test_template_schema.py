@@ -102,9 +102,14 @@ def test_load_template_from_file():
     """Test loading template from file path."""
     loader = TemplateLoader()
 
-    # This will fail because we haven't created the file yet
+    # Test that existing template file loads successfully
+    template = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
+    assert template["name"] == "PAYG Employee"
+    assert template["layer"] == "primary"
+
+    # Test that non-existent file raises FileNotFoundError
     with pytest.raises(FileNotFoundError):
-        loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
+        loader.load_from_file(Path("templates/primary/non-existent-template.yaml"))
 
 
 def test_label_validation_valid():
@@ -216,3 +221,57 @@ metadata:
     assert label["auto_apply"] is False
     assert label["requires_configuration"] is True
     assert label["configuration_prompt"] == "Enter contributor name:"
+
+
+def test_load_payg_employee_template():
+    """Test loading the actual PAYG employee template."""
+    loader = TemplateLoader()
+
+    template_path = Path("templates/primary/payg-employee.yaml")
+    template = loader.load_from_file(template_path)
+
+    # Verify structure
+    assert template["name"] == "PAYG Employee"
+    assert template["layer"] == "primary"
+    assert len(template["categories"]) == 7
+    assert len(template["rules"]) == 5
+    assert len(template["alerts"]) == 2
+
+    # Verify labels section exists and has correct structure
+    assert "labels" in template
+    assert len(template["labels"]) == 3
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Tax Deductible" in label_names
+    assert "Requires Receipt" in label_names
+    assert "Work Expense" in label_names
+
+    # Verify Work Expense label is auto-apply
+    work_expense_label = next(
+        label for label in template["labels"] if label["name"] == "Work Expense"
+    )
+    assert work_expense_label["auto_apply"] is True
+
+    # Verify rules have labels
+    uniform_rule = next(rule for rule in template["rules"] if rule["id"] == "uniform-expense")
+    assert "labels" in uniform_rule
+    assert "Tax Deductible" in uniform_rule["labels"]
+    assert "Work Expense" in uniform_rule["labels"]
+
+    work_tools_rule = next(rule for rule in template["rules"] if rule["id"] == "work-tools")
+    assert "labels" in work_tools_rule
+    assert "Tax Deductible" in work_tools_rule["labels"]
+    assert "Requires Receipt" in work_tools_rule["labels"]
+    assert "Work Expense" in work_tools_rule["labels"]
+
+    work_vehicle_rule = next(rule for rule in template["rules"] if rule["id"] == "work-vehicle")
+    assert "labels" in work_vehicle_rule
+    assert "Tax Deductible" in work_vehicle_rule["labels"]
+    assert "Requires Receipt" in work_vehicle_rule["labels"]
+    assert "Work Expense" in work_vehicle_rule["labels"]
+
+    # Verify tax tracking config
+    assert template["tax_tracking"]["bas_enabled"] is False
+    assert template["tax_tracking"]["work_expense_threshold"] == 300
+
+    # Verify conflicts
+    assert "sole-trader" in template["dependencies"]["conflicts_with"]

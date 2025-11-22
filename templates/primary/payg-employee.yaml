@@ -1,0 +1,112 @@
+name: PAYG Employee
+layer: primary
+description: |
+  Salary or wage earner with tax withheld by employer.
+  Suitable for standard employment situations with work-related expense deductions.
+
+categories:
+  - name: "Salary/Wages"
+    parent: null
+    description: "Employment income from salary or wages"
+
+  - name: "PAYG Tax Withheld"
+    parent: null
+    description: "Tax withheld from salary by employer"
+
+  - name: "Work Expenses"
+    parent: null
+    description: "Work-related expenses that may be tax deductible"
+
+  - name: "Work Expenses:Uniforms"
+    parent: "Work Expenses"
+    description: "Uniforms, protective clothing, laundry"
+
+  - name: "Work Expenses:Tools & Equipment"
+    parent: "Work Expenses"
+    description: "Tools and equipment required for work"
+
+  - name: "Work Expenses:Vehicle"
+    parent: "Work Expenses"
+    description: "Vehicle expenses for work travel (excl. commuting)"
+
+  - name: "Work Expenses:Self-Education"
+    parent: "Work Expenses"
+    description: "Study directly related to current employment"
+
+labels:
+  - name: "Tax Deductible"
+    description: "Work-related expense claimable on tax return"
+    color: "green"
+    auto_apply: false
+
+  - name: "Requires Receipt"
+    description: "Receipt required for ATO substantiation"
+    color: "yellow"
+    auto_apply: false
+
+  - name: "Work Expense"
+    description: "Work-related expense"
+    color: "purple"
+    auto_apply: true
+
+rules:
+  - id: salary-payment
+    pattern: "salary|wage.*payment|payroll|fortnightly.*pay"
+    category: "Salary/Wages"
+    confidence: high
+    description: "Detect regular salary/wage payments"
+
+  - id: payg-tax
+    pattern: "PAYG.*tax|tax.*withheld|ATO.*payment"
+    category: "PAYG Tax Withheld"
+    confidence: high
+    description: "Detect PAYG tax withholding"
+
+  - id: uniform-expense
+    pattern: "uniform|workwear|protective.*clothing|laundry.*work"
+    category: "Work Expenses:Uniforms"
+    confidence: medium
+    description: "Detect uniform and protective clothing expenses"
+    labels: ["Tax Deductible", "Work Expense"]
+
+  - id: work-tools
+    pattern: "tools?|equipment|laptop.*work|computer.*work"
+    category: "Work Expenses:Tools & Equipment"
+    confidence: medium
+    description: "Detect work tool and equipment purchases"
+    labels: ["Tax Deductible", "Requires Receipt", "Work Expense"]
+
+  - id: work-vehicle
+    pattern: "fuel.*work|parking.*work|tolls.*work|uber.*work"
+    category: "Work Expenses:Vehicle"
+    confidence: low
+    description: "Detect work-related vehicle expenses (requires verification)"
+    labels: ["Tax Deductible", "Requires Receipt", "Work Expense"]
+
+tax_tracking:
+  bas_enabled: false
+  payment_summary_reconciliation: true
+  work_expense_threshold: 300
+  logbook_required: false
+
+alerts:
+  - type: work_expense_threshold
+    trigger: annual_total_exceeds
+    threshold: 300
+    category: "Work Expenses"
+    message: "Work expenses exceed $300 - ensure you have receipts for all claims"
+
+  - type: eofy_reminder
+    schedule: annual
+    before_date: "06-15"
+    message: "EOFY approaching - gather payment summary and work expense receipts"
+
+dependencies:
+  requires: []
+  conflicts_with: ["sole-trader", "small-business"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 1
