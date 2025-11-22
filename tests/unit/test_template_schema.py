@@ -471,3 +471,142 @@ def test_load_separated_parents_template():
     )
     assert "labels" in child_support_received_rule
     assert "Child Support" in child_support_received_rule["labels"]
+
+
+def test_load_property_investor_template():
+    """Test loading the property investor template."""
+    loader = TemplateLoader()
+    template = loader.load_from_file(Path("templates/additional/property-investor.yaml"))
+
+    # Verify structure
+    assert template["name"] == "Property Investor"
+    assert template["layer"] == "additional"
+    assert template["metadata"]["priority"] == 3
+    assert len(template["categories"]) == 7
+    assert len(template["rules"]) == 5
+    assert len(template["alerts"]) == 3
+
+    # Verify tax tracking
+    assert template["tax_tracking"]["negative_gearing_calculation"] is True
+    assert template["tax_tracking"]["cgt_cost_base_tracking"] is True
+    assert template["tax_tracking"]["cgt_discount_eligible"] is True
+    assert template["tax_tracking"]["cgt_discount_holding_period"] == 365
+    assert template["tax_tracking"]["depreciation_schedule_tracking"] is True
+
+    # Verify labels section
+    assert len(template["labels"]) == 5
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Tax Deductible" in label_names
+    assert "Negative Gearing" in label_names
+    assert "Capital Improvement" in label_names
+    assert "Repairs vs Improvements" in label_names
+    assert "Property: {address}" in label_names
+
+    # Verify property address label requires configuration
+    property_label = next(
+        label for label in template["labels"] if label["name"] == "Property: {address}"
+    )
+    assert property_label["requires_configuration"] is True
+    assert property_label["configuration_prompt"] == "Enter property address:"
+    assert property_label["color"] == "brown"
+    assert property_label["auto_apply"] is False
+
+    # Verify rules have appropriate labels
+    rental_income_rule = next(rule for rule in template["rules"] if rule["id"] == "rental-income")
+    assert "labels" in rental_income_rule
+    assert "Property: {address}" in rental_income_rule["labels"]
+
+    property_loan_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "property-loan-interest"
+    )
+    assert "labels" in property_loan_rule
+    assert "Tax Deductible" in property_loan_rule["labels"]
+    assert "Property: {address}" in property_loan_rule["labels"]
+
+    council_rates_rule = next(rule for rule in template["rules"] if rule["id"] == "council-rates")
+    assert "labels" in council_rates_rule
+    assert "Tax Deductible" in council_rates_rule["labels"]
+    assert "Property: {address}" in council_rates_rule["labels"]
+
+    property_repairs_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "property-repairs"
+    )
+    assert "labels" in property_repairs_rule
+    assert "Tax Deductible" in property_repairs_rule["labels"]
+    assert "Property: {address}" in property_repairs_rule["labels"]
+    assert "Repairs vs Improvements" in property_repairs_rule["labels"]
+
+    property_mgmt_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "property-management-fee"
+    )
+    assert "labels" in property_mgmt_rule
+    assert "Tax Deductible" in property_mgmt_rule["labels"]
+    assert "Property: {address}" in property_mgmt_rule["labels"]
+
+
+def test_load_share_investor_template():
+    """Test loading the share investor template."""
+    loader = TemplateLoader()
+    template = loader.load_from_file(Path("templates/additional/share-investor.yaml"))
+
+    # Verify structure
+    assert template["name"] == "Share/ETF Investor"
+    assert template["layer"] == "additional"
+    assert template["metadata"]["priority"] == 3
+    assert len(template["categories"]) == 4
+    assert len(template["rules"]) == 4
+    assert len(template["alerts"]) == 3
+
+    # Verify tax tracking
+    assert template["tax_tracking"]["dividend_tracking"] is True
+    assert template["tax_tracking"]["franking_credit_extraction"] is True
+    assert template["tax_tracking"]["cgt_tracking"] is True
+    assert template["tax_tracking"]["cgt_discount_eligible"] is True
+    assert template["tax_tracking"]["cgt_discount_holding_period"] == 365
+    assert template["tax_tracking"]["wash_sale_detection"] is True
+    assert template["tax_tracking"]["wash_sale_period"] == 30
+
+    # Verify labels section
+    assert len(template["labels"]) == 4
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Tax Deductible" in label_names
+    assert "Capital Gain" in label_names
+    assert "Capital Loss" in label_names
+    assert "Franked Dividend" in label_names
+
+    # Verify Capital Gain label is auto-apply
+    capital_gain_label = next(
+        label for label in template["labels"] if label["name"] == "Capital Gain"
+    )
+    assert capital_gain_label["auto_apply"] is True
+    assert capital_gain_label["color"] == "gold"
+    assert capital_gain_label["description"] == "Capital gains event (CGT applicable)"
+
+    # Verify Franked Dividend label is auto-apply
+    franked_dividend_label = next(
+        label for label in template["labels"] if label["name"] == "Franked Dividend"
+    )
+    assert franked_dividend_label["auto_apply"] is True
+    assert franked_dividend_label["color"] == "teal"
+
+    # Verify rules have appropriate labels
+    franked_dividends_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "franked-dividends"
+    )
+    assert "labels" in franked_dividends_rule
+    assert "Franked Dividend" in franked_dividends_rule["labels"]
+
+    unfranked_dividends_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "unfranked-dividends"
+    )
+    # Unfranked dividends should not have labels (they're not franked)
+    if "labels" in unfranked_dividends_rule:
+        assert "Franked Dividend" not in unfranked_dividends_rule["labels"]
+
+    share_sale_rule = next(rule for rule in template["rules"] if rule["id"] == "share-sale")
+    assert "labels" in share_sale_rule
+    assert "Capital Gain" in share_sale_rule["labels"]
+
+    brokerage_rule = next(rule for rule in template["rules"] if rule["id"] == "brokerage")
+    assert "labels" in brokerage_rule
+    assert "Tax Deductible" in brokerage_rule["labels"]
