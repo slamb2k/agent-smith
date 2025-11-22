@@ -1,0 +1,57 @@
+name: Single Person
+layer: living
+description: |
+  Managing finances independently without shared household expenses.
+  Standard personal budgeting categories.
+
+categories:
+  - name: "Personal Expenses"
+    parent: null
+    description: "General personal spending"
+
+  - name: "Housing"
+    parent: null
+    description: "Rent or mortgage payments"
+
+  - name: "Utilities"
+    parent: null
+    description: "Electricity, gas, water, internet"
+
+  - name: "Groceries"
+    parent: null
+    description: "Food and household supplies"
+
+rules:
+  - id: rent-payment
+    pattern: "rent|rental.*payment|real.*estate"
+    category: "Housing"
+    confidence: high
+    description: "Detect rent payments"
+
+  - id: utilities
+    pattern: "electricity|gas|water|internet|telstra|optus|vodafone"
+    category: "Utilities"
+    confidence: high
+    description: "Detect utility payments"
+
+  - id: groceries
+    pattern: "woolworths|coles|aldi|iga|grocery"
+    category: "Groceries"
+    confidence: high
+    description: "Detect grocery shopping"
+
+tax_tracking: {}
+
+alerts: []
+
+labels: []
+
+dependencies:
+  requires: []
+  conflicts_with: ["shared-joint", "shared-hybrid", "separated-parents", "sharehouse"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 2

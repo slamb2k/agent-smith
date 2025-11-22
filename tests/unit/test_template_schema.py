@@ -356,3 +356,118 @@ def test_load_sole_trader_template():
     # Verify conflicts
     assert "payg-employee" in template["dependencies"]["conflicts_with"]
     assert "small-business" in template["dependencies"]["conflicts_with"]
+
+
+def test_load_single_template():
+    """Test loading the single person template."""
+    loader = TemplateLoader()
+    template = loader.load_from_file(Path("templates/living/single.yaml"))
+
+    assert template["name"] == "Single Person"
+    assert template["layer"] == "living"
+    assert template["metadata"]["priority"] == 2
+    assert len(template["categories"]) == 4
+    assert len(template["rules"]) == 3
+    assert len(template["labels"]) == 0  # No labels for single person
+
+
+def test_load_shared_hybrid_template():
+    """Test loading the shared hybrid template."""
+    loader = TemplateLoader()
+    template = loader.load_from_file(Path("templates/living/shared-hybrid.yaml"))
+
+    assert template["name"] == "Shared Household - Hybrid Finances"
+    assert template["layer"] == "living"
+    assert template["tax_tracking"]["expense_splitting_enabled"] is True
+    assert template["tax_tracking"]["default_split_ratio"] == 0.5
+
+    # Verify contributor labels are present
+    assert len(template["labels"]) == 5
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Shared Expense" in label_names
+    assert "Contributor: {partner_a_name}" in label_names
+    assert "Contributor: {partner_b_name}" in label_names
+    assert "Personal: {partner_a_name}" in label_names
+    assert "Personal: {partner_b_name}" in label_names
+
+    # Verify contributor labels require configuration
+    contributor_a = next(
+        label for label in template["labels"] if label["name"] == "Contributor: {partner_a_name}"
+    )
+    assert contributor_a["requires_configuration"] is True
+    assert "Partner A" in contributor_a["configuration_prompt"]
+    assert contributor_a["color"] == "orange"
+
+    contributor_b = next(
+        label for label in template["labels"] if label["name"] == "Contributor: {partner_b_name}"
+    )
+    assert contributor_b["requires_configuration"] is True
+    assert "Partner B" in contributor_b["configuration_prompt"]
+    assert contributor_b["color"] == "cyan"
+
+    # Verify rules have labels
+    shared_rent_rule = next(rule for rule in template["rules"] if rule["id"] == "shared-rent")
+    assert "labels" in shared_rent_rule
+    assert "Shared Expense" in shared_rent_rule["labels"]
+
+
+def test_load_separated_parents_template():
+    """Test loading the separated parents template."""
+    loader = TemplateLoader()
+    template = loader.load_from_file(Path("templates/living/separated-parents.yaml"))
+
+    assert template["name"] == "Separated/Divorced Parents"
+    assert template["layer"] == "living"
+    assert len(template["categories"]) == 6
+    assert template["tax_tracking"]["child_support_documentation"] is True
+    assert template["tax_tracking"]["custody_expense_tracking"] is True
+
+    # Verify labels including contributor and child labels
+    assert len(template["labels"]) == 7
+    label_names = [label["name"] for label in template["labels"]]
+    assert "Child Support" in label_names
+    assert "Custody Period" in label_names
+    assert "Shared Child Expense" in label_names
+    assert "Contributor: {parent_a_name}" in label_names
+    assert "Contributor: {parent_b_name}" in label_names
+    assert "Kids: {child_1_name}" in label_names
+    assert "Kids: {child_2_name}" in label_names
+
+    # Verify parent contributor labels
+    parent_a = next(
+        label for label in template["labels"] if label["name"] == "Contributor: {parent_a_name}"
+    )
+    assert parent_a["requires_configuration"] is True
+    assert "Parent A" in parent_a["configuration_prompt"]
+    assert parent_a["color"] == "orange"
+
+    parent_b = next(
+        label for label in template["labels"] if label["name"] == "Contributor: {parent_b_name}"
+    )
+    assert parent_b["requires_configuration"] is True
+    assert "Parent B" in parent_b["configuration_prompt"]
+    assert parent_b["color"] == "cyan"
+
+    # Verify child labels
+    child_1 = next(label for label in template["labels"] if label["name"] == "Kids: {child_1_name}")
+    assert child_1["requires_configuration"] is True
+    assert "first child" in child_1["configuration_prompt"]
+    assert child_1["color"] == "pink"
+
+    child_2 = next(label for label in template["labels"] if label["name"] == "Kids: {child_2_name}")
+    assert child_2["requires_configuration"] is True
+    assert "second child" in child_2["configuration_prompt"]
+    assert child_2["color"] == "lightgreen"
+
+    # Verify rules have labels
+    child_support_payment_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "child-support-payment"
+    )
+    assert "labels" in child_support_payment_rule
+    assert "Child Support" in child_support_payment_rule["labels"]
+
+    child_support_received_rule = next(
+        rule for rule in template["rules"] if rule["id"] == "child-support-received"
+    )
+    assert "labels" in child_support_received_rule
+    assert "Child Support" in child_support_received_rule["labels"]

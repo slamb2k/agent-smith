@@ -1,0 +1,110 @@
+name: Shared Household - Hybrid Finances
+layer: living
+description: |
+  Living with partner/spouse with mix of joint and separate accounts.
+  Some expenses shared (bills, groceries), some kept separate (personal spending).
+
+categories:
+  - name: "Shared:Bills"
+    parent: null
+    description: "Household bills split with partner"
+
+  - name: "Shared:Groceries"
+    parent: null
+    description: "Shared grocery shopping"
+
+  - name: "Shared:Household Items"
+    parent: null
+    description: "Shared furniture, appliances, home improvements"
+
+  - name: "Personal:Discretionary"
+    parent: null
+    description: "Personal spending (not shared)"
+
+  - name: "Personal:Transport"
+    parent: null
+    description: "Individual transport costs"
+
+rules:
+  - id: shared-rent
+    pattern: "rent|rental.*payment"
+    category: "Shared:Bills"
+    confidence: high
+    split_percentage: 50
+    description: "Rent split 50/50 with partner"
+    labels: ["Shared Expense"]
+
+  - id: shared-utilities
+    pattern: "electricity|gas|water|internet"
+    category: "Shared:Bills"
+    confidence: high
+    split_percentage: 50
+    description: "Utilities split 50/50 with partner"
+    labels: ["Shared Expense"]
+
+  - id: shared-groceries
+    pattern: "woolworths|coles|aldi|iga|grocery"
+    category: "Shared:Groceries"
+    confidence: high
+    split_percentage: 50
+    description: "Groceries split 50/50 with partner"
+    labels: ["Shared Expense"]
+
+  - id: personal-discretionary
+    pattern: "entertainment|dining|clothing|hobbies"
+    category: "Personal:Discretionary"
+    confidence: medium
+    description: "Personal discretionary spending"
+
+tax_tracking:
+  expense_splitting_enabled: true
+  default_split_ratio: 0.5
+
+alerts:
+  - type: split_expense_reconciliation
+    schedule: monthly
+    message: "Time to reconcile shared expenses with partner"
+
+labels:
+  - name: "Shared Expense"
+    description: "Expense split with partner"
+    color: "purple"
+    auto_apply: false
+
+  - name: "Contributor: {partner_a_name}"
+    description: "Paid by {partner_a_name}"
+    color: "orange"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Partner A:"
+
+  - name: "Contributor: {partner_b_name}"
+    description: "Paid by {partner_b_name}"
+    color: "cyan"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Partner B:"
+
+  - name: "Personal: {partner_a_name}"
+    description: "{partner_a_name} personal spending"
+    color: "lightorange"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Partner A:"
+
+  - name: "Personal: {partner_b_name}"
+    description: "{partner_b_name} personal spending"
+    color: "lightcyan"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Partner B:"
+
+dependencies:
+  requires: []
+  conflicts_with: ["single", "shared-joint", "separated-parents", "sharehouse"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 2

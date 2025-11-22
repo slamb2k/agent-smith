@@ -1,0 +1,131 @@
+name: Separated/Divorced Parents
+layer: living
+description: |
+  Managing finances with child support obligations and shared custody expenses.
+  Tracks child-related spending for tax and legal documentation.
+
+categories:
+  - name: "Child Support Paid"
+    parent: null
+    description: "Child support payments to former partner"
+
+  - name: "Child Support Received"
+    parent: null
+    description: "Child support received from former partner"
+
+  - name: "Kids:Activities"
+    parent: null
+    description: "Sports, music lessons, extracurricular activities"
+
+  - name: "Kids:Medical"
+    parent: null
+    description: "Medical, dental, therapy expenses"
+
+  - name: "Kids:Education"
+    parent: null
+    description: "School fees, uniforms, books, excursions"
+
+  - name: "Kids:Shared Custody Expenses"
+    parent: null
+    description: "Expenses during custody periods"
+
+rules:
+  - id: child-support-payment
+    pattern: "child.*support|CSA.*payment|maintenance.*payment"
+    category: "Child Support Paid"
+    confidence: high
+    description: "Detect child support payments"
+    labels: ["Child Support"]
+
+  - id: child-support-received
+    pattern: "child.*support.*received|CSA.*deposit"
+    category: "Child Support Received"
+    confidence: high
+    description: "Detect child support receipts"
+    labels: ["Child Support"]
+
+  - id: kids-activities
+    pattern: "sport|swimming|dance|music.*lessons|scouts|karate"
+    category: "Kids:Activities"
+    confidence: medium
+    description: "Detect children's activity expenses"
+
+  - id: kids-medical
+    pattern: "pediatric|child.*doctor|dentist.*kids|orthodontist|therapy.*child"
+    category: "Kids:Medical"
+    confidence: medium
+    description: "Detect children's medical expenses"
+
+  - id: kids-education
+    pattern: "school.*fees|uniform.*school|textbook|excursion|tuckshop"
+    category: "Kids:Education"
+    confidence: high
+    description: "Detect education-related expenses"
+
+tax_tracking:
+  child_support_documentation: true
+  custody_expense_tracking: true
+
+alerts:
+  - type: child_support_reconciliation
+    schedule: monthly
+    message: "Reconcile child support payments and custody expenses"
+
+  - type: ato_documentation_reminder
+    schedule: annual
+    before_date: "06-15"
+    message: "EOFY - compile child-related expenses for tax return"
+
+labels:
+  - name: "Child Support"
+    description: "Child support payment or receipt"
+    color: "skyblue"
+    auto_apply: false
+
+  - name: "Custody Period"
+    description: "Expense during custody period"
+    color: "lightpurple"
+    auto_apply: false
+
+  - name: "Shared Child Expense"
+    description: "Child expense split with ex-partner"
+    color: "coral"
+    auto_apply: false
+
+  - name: "Contributor: {parent_a_name}"
+    description: "Paid by {parent_a_name}"
+    color: "orange"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Parent A:"
+
+  - name: "Contributor: {parent_b_name}"
+    description: "Paid by {parent_b_name}"
+    color: "cyan"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Parent B:"
+
+  - name: "Kids: {child_1_name}"
+    description: "Expense for {child_1_name}"
+    color: "pink"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for first child:"
+
+  - name: "Kids: {child_2_name}"
+    description: "Expense for {child_2_name}"
+    color: "lightgreen"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for second child:"
+
+dependencies:
+  requires: []
+  conflicts_with: ["single", "shared-joint", "shared-hybrid", "sharehouse"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 2
