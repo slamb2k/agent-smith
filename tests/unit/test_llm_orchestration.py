@@ -49,10 +49,23 @@ def test_execute_validation_test_mode():
 
     transaction_ids = [1, 2]
     prompt = "Test validation prompt"
+    validations = [
+        {
+            "transaction": {"id": 1, "payee": "Test 1"},
+            "suggested_category": "Category A",
+            "confidence": 75,
+        },
+        {
+            "transaction": {"id": 2, "payee": "Test 2"},
+            "suggested_category": "Category B",
+            "confidence": 80,
+        },
+    ]
 
     result = orchestrator.execute_validation(
         prompt=prompt,
         transaction_ids=transaction_ids,
+        validations=validations,
         service=service,
     )
 
@@ -92,23 +105,37 @@ def test_execute_categorization_production_mode(monkeypatch):
     assert isinstance(result, dict)
 
 
-def test_execute_validation_production_mode():
-    """Test validation uses mock in production mode (validation parsing not yet implemented)."""
+def test_execute_validation_production_mode(monkeypatch):
+    """Test validation uses SDK in production mode with batch parsing."""
     orchestrator = LLMSubagent(test_mode=False)
     service = LLMCategorizationService()
 
     transaction_ids = [1]
     prompt = "Test prompt"
+    validations = [
+        {
+            "transaction": {"id": 1, "payee": "Test"},
+            "suggested_category": "Groceries",
+            "confidence": 75,
+        }
+    ]
 
-    # Note: Validation currently returns mock response even in production
-    # because validation parsing for SDK needs refactoring
+    # Mock the SDK call to avoid actual LLM calls during testing
+    def mock_execute_prompt_sync(self, p):
+        # Return a validation response
+        return "1. CONFIRM\nAdjusted Confidence: 90\nReasoning: Transaction matches pattern"
+
+    monkeypatch.setattr(LLMSubagent, "_execute_prompt_sync", mock_execute_prompt_sync)
+
     result = orchestrator.execute_validation(
         prompt=prompt,
         transaction_ids=transaction_ids,
+        validations=validations,
         service=service,
     )
 
-    # Currently returns mock validation (validation parsing not yet implemented for SDK)
+    # Should parse the SDK response
     assert isinstance(result, dict)
     assert 1 in result
     assert result[1]["validation"] == "CONFIRM"
+    assert result[1]["confidence"] == 90
