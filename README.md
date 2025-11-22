@@ -8,7 +8,7 @@ Agent Smith provides comprehensive PocketSmith API integration with advanced AI-
 
 ✅ **Implementation Complete** - All 8 phases implemented and tested
 
-📦 **Version:** 1.3.0
+📦 **Version:** 1.3.4
 
 📋 **Design Document:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
 
@@ -119,13 +119,13 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 
 ### First-Time Setup
 
-**Launch the interactive onboarding wizard:**
+**Launch Agent Smith with integrated onboarding:**
 
 ```bash
-/agent-smith-onboard
+/agent-smith
 ```
 
-This guided 8-stage process will:
+**First-time users:** This guided 8-stage onboarding process will:
 1. Discover your PocketSmith account structure
 2. Recommend and apply a rule template
 3. Help you customize rules for your needs
@@ -133,8 +133,15 @@ This guided 8-stage process will:
 5. Incrementally categorize your transactions
 6. Show measurable improvement with health scores
 7. Provide ongoing usage guidance
+8. Generate intelligent suggestions based on your setup
 
-**Time required:** 30-60 minutes
+**Returning users:** Skip directly to intelligent suggestions with:
+- Priority actions based on current state
+- Optimization opportunities
+- Spending insights and trends
+- Maintenance recommendations
+
+**Time required (first time):** 30-60 minutes
 
 **For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
 

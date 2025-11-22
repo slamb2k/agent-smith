@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.4] - 2025-11-23
+
+### Changed
+- **Onboarding Command Consolidated into Main Command**
+  - Removed separate `/agent-smith-onboard` command
+  - Main `/agent-smith` command now includes conditional onboarding (first time) and intelligent suggestions (every time)
+  - First-time users: Run full 8-stage onboarding workflow automatically
+  - Returning users: Skip directly to Stage 9 (Intelligent Suggestions)
+  - Simplified command structure from 9 commands to 8 commands
+
+### Added
+- **Stage 9: Intelligent Suggestions**
+  - Always runs after onboarding or when invoked by returning users
+  - Analyzes current setup to provide priority actions, opportunities, insights, and maintenance tasks
+  - Context-aware suggestions based on selected templates (PAYG, Sole Trader, Property Investor, etc.)
+  - Seasonal recommendations (EOFY prep, BAS deadlines, tax planning)
+  - Priority ranking based on urgency (uncategorized transactions, tax deadlines, health score, etc.)
+
+### Removed
+- `/agent-smith-onboard` command (functionality merged into `/agent-smith`)
+
+## [1.3.3] - 2025-11-23
+
 ### Changed
 - **Converted to Plugin-Only Distribution**
   - Removed `marketplace.json` - now distributed as a standalone plugin only

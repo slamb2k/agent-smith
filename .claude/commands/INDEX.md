@@ -4,51 +4,53 @@ Quick-access commands for common financial management operations.
 
 ## All Commands
 
-1. `/agent-smith` - Main conversational entry point
-2. `/agent-smith-onboard` - Interactive first-time setup wizard
-3. `/agent-smith-categorize` - Transaction categorization
-4. `/agent-smith-analyze` - Financial analysis
-5. `/agent-smith-scenario` - Scenario modeling
-6. `/agent-smith-report` - Report generation
-7. `/agent-smith-optimize` - Optimization operations
-8. `/agent-smith-tax` - Tax intelligence
-9. `/agent-smith-health` - Health check
+1. `/agent-smith` - Main entry point with onboarding and intelligent suggestions
+2. `/agent-smith-categorize` - Transaction categorization
+3. `/agent-smith-analyze` - Financial analysis
+4. `/agent-smith-scenario` - Scenario modeling
+5. `/agent-smith-report` - Report generation
+6. `/agent-smith-optimize` - Optimization operations
+7. `/agent-smith-tax` - Tax intelligence
+8. `/agent-smith-health` - Health check
 
 ## Command Descriptions
 
 ### /agent-smith
 
-Main conversational skill for complex multi-step operations.
+Main entry point for Agent Smith with integrated onboarding and intelligent suggestions.
 
 **Use for:**
+- First-time setup and onboarding (8 stages)
+- Ongoing intelligent suggestions based on your setup
 - Understanding your financial situation
-- Guided setup and onboarding
 - Multi-step workflows
 - Custom analysis
 
-### /agent-smith-onboard
-
-Interactive first-time setup wizard for Agent Smith.
-
-**Purpose:** Guide new users through discovery, template selection, customization, and initial categorization
-
-**Stages:**
+**Onboarding Stages (first time only):**
 1. Prerequisites check
 2. PocketSmith account discovery
 3. Template selection and customization
-4. Intelligence mode configuration
-5. Incremental categorization
-6. Health check and progress tracking
-7. Ongoing usage guidance
+4. Template merging and application
+5. Intelligence mode configuration
+6. Incremental categorization
+7. Post-onboarding health check
+8. Ongoing usage guidance
 
-**Time Required:** 30-60 minutes
+**Intelligent Suggestions (every time):**
+- Priority actions based on current state
+- Opportunities for optimization
+- Spending insights and trends
+- Maintenance recommendations
+- Context-aware suggestions for your templates
+
+**Time Required (first time):** 30-60 minutes
 
 **Example:**
 ```bash
-/agent-smith-onboard
+/agent-smith
 ```
 
-**Note:** Your progress is saved in `data/onboarding_state.json` and can be resumed if interrupted.
+**Note:** Your progress is saved in `data/onboarding_state.json`. If onboarding is complete, this command will skip directly to intelligent suggestions.
 
 ### /agent-smith-categorize
 

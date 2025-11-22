@@ -1,7 +1,7 @@
 {
   "name": "agent-smith-plugin",
   "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "author": {
     "name": "slamb2k",
     "email": "slamb2k@users.noreply.github.com"
@@ -19,7 +19,6 @@
   ],
   "commands": [
     "./.claude/commands/agent-smith.md",
-    "./.claude/commands/agent-smith-onboard.md",
     "./.claude/commands/agent-smith-categorize.md",
     "./.claude/commands/agent-smith-analyze.md",
     "./.claude/commands/agent-smith-scenario.md",

@@ -144,20 +144,27 @@ This ensures:
 
 ## First-Time Setup
 
-After installation and verification, run the interactive onboarding wizard:
+After installation and verification, run Agent Smith:
 
 ```bash
-/agent-smith-onboard
+/agent-smith
 ```
 
-**What it does:**
+**What it does (first-time users):**
 - Analyzes your PocketSmith account structure
 - Recommends the best rule template for your needs
 - Guides you through customization
 - Incrementally categorizes your transactions
 - Shows measurable improvement with health scores
+- Generates intelligent suggestions based on your setup
 
-**Time required:** 30-60 minutes
+**What it does (returning users):**
+- Skips directly to intelligent suggestions
+- Provides priority actions based on current state
+- Identifies optimization opportunities
+- Highlights spending insights and trends
+
+**Time required (first time):** 30-60 minutes
 
 **Alternative:** Run components individually:
 
@@ -186,8 +193,7 @@ Once installed, you have access to these slash commands:
 
 | Command | Description |
 |---------|-------------|
-| `/agent-smith` | Main conversational assistant |
-| `/agent-smith-onboard` | Interactive first-time setup wizard |
+| `/agent-smith` | Main assistant with onboarding and intelligent suggestions |
 | `/agent-smith-categorize` | Categorize transactions |
 | `/agent-smith-analyze` | Financial analysis |
 | `/agent-smith-scenario` | What-if scenarios |
