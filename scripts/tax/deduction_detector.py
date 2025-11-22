@@ -30,7 +30,7 @@ class DeductionDetector:
         """
         if patterns_file is None:
             project_root = Path(__file__).parent.parent.parent
-            patterns_file = project_root / "data" / "tax" / "deduction_patterns.json"
+            patterns_file = project_root / "assets" / "tax" / "deduction_patterns.json"
 
         self.patterns_file = Path(patterns_file)
         self.patterns: List[Dict[str, Any]] = []

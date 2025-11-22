@@ -35,16 +35,10 @@ logs/*
 !logs/INDEX.md
 
 # Skill build artifacts (scripts are copied during build)
-skill/scripts/
+agent-smith-plugin/skills/agent-smith/scripts/
 
-# Skill runtime data (keep directory structure, ignore contents)
-skill/backups/*
-skill/logs/*
-skill/reports/*
-skill/data/cache/
-skill/data/*.json
-!skill/data/INDEX.md
-!skill/assets/config.json.sample
+# Installed plugin directory (local installation)
+agent-smith-plugin/
 
 # Onboarding state (tracked as template, but user's state will be overwritten)
 # Note: data/onboarding_state.json is committed as a template, but the user's

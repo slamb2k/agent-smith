@@ -34,7 +34,7 @@ class MerchantNormalizer:
         """
         if mappings_file is None:
             project_root = Path(__file__).parent.parent.parent
-            mappings_file = project_root / "data" / "merchants" / "merchant_mappings.json"
+            mappings_file = project_root / "assets" / "merchants" / "merchant_mappings.json"
 
         self.mappings_file = Path(mappings_file)
         self.mappings: Dict[str, List[str]] = {}
