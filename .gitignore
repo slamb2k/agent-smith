@@ -17,6 +17,7 @@ build-python/
 .pytest_cache/
 .coverage
 .mypy_cache/
+.ruff_cache/
 .tox/
 htmlcov/
 
@@ -29,8 +30,21 @@ backups/*
 reports/*
 !reports/INDEX.md
 data/cache/
+data/templates/
 logs/*
 !logs/INDEX.md
+
+# Skill build artifacts (scripts are copied during build)
+skill/scripts/
+
+# Skill runtime data (keep directory structure, ignore contents)
+skill/backups/*
+skill/logs/*
+skill/reports/*
+skill/data/cache/
+skill/data/*.json
+!skill/data/INDEX.md
+!skill/assets/config.json.sample
 
 # Onboarding state (tracked as template, but user's state will be overwritten)
 # Note: data/onboarding_state.json is committed as a template, but the user's
