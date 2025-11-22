@@ -1,0 +1,187 @@
+# Household Workflow Example
+# Complete shared household setup with approval workflows and reconciliation
+
+metadata:
+  name: Shared Household Workflow
+  description: Complete rules for couples/roommates managing shared expenses
+  use_case: Two-person household with joint and individual accounts
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # SHARED EXPENSES - ESSENTIAL
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Shared Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI, IGA]
+    accounts: [Shared Bills, Joint Account, Household Card]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Rent/Mortgage
+    patterns: [RENT, MORTGAGE, REAL ESTATE, PROPERTY MANAGER]
+    category: Housing > Rent
+    confidence: 95
+
+  - type: category
+    name: Utilities - Electricity
+    patterns: [AGL, ORIGIN, ENERGY AUSTRALIA, ELECTRICITY]
+    category: Bills > Utilities
+    confidence: 95
+
+  - type: category
+    name: Utilities - Internet
+    patterns: [TELSTRA, OPTUS, TPG, NBN, INTERNET]
+    category: Bills > Internet
+    confidence: 90
+
+  # ═══════════════════════════════════════════════════════════
+  # PERSONAL EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Personal Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI]
+    accounts: [Personal, Alice Account, Bob Account]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Personal Dining
+    patterns: [RESTAURANT, CAFE, UBER EATS]
+    accounts: [Personal, Alice Account, Bob Account]
+    category: Food & Dining > Dining Out
+    confidence: 90
+
+  # ═══════════════════════════════════════════════════════════
+  # SHARED VS PERSONAL LABELS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Shared Essential Expense
+    when:
+      categories: [Groceries, Utilities, Rent, Internet, Insurance]
+      accounts: [Shared Bills, Joint Account, Household Card]
+    labels: [Shared Expense, Essential]
+
+  - type: label
+    name: Personal Expense
+    when:
+      accounts: [Personal, Alice Account, Bob Account]
+    labels: [Personal, Individual]
+
+  # ═══════════════════════════════════════════════════════════
+  # CONTRIBUTOR TRACKING
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Alice Contribution
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      # Transactions FROM Alice's account TO shared account
+    labels: [Contributor: Alice, Transfer In]
+
+  - type: label
+    name: Bob Contribution
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      # Transactions FROM Bob's account TO shared account
+    labels: [Contributor: Bob, Transfer In]
+
+  # ═══════════════════════════════════════════════════════════
+  # APPROVAL WORKFLOWS
+  # ═══════════════════════════════════════════════════════════
+
+  # Large shared purchases need approval
+  - type: label
+    name: Needs Approval - Large Purchase
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      amount_operator: ">"
+      amount_value: 150
+    labels: [Needs Approval, Review Required, Both Must Approve]
+
+  # Discretionary shared spending needs approval
+  - type: label
+    name: Needs Approval - Discretionary
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      categories: [Dining Out, Entertainment, Shopping]
+    labels: [Needs Approval, Discretionary, Discuss First]
+
+  # Very large purchases (emergency approval)
+  - type: label
+    name: Urgent Approval Required
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      amount_operator: ">"
+      amount_value: 500
+    labels: [Urgent, High Priority, Immediate Discussion]
+
+  # ═══════════════════════════════════════════════════════════
+  # RECONCILIATION
+  # ═══════════════════════════════════════════════════════════
+
+  # Monthly reconciliation items
+  - type: label
+    name: Monthly Reconciliation
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      categories: [Groceries, Utilities, Dining Out, Entertainment]
+    labels: [Monthly Reconciliation, Split 50/50]
+
+  # Annual reconciliation items (insurance, etc.)
+  - type: label
+    name: Annual Reconciliation
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      categories: [Insurance, Subscriptions]
+    labels: [Annual Reconciliation, Review Yearly]
+
+  # ═══════════════════════════════════════════════════════════
+  # SPECIAL CASES
+  # ═══════════════════════════════════════════════════════════
+
+  # Shared but discretionary (date nights, etc.)
+  - type: label
+    name: Shared Discretionary
+    when:
+      categories: [Dining Out, Entertainment]
+      accounts: [Shared Bills, Joint Account]
+    labels: [Shared Expense, Discretionary, Optional]
+
+  # Household maintenance/repairs
+  - type: category
+    name: Household Maintenance
+    patterns: [BUNNINGS, HARDWARE, PLUMBER, ELECTRICIAN, REPAIR]
+    accounts: [Shared Bills, Joint Account, Household Card]
+    category: Housing > Maintenance
+    confidence: 85
+
+  - type: label
+    name: Household Investment
+    when:
+      categories: [Maintenance, Improvements, Repairs]
+      accounts: [Shared Bills, Joint Account]
+    labels: [Household Investment, Shared Benefit, Keep Receipts]
+
+  # ═══════════════════════════════════════════════════════════
+  # ERROR DETECTION
+  # ═══════════════════════════════════════════════════════════
+
+  # Personal expenses accidentally charged to shared account
+  - type: label
+    name: Possible Error - Personal on Shared
+    when:
+      accounts: [Shared Bills, Joint Account]
+      categories: [Personal Care, Clothing, Individual Entertainment]
+    labels: [Possible Error, Verify, May Need Reimbursement]
+
+  # Flag uncategorized shared account transactions
+  - type: label
+    name: Uncategorized Shared Expense
+    when:
+      accounts: [Shared Bills, Joint Account, Household Card]
+      uncategorized: true
+    labels: [Uncategorized, Shared Account, High Priority]

@@ -75,6 +75,7 @@ dependencies = [
     "requests>=2.31.0",
     "python-dateutil>=2.8.2",
     "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.3",
 ]
 
 [project.optional-dependencies]
@@ -91,6 +92,11 @@ dev = [
 Homepage = "https://github.com/slamb2k/agent-smith"
 Repository = "https://github.com/slamb2k/agent-smith"
 Issues = "https://github.com/slamb2k/agent-smith/issues"
+
+[dependency-groups]
+dev = [
+    "types-pyyaml>=6.0.12.20250915",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -315,7 +315,15 @@ class RuleEngine:
     ) -> Dict[str, Any]:
         """Create a platform rule via PocketSmith API.
 
-        Creates a rule through the API and tracks it locally.
+        DEPRECATED: Platform rule creation is deprecated in favor of local rules.
+        Use UnifiedRuleEngine with YAML rules instead for full control.
+
+        Platform rules have limitations:
+        - Cannot be modified or deleted via API
+        - Keyword-only matching (no regex)
+        - No confidence scoring or advanced conditions
+
+        This method remains for backward compatibility with existing scripts.
 
         Args:
             api_client: PocketSmith API client instance
@@ -325,6 +333,12 @@ class RuleEngine:
         Returns:
             Dict with rule_id, category_id, payee_contains, created_at
         """
+        logger.warning(
+            "Platform rule creation is DEPRECATED. "
+            "Use UnifiedRuleEngine with YAML rules for better control. "
+            "See docs/guides/platform-to-local-migration.md for migration guide."
+        )
+
         # Create rule via API
         response = api_client.create_category_rule(
             category_id=category_id, payee_matches=payee_contains

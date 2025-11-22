@@ -145,21 +145,88 @@ pytest --cov=scripts tests/
 
 Phase 8 (Health Check & Polish) is complete. All 8 phases implemented.
 
-Python usage example:
+## Unified Rule System
+
+Agent Smith uses a YAML-based unified rule system for transaction categorization and labeling.
+
+### Quick Start
+
+```bash
+# 1. Choose a template for your household type
+uv run python scripts/setup/template_selector.py
+
+# 2. Customize rules in data/rules.yaml
+# 3. Test with dry run
+uv run python scripts/operations/batch_categorize.py --mode=dry_run --period=2025-11
+
+# 4. Apply to transactions
+uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-11
+```
+
+### Example Rules
+
+```yaml
+rules:
+  # Category rule - categorize transactions
+  - type: category
+    name: WOOLWORTHS → Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  # Label rule - apply labels based on context
+  - type: label
+    name: Shared Groceries
+    when:
+      categories: [Groceries]
+      accounts: [Shared Bills]
+    labels: [Shared Expense, Essential]
+```
+
+### Key Features
+
+- **Two-phase execution** - Categories first, then labels
+- **Pattern matching** - Regex patterns with exclusions
+- **Confidence scoring** - 0-100% for auto-apply logic
+- **LLM fallback** - AI categorization when rules don't match
+- **Intelligence modes** - Conservative/Smart/Aggressive
+- **Template system** - Pre-built rules for common household types
+- **Operational modes** - DRY_RUN/VALIDATE/APPLY for safe testing
+
+### Documentation
+
+- **[Unified Rules Guide](docs/guides/unified-rules-guide.md)** - Complete reference
+- **[Example YAML Files](docs/examples/)** - Basic, advanced, household, and tax examples
+- **[Templates](data/templates/)** - Pre-built rule sets (simple, shared-household, separated-families, advanced)
+
+### Python Usage
 
 ```python
-from scripts.core.api_client import PocketSmithClient
+from scripts.core.unified_rules import UnifiedRuleEngine
+from scripts.workflows.categorization import CategorizationWorkflow
 
-# Initialize client
-client = PocketSmithClient()
+# Load rules from YAML
+engine = UnifiedRuleEngine()  # Loads data/rules.yaml by default
 
-# Get user info
-user = client.get_user()
-print(f"Connected as: {user['login']}")
+# Categorize a transaction
+transaction = {
+    "id": 12345,
+    "payee": "WOOLWORTHS",
+    "amount": -127.50,
+    "_account_name": "Shared Bills"
+}
 
-# Get categories
-categories = client.get_categories(user_id=user['id'])
-print(f"Found {len(categories)} categories")
+result = engine.categorize_and_label(transaction)
+print(f"Category: {result['category']}")
+print(f"Labels: {result['labels']}")
+print(f"Confidence: {result['confidence']}%")
+
+# Or use the workflow for LLM integration
+workflow = CategorizationWorkflow(client=client, mode="smart")
+result = workflow.categorize_transaction(
+    transaction=transaction,
+    available_categories=categories
+)
 ```
 
 ## Contributing Workflow

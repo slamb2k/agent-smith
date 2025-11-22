@@ -1,0 +1,144 @@
+# Advanced Patterns Example
+# Complex rules with exclusions, amounts, accounts, and conditional logic
+
+metadata:
+  name: Advanced Patterns
+  description: Demonstrates complex rule patterns and edge cases
+  use_case: Power users with specific requirements
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # ACCOUNT-SPECIFIC RULES
+  # ═══════════════════════════════════════════════════════════
+
+  # Same merchant, different category based on account
+  - type: category
+    name: Work Laptop Purchase
+    patterns: [APPLE STORE, JB HI-FI, OFFICE WORKS]
+    accounts: [Work Credit Card, Business Account]
+    category: Work > Equipment
+    confidence: 90
+
+  - type: category
+    name: Personal Electronics
+    patterns: [APPLE STORE, JB HI-FI, OFFICE WORKS]
+    accounts: [Personal, Personal Credit Card]
+    category: Shopping > Electronics
+    confidence: 85
+
+  # ═══════════════════════════════════════════════════════════
+  # AMOUNT-BASED RULES
+  # ═══════════════════════════════════════════════════════════
+
+  # Small daily coffee
+  - type: category
+    name: Coffee Shop - Small
+    patterns: [STARBUCKS, COSTA, CAFE]
+    category: Food & Dining > Coffee
+    confidence: 95
+    amount_operator: "<"
+    amount_value: 10
+
+  # Large coffee meeting/group order
+  - type: category
+    name: Coffee Shop - Meeting
+    patterns: [STARBUCKS, COSTA, CAFE]
+    category: Food & Dining > Dining Out
+    confidence: 85
+    amount_operator: ">="
+    amount_value: 10
+
+  # ═══════════════════════════════════════════════════════════
+  # COMPLEX EXCLUSIONS
+  # ═══════════════════════════════════════════════════════════
+
+  # Woolworths groceries (excluding petrol)
+  - type: category
+    name: WOOLWORTHS Groceries
+    patterns: [WOOLWORTHS]
+    exclude_patterns: [WOOLWORTHS PETROL, WOOLWORTHS CALTEX, WW PETROL]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  # Woolworths petrol
+  - type: category
+    name: WOOLWORTHS Petrol
+    patterns: [WOOLWORTHS PETROL, WOOLWORTHS CALTEX, WW PETROL]
+    category: Transport > Fuel
+    confidence: 95
+
+  # Amazon purchases (complex - many subcategories possible)
+  - type: category
+    name: Amazon General
+    patterns: [AMAZON, AMAZON AU, AMAZON.COM.AU]
+    exclude_patterns: [AMAZON PRIME, AMAZON MUSIC, AMAZON KINDLE]
+    category: Shopping > Online
+    confidence: 75  # Lower confidence - could be many things
+
+  # Amazon subscriptions (higher confidence)
+  - type: category
+    name: Amazon Subscriptions
+    patterns: [AMAZON PRIME, AMAZON MUSIC, AMAZON KINDLE]
+    category: Entertainment > Subscriptions
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # MULTI-CONDITION LABELS
+  # ═══════════════════════════════════════════════════════════
+
+  # Work-related reimbursable expenses
+  - type: label
+    name: Reimbursable Work Expense
+    when:
+      categories: [Transport, Dining Out, Accommodation]
+      accounts: [Personal, Personal Credit Card]
+      amount_operator: ">"
+      amount_value: 20
+    labels: [Work Related, Reimbursable, Needs Receipt]
+
+  # Large discretionary spending requiring approval
+  - type: label
+    name: Large Discretionary Purchase
+    when:
+      categories: [Shopping, Entertainment, Dining Out]
+      amount_operator: ">"
+      amount_value: 150
+    labels: [Large Purchase, Discretionary, Review Required]
+
+  # Shared household large purchase
+  - type: label
+    name: Shared Large Purchase
+    when:
+      accounts: [Shared Bills, Joint Account]
+      amount_operator: ">"
+      amount_value: 100
+    labels: [Shared Expense, Large Purchase, Needs Approval]
+
+  # ═══════════════════════════════════════════════════════════
+  # CROSS-CATEGORY PATTERNS
+  # ═══════════════════════════════════════════════════════════
+
+  # Apply tax deductible label to multiple work categories
+  - type: label
+    name: Tax Deductible
+    when:
+      categories: [Work, Professional Development, Home Office, Software]
+    labels: [Tax Deductible, ATO: D1]
+
+  # ATO substantiation requirement (>$300)
+  - type: label
+    name: Substantiation Required
+    when:
+      categories: [Work, Professional Development, Home Office]
+      amount_operator: ">"
+      amount_value: 300
+    labels: [Receipt Required, ATO Substantiation]
+
+  # High-priority uncategorized (large amounts)
+  - type: label
+    name: High Priority Uncategorized
+    when:
+      uncategorized: true
+      amount_operator: ">"
+      amount_value: 100
+    labels: [Uncategorized, High Priority, Urgent Review]

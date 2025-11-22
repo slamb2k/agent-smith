@@ -1,0 +1,90 @@
+# Simple Template - Single Person Finances
+# Best for: Individuals managing personal finances only
+
+metadata:
+  template_name: Simple
+  description: Basic categories and labels for individual financial tracking
+  target_users: Single person, no shared expenses, basic needs
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # INCOME
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Salary Income
+    patterns: [SALARY, WAGES, EMPLOYER]
+    category: Income > Salary
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # ESSENTIAL EXPENSES
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI, IGA]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: label
+    name: Essential Spending
+    when:
+      categories: [Groceries, Utilities, Rent, Insurance]
+    labels: [Essential]
+
+  - type: category
+    name: Utilities
+    patterns: [AGL, ORIGIN, ENERGY AUSTRALIA, TELSTRA, OPTUS]
+    category: Bills > Utilities
+    confidence: 90
+
+  # ═══════════════════════════════════════════════════════════
+  # DISCRETIONARY
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Dining Out
+    patterns: [RESTAURANT, CAFE, UBER EATS, DELIVEROO]
+    category: Food & Dining > Dining Out
+    confidence: 90
+
+  - type: label
+    name: Discretionary Spending
+    when:
+      categories: [Dining Out, Entertainment, Shopping]
+    labels: [Discretionary]
+
+  - type: category
+    name: Entertainment
+    patterns: [NETFLIX, SPOTIFY, CINEMA, STEAM]
+    category: Entertainment
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # TRANSPORT
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Transport
+    patterns: [UBER, TRAIN, BUS, PETROL]
+    exclude_patterns: [UBER EATS]
+    category: Transport
+    confidence: 90
+
+  # ═══════════════════════════════════════════════════════════
+  # CROSS-CATEGORY LABELS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Large Purchase Review
+    when:
+      amount_operator: ">"
+      amount_value: 200
+    labels: [Large Purchase, Review]
+
+  - type: label
+    name: Flag Uncategorized
+    when:
+      uncategorized: true
+    labels: [Needs Categorization]

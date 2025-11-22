@@ -15,7 +15,15 @@ docs/
 │   └── 2025-11-20-agent-smith-design.md  # Complete Agent Smith design
 ├── guides/                                # User guides
 │   ├── backup-and-restore-guide.md       # Backup & Restore System guide
-│   └── health-check-guide.md             # Health Check System guide
+│   ├── health-check-guide.md             # Health Check System guide
+│   ├── platform-to-local-migration.md    # Platform to Local Rules Migration guide
+│   └── unified-rules-guide.md            # Unified Rules System guide
+├── examples/                              # Example YAML files
+│   ├── README.md                          # Examples overview
+│   ├── basic-rules.yaml                   # Basic category and label rules
+│   ├── advanced-patterns.yaml             # Advanced patterns and techniques
+│   ├── household-workflow.yaml            # Shared household setup
+│   └── tax-deductible.yaml               # Tax deduction tracking
 └── research/                              # Research documents
     └── pocketsmith-backup-and-limitations-research.md  # PocketSmith capabilities research
 ```
@@ -59,6 +67,57 @@ docs/
 
 ## User Guides
 
+### [guides/unified-rules-guide.md](guides/unified-rules-guide.md)
+
+**Unified Rules System - Complete Guide**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Comprehensive guide to the YAML-based unified rule system for transaction categorization and labeling.
+
+**Contents:**
+- Quick start with template selection
+- Category and label rule syntax reference
+- Two-phase execution explanation (categories → labels)
+- Intelligence modes (Conservative/Smart/Aggressive)
+- LLM integration (fallback, validation, learning)
+- Advanced patterns (cross-category, account-based, tax tracking)
+- Operational modes (DRY_RUN/VALIDATE/APPLY)
+- Update strategies (SKIP_EXISTING/REPLACE_ALL/etc.)
+- Template system overview
+- Migration from platform rules
+- Troubleshooting guide
+
+**Key Features:**
+- Pattern matching with exclusions
+- Confidence scoring (0-100%)
+- Account-specific routing
+- Amount-based conditions
+- LLM fallback for unmatched transactions
+- Rule learning from LLM suggestions
+
+**Size:** ~45KB
+**Sections:** 12 major sections with examples
+
+### [guides/platform-to-local-migration.md](guides/platform-to-local-migration.md)
+
+**Platform to Local Rules Migration Guide**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Guide for migrating existing PocketSmith platform rules to the unified YAML system.
+
+**Contents:**
+- Why migrate (limitations of platform rules)
+- Migration process (export, convert, test, switch)
+- Python migration script usage
+- Testing and validation
+- Rollback procedures
+
+**Size:** ~10KB
+
 ### [guides/health-check-guide.md](guides/health-check-guide.md)
 
 **Health Check System User Guide**
@@ -100,6 +159,51 @@ Comprehensive guide covering:
 
 ---
 
+## Example Files
+
+### [examples/](examples/)
+
+**YAML Rule Examples**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Example YAML files demonstrating various patterns and use cases.
+
+**Available Examples:**
+
+1. **[basic-rules.yaml](examples/basic-rules.yaml)** - Beginner-level examples
+   - Simple pattern matching
+   - Basic labels (Essential, Discretionary)
+   - Large purchase flagging
+   - Uncategorized flagging
+
+2. **[advanced-patterns.yaml](examples/advanced-patterns.yaml)** - Advanced features
+   - Account-specific categorization
+   - Amount-based rules
+   - Complex exclusions
+   - Multi-condition labels
+   - Cross-category patterns
+
+3. **[household-workflow.yaml](examples/household-workflow.yaml)** - Shared household
+   - Shared vs personal expense separation
+   - Contributor tracking
+   - Approval workflows
+   - Reconciliation items
+   - Error detection
+
+4. **[tax-deductible.yaml](examples/tax-deductible.yaml)** - Tax optimization
+   - Work-related expenses (ATO codes)
+   - Home office deductions
+   - Investment deductions
+   - Substantiation requirements
+   - CGT event tracking
+   - GST tracking
+
+**See also:** [data/templates/](../data/templates/) for ready-to-use templates
+
+---
+
 ## Research Documents
 
 ### [research/pocketsmith-backup-and-limitations-research.md](research/pocketsmith-backup-and-limitations-research.md)
@@ -130,11 +234,62 @@ Comprehensive research covering:
 
 ---
 
+## Implementation Documentation
+
+### [implementation/llm-categorization-implementation-summary.md](implementation/llm-categorization-implementation-summary.md)
+
+**LLM Categorization & Labeling - Implementation Summary**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Comprehensive summary of the LLM-powered categorization and labeling system implementation.
+
+**Contents:**
+- Executive summary and architecture overview
+- Features delivered (6 major components)
+- File structure (57 scripts, 61 tests)
+- Test coverage (445 tests, 95% coverage)
+- Code quality metrics (mypy, flake8, black)
+- Usage examples and integration points
+- Performance characteristics
+- Next steps (4 phases)
+- Known limitations and API constraints
+
+**Key Achievements:**
+- Hybrid categorization (rules + LLM fallback)
+- Two-phase execution (categories → labels)
+- Rule learning from LLM patterns
+- Template system (4 household types)
+- Intelligence modes (Conservative/Smart/Aggressive)
+- Comprehensive documentation
+
+**Size:** ~25KB
+
+### [implementation/task-6-integration-summary.md](implementation/task-6-integration-summary.md)
+
+**Task 6: Integration with Categorization Workflow**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Detailed technical summary of Task 6 from the LLM categorization plan.
+
+**Contents:**
+- Hybrid categorization flow diagram
+- Intelligence mode integration
+- Two-phase execution logic
+- Rule learning implementation
+- API reference and examples
+
+**Size:** ~10KB
+
+---
+
 ## Future Documentation
 
 As implementation progresses, this directory will expand to include:
 
-- **Implementation Guides** - Step-by-step development documentation
 - **API Documentation** - Internal API docs for Agent Smith modules
 - **Testing Documentation** - Test plans and results
 - **Operations Guides** - Deployment and operational procedures
@@ -149,5 +304,5 @@ As implementation progresses, this directory will expand to include:
 
 ---
 
-**Document Count:** 4 documents (1 design specification + 2 user guides + 1 research document)
-**Total Size:** ~86KB
+**Document Count:** 11 documents (1 design + 4 guides + 4 examples + 1 research + 2 implementation)
+**Total Size:** ~171KB

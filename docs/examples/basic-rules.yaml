@@ -1,0 +1,81 @@
+# Basic Rules Example
+# Simple category and label rules for getting started
+
+metadata:
+  name: Basic Rules Example
+  description: Simple rules to demonstrate core concepts
+  use_case: Learning the unified rules system
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # BASIC CATEGORY RULES
+  # ═══════════════════════════════════════════════════════════
+
+  # Simple pattern match - most common use case
+  - type: category
+    name: Groceries
+    patterns: [WOOLWORTHS, COLES, ALDI, IGA]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  # Pattern with exclusion
+  - type: category
+    name: Transport (not food delivery)
+    patterns: [UBER, LYFT]
+    exclude_patterns: [UBER EATS, UBER EATS MARKETPLACE]
+    category: Transport
+    confidence: 90
+
+  # Food delivery
+  - type: category
+    name: Food Delivery
+    patterns: [UBER EATS, DELIVEROO, MENULOG]
+    category: Food & Dining > Dining Out
+    confidence: 95
+
+  # Utilities
+  - type: category
+    name: Energy Bills
+    patterns: [AGL, ORIGIN ENERGY, ENERGY AUSTRALIA]
+    category: Bills > Utilities
+    confidence: 95
+
+  # Entertainment subscriptions
+  - type: category
+    name: Streaming Services
+    patterns: [NETFLIX, SPOTIFY, DISNEY, STAN]
+    category: Entertainment > Subscriptions
+    confidence: 95
+
+  # ═══════════════════════════════════════════════════════════
+  # BASIC LABEL RULES
+  # ═══════════════════════════════════════════════════════════
+
+  # Label essential spending
+  - type: label
+    name: Essential Expenses
+    when:
+      categories: [Groceries, Utilities, Rent, Insurance]
+    labels: [Essential, Needs]
+
+  # Label discretionary spending
+  - type: label
+    name: Discretionary Expenses
+    when:
+      categories: [Dining Out, Entertainment, Shopping]
+    labels: [Discretionary, Wants]
+
+  # Flag large purchases for review
+  - type: label
+    name: Large Purchase
+    when:
+      amount_operator: ">"
+      amount_value: 200
+    labels: [Large Purchase, Review]
+
+  # Flag uncategorized transactions
+  - type: label
+    name: Needs Categorization
+    when:
+      uncategorized: true
+    labels: [Uncategorized, Needs Review]
