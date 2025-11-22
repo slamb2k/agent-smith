@@ -1,0 +1,368 @@
+"""LLM-powered categorization service using subagent context.
+
+This service provides LLM-based transaction categorization as a fallback
+when rule-based categorization doesn't match or needs validation.
+
+Key features:
+- Prompt building with full category hierarchy and transaction details
+- Response parsing supporting both text and JSON formats
+- Intelligence mode integration (Conservative/Smart/Aggressive)
+- Confidence threshold logic for auto-apply vs ask-user decisions
+"""
+
+import re
+import json
+import logging
+from typing import List, Dict, Any
+
+# Import from rule_engine to avoid duplication
+from scripts.core.rule_engine import IntelligenceMode
+
+logger = logging.getLogger(__name__)
+
+
+class LLMCategorizationService:
+    """Service for LLM-powered transaction categorization.
+
+    Uses the subagent's own LLM context rather than external API calls.
+    This is implemented via prompt instructions to the subagent.
+    """
+
+    def __init__(self) -> None:
+        """Initialize LLM categorization service."""
+        # Intelligence mode thresholds
+        self.thresholds = {
+            IntelligenceMode.CONSERVATIVE: {
+                "auto_apply": 999,  # Never auto-apply (impossible threshold)
+                "ask_user": 0,  # Always ask
+            },
+            IntelligenceMode.SMART: {
+                "auto_apply": 90,  # ≥90% auto-apply
+                "ask_user": 70,  # 70-89% ask
+            },
+            IntelligenceMode.AGGRESSIVE: {
+                "auto_apply": 80,  # ≥80% auto-apply
+                "ask_user": 50,  # 50-79% ask
+            },
+        }
+
+    def build_categorization_prompt(
+        self,
+        transactions: List[Dict[str, Any]],
+        categories: List[Dict[str, Any]],
+        mode: IntelligenceMode = IntelligenceMode.SMART,
+    ) -> str:
+        """Build prompt for LLM to categorize transactions.
+
+        Args:
+            transactions: List of transaction dicts (id, payee, amount, date)
+            categories: List of category dicts (title, parent hierarchy)
+            mode: Intelligence mode affecting confidence expectations
+
+        Returns:
+            Formatted prompt string for LLM
+        """
+        # Build category hierarchy section
+        category_lines = []
+        for cat in categories:
+            parent = cat.get("parent", "")
+            if parent:
+                category_lines.append(f"- {parent} > {cat['title']}")
+            else:
+                category_lines.append(f"- {cat['title']}")
+
+        categories_text = "\n".join(category_lines)
+
+        # Build transactions section with all relevant details
+        transaction_lines = []
+        for i, txn in enumerate(transactions, 1):
+            payee = txn.get("payee", "Unknown")
+            amount = txn.get("amount", 0)
+            date = txn.get("date", "")
+            date_str = f" on {date}" if date else ""
+
+            transaction_lines.append(f"Transaction {i}: {payee} (${abs(amount):.2f}){date_str}")
+
+        transactions_text = "\n".join(transaction_lines)
+
+        # Mode-specific guidance
+        mode_guidance = {
+            IntelligenceMode.CONSERVATIVE: (
+                "Use high confidence thresholds. Only suggest categories "
+                "you're very certain about (90%+)."
+            ),
+            IntelligenceMode.SMART: (
+                "Balance accuracy and coverage. Suggest categories with " "good confidence (70%+)."
+            ),
+            IntelligenceMode.AGGRESSIVE: (
+                "Be more lenient with suggestions. Include reasonable "
+                "matches even with moderate confidence (50%+)."
+            ),
+        }
+
+        guidance = mode_guidance.get(mode, mode_guidance[IntelligenceMode.SMART])
+
+        prompt = f"""Categorize these transactions using the category hierarchy below.
+
+INTELLIGENCE MODE: {mode.value}
+GUIDANCE: {guidance}
+
+For each transaction, provide:
+1. Category name (exact match from hierarchy below)
+2. Confidence score (0-100%)
+3. Brief reasoning
+
+Available Categories:
+{categories_text}
+
+Transactions to Categorize:
+{transactions_text}
+
+Format your response as:
+Transaction N: [payee]
+Category: [category name]
+Confidence: [score]%
+Reasoning: [brief explanation]
+
+Alternatively, you can use JSON format:
+[
+    {{"transaction_id": N, "category": "...", "confidence": 95, "reasoning": "..."}},
+    ...
+]
+"""
+
+        return prompt
+
+    def parse_categorization_response(
+        self, llm_response: str, transaction_ids: List[int]
+    ) -> Dict[int, Dict[str, Any]]:
+        """Parse LLM categorization response.
+
+        Supports both text format and JSON format responses.
+
+        Args:
+            llm_response: Raw LLM response text
+            transaction_ids: Original transaction IDs (in order)
+
+        Returns:
+            Dict mapping transaction_id to categorization result
+            {
+                transaction_id: {
+                    "transaction_id": int,
+                    "category": str,
+                    "confidence": int,
+                    "reasoning": str,
+                    "source": "llm"
+                }
+            }
+        """
+        # Try JSON format first
+        try:
+            json_match = re.search(r"\[[\s\S]*\]", llm_response)
+            if json_match:
+                parsed_json = json.loads(json_match.group(0))
+                if isinstance(parsed_json, list):
+                    results = {}
+                    for item in parsed_json:
+                        txn_id = item.get("transaction_id")
+                        if txn_id is not None:
+                            results[txn_id] = {
+                                "transaction_id": txn_id,
+                                "category": item.get("category"),
+                                "confidence": item.get("confidence", 50),
+                                "reasoning": item.get("reasoning", ""),
+                                "source": "llm",
+                            }
+                    return results
+        except (json.JSONDecodeError, ValueError):
+            # Fall back to text parsing
+            pass
+
+        # Text format parsing
+        results = {}
+
+        # Split response into transaction blocks
+        blocks = re.split(r"Transaction \d+:", llm_response)
+        blocks = [b.strip() for b in blocks if b.strip()]
+
+        for i, block in enumerate(blocks):
+            if i >= len(transaction_ids):
+                break
+
+            txn_id = transaction_ids[i]
+
+            # Extract category
+            category_match = re.search(r"Category:\s*(.+?)(?:\n|$)", block)
+            category = category_match.group(1).strip() if category_match else None
+
+            # Extract confidence
+            confidence_match = re.search(r"Confidence:\s*(\d+)", block)
+            confidence = (
+                int(confidence_match.group(1)) if confidence_match else 50
+            )  # Default to 50% if missing
+
+            # Extract reasoning (optional)
+            reasoning_match = re.search(r"Reasoning:\s*(.+?)(?:\n\n|$)", block, re.DOTALL)
+            reasoning = reasoning_match.group(1).strip() if reasoning_match else ""
+
+            results[txn_id] = {
+                "transaction_id": txn_id,
+                "category": category,
+                "confidence": confidence,
+                "reasoning": reasoning,
+                "source": "llm",
+            }
+
+        return results
+
+    def categorize_batch(
+        self,
+        transactions: List[Dict[str, Any]],
+        categories: List[Dict[str, Any]],
+        mode: IntelligenceMode = IntelligenceMode.SMART,
+    ) -> Dict[int, Dict[str, Any]]:
+        """Categorize a batch of transactions using LLM.
+
+        This is a placeholder for the actual LLM integration.
+        In practice, this would be called by a subagent that has LLM context.
+
+        Args:
+            transactions: List of transactions to categorize
+            categories: Available categories for categorization
+            mode: Intelligence mode for threshold decisions
+
+        Returns:
+            Dict mapping transaction_id to categorization result
+        """
+        # Build the prompt
+        self.build_categorization_prompt(transactions, categories, mode)
+
+        # Extract transaction IDs for parsing
+        transaction_ids = [txn["id"] for txn in transactions]
+
+        # In actual usage, this would be called by a subagent that executes
+        # the prompt and returns the response. For testing, we'll use the
+        # mock parse function that tests provide.
+
+        # For now, return a structure that shows this is a placeholder
+        # Tests will mock this method or the parse function
+        logger.warning("categorize_batch called - should be executed by subagent with LLM context")
+
+        # Call parse with empty response to demonstrate structure
+        # In practice, this would have the LLM's actual response
+        results = self.parse_categorization_response("", transaction_ids)
+
+        return results
+
+    def _should_auto_apply(self, confidence: int, mode: IntelligenceMode) -> bool:
+        """Determine if categorization should be auto-applied based on confidence and mode.
+
+        Args:
+            confidence: Confidence score (0-100)
+            mode: Intelligence mode
+
+        Returns:
+            True if should auto-apply without asking user
+        """
+        threshold = self.thresholds[mode]["auto_apply"]
+        return confidence >= threshold
+
+    def _should_ask_user(self, confidence: int, mode: IntelligenceMode) -> bool:
+        """Determine if categorization should prompt user for confirmation.
+
+        Args:
+            confidence: Confidence score (0-100)
+            mode: Intelligence mode
+
+        Returns:
+            True if should ask user for confirmation
+        """
+        auto_threshold = self.thresholds[mode]["auto_apply"]
+        ask_threshold = self.thresholds[mode]["ask_user"]
+
+        # Ask if between ask_threshold and auto_threshold
+        return ask_threshold <= confidence < auto_threshold
+
+    def build_validation_prompt(
+        self,
+        transaction: Dict[str, Any],
+        suggested_category: str,
+        rule_confidence: int,
+    ) -> str:
+        """Build prompt for LLM to validate a rule-based categorization.
+
+        Args:
+            transaction: Transaction dict
+            suggested_category: Category suggested by rule
+            rule_confidence: Confidence of the rule match
+
+        Returns:
+            Formatted validation prompt
+        """
+        payee = transaction.get("payee", "Unknown")
+        amount = transaction.get("amount", 0)
+        date = transaction.get("date", "")
+        date_str = f" on {date}" if date else ""
+
+        prompt = f"""Validate this transaction categorization:
+
+Transaction: {payee} (${abs(amount):.2f}){date_str}
+Suggested Category: {suggested_category}
+Rule Confidence: {rule_confidence}%
+
+Does this categorization look correct? Provide:
+1. Validation: CONFIRM or REJECT
+2. Adjusted Confidence: 0-100%
+3. Reasoning: Brief explanation
+
+If you REJECT, suggest a better category.
+"""
+
+        return prompt
+
+    def parse_validation_response(
+        self,
+        llm_response: str,
+        original_category: str,
+        original_confidence: int,
+    ) -> Dict[str, Any]:
+        """Parse LLM validation response.
+
+        Args:
+            llm_response: Raw LLM response
+            original_category: Original suggested category
+            original_confidence: Original confidence score
+
+        Returns:
+            Validation result dict with validation, category, confidence, reasoning
+        """
+        # Check validation status
+        validation = "UNKNOWN"
+        if "CONFIRM" in llm_response.upper():
+            validation = "CONFIRM"
+        elif "REJECT" in llm_response.upper():
+            validation = "REJECT"
+
+        # Extract adjusted confidence
+        confidence_match = re.search(r"Adjusted Confidence:\s*(\d+)", llm_response)
+        adjusted_confidence = (
+            int(confidence_match.group(1)) if confidence_match else original_confidence
+        )
+
+        # Extract suggested category if rejected
+        suggested_category = original_category
+        if validation == "REJECT":
+            category_match = re.search(r"Suggested Category:\s*(.+?)(?:\n|$)", llm_response)
+            if category_match:
+                suggested_category = category_match.group(1).strip()
+
+        # Extract reasoning
+        reasoning_match = re.search(r"Reasoning:\s*(.+?)(?:\n\n|$)", llm_response, re.DOTALL)
+        reasoning = reasoning_match.group(1).strip() if reasoning_match else ""
+
+        return {
+            "validation": validation,
+            "category": suggested_category,
+            "confidence": adjusted_confidence,
+            "reasoning": reasoning,
+        }
