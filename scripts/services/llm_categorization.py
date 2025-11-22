@@ -220,39 +220,82 @@ Alternatively, you can use JSON format:
         transactions: List[Dict[str, Any]],
         categories: List[Dict[str, Any]],
         mode: IntelligenceMode = IntelligenceMode.SMART,
-    ) -> Dict[int, Dict[str, Any]]:
-        """Categorize a batch of transactions using LLM.
+    ) -> Dict[str, Any]:
+        """Categorize a batch of transactions using Claude Code's LLM context.
 
-        This is a placeholder for the actual LLM integration.
-        In practice, this would be called by a subagent that has LLM context.
+        This method should be called from within a subagent context where
+        Claude's LLM is available. It builds a prompt and returns the response
+        for the parent to parse.
 
         Args:
-            transactions: List of transactions to categorize
-            categories: Available categories for categorization
-            mode: Intelligence mode for threshold decisions
+            transactions: List of transaction dicts
+            categories: Available categories for matching
+            mode: Intelligence mode (Conservative/Smart/Aggressive)
 
         Returns:
-            Dict mapping transaction_id to categorization result
+            Dict mapping transaction IDs to categorization results
         """
-        # Build the prompt
-        self.build_categorization_prompt(transactions, categories, mode)
+        if not transactions:
+            return {}
 
-        # Extract transaction IDs for parsing
-        transaction_ids = [txn["id"] for txn in transactions]
+        # Build prompt for all transactions
+        prompt = self.build_categorization_prompt(transactions, categories, mode)
 
-        # In actual usage, this would be called by a subagent that executes
-        # the prompt and returns the response. For testing, we'll use the
-        # mock parse function that tests provide.
+        # CRITICAL: This method must be called from within a subagent context.
+        # The parent workflow uses the Task tool to delegate here.
+        # We return the prompt so parent can send to subagent.
 
-        # For now, return a structure that shows this is a placeholder
-        # Tests will mock this method or the parse function
-        logger.warning("categorize_batch called - should be executed by subagent with LLM context")
+        # For now, return the prompt as a special marker
+        # The orchestration layer will detect this and delegate properly
+        return {
+            "_needs_llm": True,
+            "_prompt": prompt,
+            "_transaction_ids": [t["id"] for t in transactions],
+        }
 
-        # Call parse with empty response to demonstrate structure
-        # In practice, this would have the LLM's actual response
-        results = self.parse_categorization_response("", transaction_ids)
+    def validate_batch(
+        self,
+        validations: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Validate a batch of rule-based categorizations using LLM.
 
-        return results
+        Args:
+            validations: List of dicts with:
+                - transaction: Transaction dict
+                - suggested_category: Category from rule
+                - confidence: Rule confidence score
+
+        Returns:
+            Dict mapping transaction IDs to validation results:
+                - validation: "CONFIRM" or "REJECT"
+                - confidence: Adjusted confidence (0-100)
+                - reasoning: Explanation
+                - category: Original or new category (if REJECT)
+        """
+        if not validations:
+            return {}
+
+        # Build combined validation prompt
+        prompt_parts = ["Validate the following transaction categorizations:\n"]
+
+        for i, val in enumerate(validations, 1):
+            txn = val["transaction"]
+            prompt_parts.append(
+                f"\n{i}. "
+                + self.build_validation_prompt(txn, val["suggested_category"], val["confidence"])
+            )
+
+        prompt_parts.append("\n\nProvide validation for each transaction in order (1, 2, 3...).")
+
+        prompt = "\n".join(prompt_parts)
+
+        # Return prompt for parent to delegate
+        return {
+            "_needs_llm": True,
+            "_prompt": prompt,
+            "_transaction_ids": [v["transaction"]["id"] for v in validations],
+            "_type": "validation",
+        }
 
     def _should_auto_apply(self, confidence: int, mode: IntelligenceMode) -> bool:
         """Determine if categorization should be auto-applied based on confidence and mode.
