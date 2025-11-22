@@ -120,7 +120,7 @@ run_agent_smith "onboarding/discovery.py"
 
 Agent Smith uses a **composable template system** with three layers. Users select:
 1. **Primary Income** (ONE choice) - How you earn most of your income
-2. **Living Arrangement** (ONE choice) - How you manage household finances
+2. **Living Arrangement** (ONE OR MORE choices) - How you manage household finances
 3. **Additional Income** (MULTIPLE choices) - Extra income sources beyond your primary
 
 **Step 3a: Select Primary Income Template**
@@ -136,19 +136,22 @@ run_agent_smith "setup/template_selector.py" --layer=primary --interactive
 - `payg-employee` - Salary/wage earner, PAYG tax withheld
 - `sole-trader` - ABN holder, contractor, quarterly BAS
 
-**Step 3b: Select Living Arrangement Template**
+**Step 3b: Select Living Arrangement Template(s)**
 
-Present discovery recommendation, then let user select ONE:
+Present discovery recommendation, then let user select ONE OR MORE:
 
 ```bash
-echo "Select your LIVING arrangement (choose ONE):"
-run_agent_smith "setup/template_selector.py" --layer=living --interactive
+echo "Select your LIVING arrangement (select all that apply):"
+run_agent_smith "setup/template_selector.py" --layer=living --multiple --interactive
 ```
 
 **Available living templates:**
 - `single` - Managing finances alone
 - `shared-hybrid` - Some joint accounts, some separate (partners/couples)
 - `separated-parents` - Child support, shared custody expenses
+
+**Note:** You can select MULTIPLE living arrangements if your situation requires both. For example:
+- Divorced with kids + now living with new partner = select BOTH `separated-parents` AND `shared-hybrid`
 
 **Step 3c: Select Additional Income Templates**
 

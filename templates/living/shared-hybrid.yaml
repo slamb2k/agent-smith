@@ -101,7 +101,8 @@ labels:
 
 dependencies:
   requires: []
-  conflicts_with: ["single", "shared-joint", "separated-parents", "sharehouse"]
+  conflicts_with: ["single", "shared-joint", "sharehouse"]
+  # Note: Can be combined with separated-parents for new relationships after divorce
 
 metadata:
   created: "2025-11-22"

@@ -122,7 +122,8 @@ labels:
 
 dependencies:
   requires: []
-  conflicts_with: ["single", "shared-joint", "shared-hybrid", "sharehouse"]
+  conflicts_with: ["single", "shared-joint", "sharehouse"]
+  # Note: Can be combined with shared-hybrid for divorced parents now living with new partner
 
 metadata:
   created: "2025-11-22"
