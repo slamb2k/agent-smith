@@ -7,8 +7,13 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
+from scripts.features.merchant_intelligence import MerchantMatcher
+
 
 logger = logging.getLogger(__name__)
+
+# Global MerchantMatcher instance for normalization
+_merchant_matcher = MerchantMatcher()
 
 
 class RuleType(Enum):
@@ -31,6 +36,67 @@ class CategoryRule:
     amount_value: Optional[float] = None
     accounts: List[str] = field(default_factory=list)
 
+    def matches(self, transaction: Dict[str, Any]) -> bool:
+        """Check if rule matches transaction.
+
+        Args:
+            transaction: Transaction dict
+
+        Returns:
+            True if rule matches, False otherwise
+        """
+        # Normalize payee for matching
+        payee = transaction.get("payee", "")
+        normalized_payee = _merchant_matcher.normalize_payee(payee)
+
+        # Check patterns (OR logic) - normalize both pattern and payee for comparison
+        pattern_match = any(
+            _merchant_matcher.normalize_payee(pattern) in normalized_payee
+            for pattern in self.patterns
+        )
+        if not pattern_match:
+            return False
+
+        # Check exclusions - also use normalized comparison
+        for exclude in self.exclude_patterns:
+            if _merchant_matcher.normalize_payee(exclude) in normalized_payee:
+                return False
+
+        # Check amount condition
+        if self.amount_operator and self.amount_value is not None:
+            amount = abs(float(transaction.get("amount", 0)))
+            if not self._check_amount(amount):
+                return False
+
+        # Check account filter
+        if self.accounts:
+            account_name = transaction.get("_account_name") or transaction.get(
+                "transaction_account", {}
+            ).get("name")
+            if account_name not in self.accounts:
+                return False
+
+        return True
+
+    def _check_amount(self, amount: float) -> bool:
+        """Check amount condition."""
+        # Type narrowing: this method is only called when amount_value is not None
+        assert self.amount_value is not None
+
+        if self.amount_operator == ">":
+            return amount > self.amount_value
+        elif self.amount_operator == "<":
+            return amount < self.amount_value
+        elif self.amount_operator == ">=":
+            return amount >= self.amount_value
+        elif self.amount_operator == "<=":
+            return amount <= self.amount_value
+        elif self.amount_operator == "==":
+            return amount == self.amount_value
+        elif self.amount_operator == "!=":
+            return amount != self.amount_value
+        return True
+
 
 @dataclass
 class LabelRule:
@@ -43,6 +109,71 @@ class LabelRule:
     when_amount_operator: Optional[str] = None
     when_amount_value: Optional[float] = None
     when_uncategorized: bool = False
+
+    def matches(self, transaction: Dict[str, Any]) -> bool:
+        """Check if label rule matches transaction.
+
+        Args:
+            transaction: Transaction dict (may include _account_name)
+
+        Returns:
+            True if all conditions match
+        """
+        # Check uncategorized condition
+        if self.when_uncategorized:
+            category = transaction.get("category")
+            if category is None:
+                return True
+            return False
+
+        # Check category condition (OR logic within list)
+        if self.when_categories:
+            category = transaction.get("category")
+            if category is None:
+                return False
+
+            category_title = (
+                category.get("title", "") if isinstance(category, dict) else str(category)
+            )
+
+            if not any(cat in category_title for cat in self.when_categories):
+                return False
+
+        # Check account condition (OR logic within list)
+        if self.when_accounts:
+            account_name = transaction.get("_account_name") or transaction.get(
+                "transaction_account", {}
+            ).get("name", "")
+
+            if not any(acc in account_name for acc in self.when_accounts):
+                return False
+
+        # Check amount condition
+        if self.when_amount_operator and self.when_amount_value is not None:
+            amount = abs(float(transaction.get("amount", 0)))
+            if not self._check_amount(amount):
+                return False
+
+        return True
+
+    def _check_amount(self, amount: float) -> bool:
+        """Check amount condition."""
+        # Type narrowing: this method is only called when when_amount_value is not None
+        assert self.when_amount_value is not None
+
+        if self.when_amount_operator == ">":
+            return amount > self.when_amount_value
+        elif self.when_amount_operator == "<":
+            return amount < self.when_amount_value
+        elif self.when_amount_operator == ">=":
+            return amount >= self.when_amount_value
+        elif self.when_amount_operator == "<=":
+            return amount <= self.when_amount_value
+        elif self.when_amount_operator == "==":
+            return amount == self.when_amount_value
+        elif self.when_amount_operator == "!=":
+            return amount != self.when_amount_value
+        return True
 
 
 class UnifiedRuleEngine:
