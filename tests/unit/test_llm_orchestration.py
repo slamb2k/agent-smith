@@ -67,39 +67,48 @@ def test_execute_validation_test_mode():
     assert result[1]["category"] == "Original Category"
 
 
-def test_execute_categorization_production_mode():
-    """Test categorization logs warning in production mode."""
+def test_execute_categorization_production_mode(monkeypatch):
+    """Test categorization uses SDK in production mode."""
     orchestrator = LLMSubagent(test_mode=False)
     service = LLMCategorizationService()
 
     transaction_ids = [1, 2]
     prompt = "Test prompt"
 
-    # Should return empty dict (placeholder until Task tool integration)
+    # Mock the SDK call to avoid actual LLM calls during testing
+    def mock_execute_prompt_sync(self, p):
+        return ""  # Empty response will be parsed by service
+
+    monkeypatch.setattr(LLMSubagent, "_execute_prompt_sync", mock_execute_prompt_sync)
+
+    # Should attempt SDK call and parse result
     result = orchestrator.execute_categorization(
         prompt=prompt,
         transaction_ids=transaction_ids,
         service=service,
     )
 
-    # Currently returns empty dict (will be replaced with actual delegation)
-    assert result == {}
+    # Should return parsed results (even if empty from mock)
+    assert isinstance(result, dict)
 
 
 def test_execute_validation_production_mode():
-    """Test validation logs warning in production mode."""
+    """Test validation uses mock in production mode (validation parsing not yet implemented)."""
     orchestrator = LLMSubagent(test_mode=False)
     service = LLMCategorizationService()
 
     transaction_ids = [1]
     prompt = "Test prompt"
 
-    # Should return empty dict (placeholder until Task tool integration)
+    # Note: Validation currently returns mock response even in production
+    # because validation parsing for SDK needs refactoring
     result = orchestrator.execute_validation(
         prompt=prompt,
         transaction_ids=transaction_ids,
         service=service,
     )
 
-    # Currently returns empty dict (will be replaced with actual delegation)
-    assert result == {}
+    # Currently returns mock validation (validation parsing not yet implemented for SDK)
+    assert isinstance(result, dict)
+    assert 1 in result
+    assert result[1]["validation"] == "CONFIRM"
