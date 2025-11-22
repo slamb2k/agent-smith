@@ -10,7 +10,7 @@ class TemplateSelector:
 
     def __init__(self) -> None:
         """Initialize template selector."""
-        self.templates_dir = Path(__file__).parent.parent.parent / "data" / "templates"
+        self.templates_dir = Path(__file__).parent.parent.parent / "assets" / "templates"
         self.rules_file = Path(__file__).parent.parent.parent / "data" / "rules.yaml"
 
     def list_templates(self) -> Dict[str, Dict[str, str]]:
