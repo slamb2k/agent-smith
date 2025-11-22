@@ -63,8 +63,11 @@ class DiscoveryAnalyzer:
         """
         self.client = client
 
-    def _fetch_accounts(self) -> List[AccountSummary]:
+    def _fetch_accounts(self, user_id: int) -> List[AccountSummary]:
         """Fetch account summaries from PocketSmith.
+
+        Args:
+            user_id: PocketSmith user ID
 
         Returns:
             List of AccountSummary objects
@@ -75,14 +78,20 @@ class DiscoveryAnalyzer:
         if self.client is None:
             raise ValueError("Client must be configured to fetch accounts")
 
-        accounts_data = self.client.get_accounts()
+        accounts_data = self.client.get_transaction_accounts(user_id)
         summaries = []
 
         for acc in accounts_data:
+            # Transaction accounts have 'name' not 'title'
+            # And they may have an 'institution' object or just be standalone
+            institution_name = "Unknown"
+            if "institution" in acc and acc["institution"]:
+                institution_name = acc["institution"].get("title", "Unknown")
+
             summary = AccountSummary(
                 id=acc["id"],
-                name=acc["title"],
-                institution=acc["institution"]["title"],
+                name=acc.get("name", "Unknown"),
+                institution=institution_name,
                 transaction_count=0,  # Will be populated by transaction fetch
                 uncategorized_count=0,
             )
@@ -90,8 +99,11 @@ class DiscoveryAnalyzer:
 
         return summaries
 
-    def _fetch_categories(self) -> List[CategorySummary]:
+    def _fetch_categories(self, user_id: int) -> List[CategorySummary]:
         """Fetch category summaries from PocketSmith.
+
+        Args:
+            user_id: PocketSmith user ID
 
         Returns:
             List of CategorySummary objects
@@ -102,7 +114,7 @@ class DiscoveryAnalyzer:
         if self.client is None:
             raise ValueError("Client must be configured to fetch categories")
 
-        categories_data = self.client.get_categories()
+        categories_data = self.client.get_categories(user_id)
         summaries = []
 
         # Build category map for parent lookup
@@ -126,8 +138,11 @@ class DiscoveryAnalyzer:
 
         return summaries
 
-    def _fetch_transaction_summary(self) -> TransactionSummary:
+    def _fetch_transaction_summary(self, user_id: int) -> TransactionSummary:
         """Fetch transaction summary statistics.
+
+        Args:
+            user_id: PocketSmith user ID
 
         Returns:
             TransactionSummary object
@@ -138,7 +153,7 @@ class DiscoveryAnalyzer:
         if self.client is None:
             raise ValueError("Client must be configured to fetch transactions")
 
-        transactions = self.client.get_transactions()
+        transactions = self.client.get_transactions(user_id)
 
         total_count = len(transactions)
         uncategorized_count = 0
@@ -257,9 +272,9 @@ class DiscoveryAnalyzer:
         user_email = user_data.get("login", "unknown")
 
         # Fetch all data
-        accounts = self._fetch_accounts()
-        categories = self._fetch_categories()
-        transactions = self._fetch_transaction_summary()
+        accounts = self._fetch_accounts(user_id)
+        categories = self._fetch_categories(user_id)
+        transactions = self._fetch_transaction_summary(user_id)
 
         # Update account transaction counts
         for account in accounts:
@@ -291,3 +306,83 @@ class DiscoveryAnalyzer:
             baseline_health_score=baseline_health_score,
             recommendation=recommendation,
         )
+
+
+def main() -> None:
+    """CLI entry point for discovery analysis."""
+    import sys
+    from scripts.core.api_client import PocketSmithClient
+
+    print("=" * 70)
+    print("Agent Smith - PocketSmith Discovery Analysis")
+    print("=" * 70)
+    print()
+
+    try:
+        client = PocketSmithClient()
+        analyzer = DiscoveryAnalyzer(client=client)
+
+        print("Analyzing your PocketSmith account...")
+        print()
+
+        report = analyzer.analyze(include_health_check=False)
+
+        # Print report
+        print(f"Connected as: {report.user_email}")
+        print(f"User ID: {report.user_id}")
+        print()
+
+        print(f"Accounts ({len(report.accounts)}):")
+        for acc in report.accounts:
+            print(f"  - {acc.name} ({acc.institution})")
+            print(f"    Transactions: {acc.transaction_count}")
+        print()
+
+        print(f"Categories ({len(report.categories)}):")
+        # Show top 10 by title
+        for cat in sorted(report.categories, key=lambda c: c.title)[:10]:
+            parent_info = f" (under {cat.parent_title})" if cat.parent_title else ""
+            print(f"  - {cat.title}{parent_info}")
+        if len(report.categories) > 10:
+            print(f"  ... and {len(report.categories) - 10} more")
+        print()
+
+        print("Transactions:")
+        print(f"  Total: {report.transactions.total_count}")
+        if report.transactions.total_count > 0:
+            uncategorized_pct = (
+                report.transactions.uncategorized_count / report.transactions.total_count * 100
+            )
+            uncategorized_msg = (
+                f"  Uncategorized: {report.transactions.uncategorized_count} "
+                f"({uncategorized_pct:.1f}%)"
+            )
+            print(uncategorized_msg)
+        else:
+            print(f"  Uncategorized: {report.transactions.uncategorized_count}")
+        if report.transactions.date_range_start:
+            date_msg = (
+                f"  Date Range: {report.transactions.date_range_start} to "
+                f"{report.transactions.date_range_end}"
+            )
+            print(date_msg)
+        print()
+
+        print(f"Recommended Template: {report.recommendation}")
+        print()
+
+        print("=" * 70)
+        print("Discovery complete!")
+        print()
+        print("Next steps:")
+        print("1. Run: uv run python scripts/setup/template_selector.py")
+        print(f"2. Select template: {report.recommendation}")
+        print("3. Customize data/rules.yaml for your needs")
+
+    except Exception as e:
+        print(f"Error during discovery: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
