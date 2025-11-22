@@ -5,13 +5,14 @@ Quick-access commands for common financial management operations.
 ## All Commands
 
 1. `/agent-smith` - Main conversational entry point
-2. `/agent-smith-categorize` - Transaction categorization
-3. `/agent-smith-analyze` - Financial analysis
-4. `/agent-smith-scenario` - Scenario modeling
-5. `/agent-smith-report` - Report generation
-6. `/agent-smith-optimize` - Optimization operations
-7. `/agent-smith-tax` - Tax intelligence
-8. `/agent-smith-health` - Health check
+2. `/agent-smith-onboard` - Interactive first-time setup wizard
+3. `/agent-smith-categorize` - Transaction categorization
+4. `/agent-smith-analyze` - Financial analysis
+5. `/agent-smith-scenario` - Scenario modeling
+6. `/agent-smith-report` - Report generation
+7. `/agent-smith-optimize` - Optimization operations
+8. `/agent-smith-tax` - Tax intelligence
+9. `/agent-smith-health` - Health check
 
 ## Command Descriptions
 
@@ -24,6 +25,30 @@ Main conversational skill for complex multi-step operations.
 - Guided setup and onboarding
 - Multi-step workflows
 - Custom analysis
+
+### /agent-smith-onboard
+
+Interactive first-time setup wizard for Agent Smith.
+
+**Purpose:** Guide new users through discovery, template selection, customization, and initial categorization
+
+**Stages:**
+1. Prerequisites check
+2. PocketSmith account discovery
+3. Template selection and customization
+4. Intelligence mode configuration
+5. Incremental categorization
+6. Health check and progress tracking
+7. Ongoing usage guidance
+
+**Time Required:** 30-60 minutes
+
+**Example:**
+```bash
+/agent-smith-onboard
+```
+
+**Note:** Your progress is saved in `data/onboarding_state.json` and can be resumed if interrupted.
 
 ### /agent-smith-categorize
 

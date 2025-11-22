@@ -71,6 +71,7 @@ class LLMSubagent:
         self,
         prompt: str,
         transaction_ids: List[int],
+        validations: List[Dict[str, Any]],
         service: Any,
     ) -> Dict[int, Dict[str, Any]]:
         """Execute validation prompt via LLM.
@@ -78,6 +79,7 @@ class LLMSubagent:
         Args:
             prompt: Validation prompt from service
             transaction_ids: Transaction IDs (in order)
+            validations: Original validation request dicts for parsing
             service: LLMCategorizationService instance for parsing
 
         Returns:
@@ -94,10 +96,13 @@ class LLMSubagent:
             f"Executing validation for {len(transaction_ids)} transactions via Claude Agent SDK"
         )
 
-        # Note: Validation parsing for SDK needs refactoring
-        # For now, return mock response (validation workflow less critical than categorization)
-        logger.warning("Validation parsing not yet implemented for SDK integration")
-        return self._mock_validation_response(transaction_ids)
+        llm_response = self._execute_prompt_sync(prompt)
+
+        # Parse response using service batch parsing method
+        return cast(
+            Dict[int, Dict[str, Any]],
+            service.parse_validation_batch_response(llm_response, validations),
+        )
 
     def _execute_prompt_sync(self, prompt: str) -> str:
         """Execute a prompt synchronously using Claude Agent SDK.

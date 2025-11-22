@@ -157,6 +157,40 @@ Comprehensive guide covering:
 
 **Size:** ~12KB
 
+### [guides/onboarding-guide.md](guides/onboarding-guide.md)
+
+**Agent Smith Onboarding Guide**
+
+**Status:** Complete
+**Date:** 2025-11-22
+
+Complete user guide for first-time Agent Smith setup.
+
+**Contents:**
+- 8-stage onboarding journey walkthrough
+- Prerequisites and time estimates
+- Step-by-step instructions for each stage
+- Template selection guidance
+- Customization examples
+- Troubleshooting common issues
+- Next steps after onboarding
+
+**Key Stages:**
+1. Prerequisites Check (2 min)
+2. Discovery (5-10 min)
+3. Template Selection (3-5 min)
+4. Template Customization (10-20 min)
+5. Intelligence Mode Selection (2 min)
+6. Incremental Categorization (20-60 min)
+7. Health Check & Progress (5 min)
+8. Ongoing Usage (2 min)
+
+**Target Audience:** New Agent Smith users
+**Total Time:** 30-60 minutes
+**Related:** INSTALL.md, unified-rules-guide.md, health-check-guide.md
+
+**Size:** ~10KB
+
 ---
 
 ## Example Files
@@ -304,5 +338,5 @@ As implementation progresses, this directory will expand to include:
 
 ---
 
-**Document Count:** 11 documents (1 design + 4 guides + 4 examples + 1 research + 2 implementation)
-**Total Size:** ~171KB
+**Document Count:** 12 documents (1 design + 5 guides + 4 examples + 1 research + 2 implementation)
+**Total Size:** ~181KB

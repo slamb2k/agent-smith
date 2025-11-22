@@ -32,6 +32,10 @@ data/cache/
 logs/*
 !logs/INDEX.md
 
+# Onboarding state (tracked as template, but user's state will be overwritten)
+# Note: data/onboarding_state.json is committed as a template, but the user's
+# actual state will modify this file during onboarding. This is intentional.
+
 # Build reference (temporary - remove before publishing)
 build/
 

@@ -142,6 +142,44 @@ This ensures:
 
 **Why `-u`?** Python buffers output by default. The `-u` flag disables buffering, showing progress immediately. Essential for long-running operations like health checks and categorization.
 
+## First-Time Setup
+
+After installation and verification, run the interactive onboarding wizard:
+
+```bash
+/agent-smith-onboard
+```
+
+**What it does:**
+- Analyzes your PocketSmith account structure
+- Recommends the best rule template for your needs
+- Guides you through customization
+- Incrementally categorizes your transactions
+- Shows measurable improvement with health scores
+
+**Time required:** 30-60 minutes
+
+**Alternative:** Run components individually:
+
+```bash
+# 1. Discovery - Analyze your PocketSmith account
+uv run python -u scripts/onboarding/discovery.py
+
+# 2. Template Selection - Choose rule template
+uv run python scripts/setup/template_selector.py
+
+# 3. Customize data/rules.yaml manually
+
+# 4. Categorize transactions
+uv run python scripts/operations/batch_categorize.py --mode=dry_run --period=2025-11
+uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-11
+
+# 5. Health Check
+/agent-smith-health --full
+```
+
+**For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
+
 ## Available Commands
 
 Once installed, you have access to these slash commands:
@@ -149,6 +187,7 @@ Once installed, you have access to these slash commands:
 | Command | Description |
 |---------|-------------|
 | `/agent-smith` | Main conversational assistant |
+| `/agent-smith-onboard` | Interactive first-time setup wizard |
 | `/agent-smith-categorize` | Categorize transactions |
 | `/agent-smith-analyze` | Financial analysis |
 | `/agent-smith-scenario` | What-if scenarios |

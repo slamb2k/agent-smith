@@ -155,3 +155,150 @@ def test_validation_workflow_integration():
     assert result["category"] == "Medical & Healthcare"
     assert result["confidence"] == 95
     assert result["confidence"] > 75  # Confidence upgraded
+
+
+def test_parse_validation_batch_response_mixed():
+    """Test parsing batch validation response with mixed CONFIRM/REJECT."""
+    service = LLMCategorizationService()
+
+    validations = [
+        {
+            "transaction": {"id": 1, "payee": "Woolworths"},
+            "suggested_category": "Groceries",
+            "confidence": 75,
+        },
+        {
+            "transaction": {"id": 2, "payee": "UBER MEDICAL CENTRE"},
+            "suggested_category": "Transport",
+            "confidence": 70,
+        },
+        {
+            "transaction": {"id": 3, "payee": "Shell"},
+            "suggested_category": "Transport",
+            "confidence": 80,
+        },
+    ]
+
+    llm_response = """
+1. CONFIRM
+Adjusted Confidence: 90
+Reasoning: Clear grocery expense
+
+2. REJECT
+Suggested Category: Medical & Healthcare
+Adjusted Confidence: 95
+Reasoning: This is a medical facility
+
+3. CONFIRM
+Adjusted Confidence: 85
+Reasoning: Standard fuel purchase
+"""
+
+    results = service.parse_validation_batch_response(llm_response, validations)
+
+    # Check all three validations were parsed
+    assert len(results) == 3
+    assert 1 in results
+    assert 2 in results
+    assert 3 in results
+
+    # Transaction 1: CONFIRM
+    assert results[1]["validation"] == "CONFIRM"
+    assert results[1]["category"] == "Groceries"
+    assert results[1]["confidence"] == 90
+
+    # Transaction 2: REJECT with new category
+    assert results[2]["validation"] == "REJECT"
+    assert results[2]["category"] == "Medical & Healthcare"
+    assert results[2]["confidence"] == 95
+
+    # Transaction 3: CONFIRM
+    assert results[3]["validation"] == "CONFIRM"
+    assert results[3]["category"] == "Transport"
+    assert results[3]["confidence"] == 85
+
+
+def test_parse_validation_batch_response_missing_responses():
+    """Test batch parsing when LLM doesn't respond to all validations."""
+    service = LLMCategorizationService()
+
+    validations = [
+        {
+            "transaction": {"id": 1, "payee": "Woolworths"},
+            "suggested_category": "Groceries",
+            "confidence": 75,
+        },
+        {
+            "transaction": {"id": 2, "payee": "Coles"},
+            "suggested_category": "Groceries",
+            "confidence": 80,
+        },
+    ]
+
+    # LLM only responds to first validation
+    llm_response = """
+1. CONFIRM
+Adjusted Confidence: 90
+Reasoning: Clear grocery expense
+"""
+
+    results = service.parse_validation_batch_response(llm_response, validations)
+
+    # Should still have entries for both
+    assert len(results) == 2
+
+    # Transaction 1: parsed from response
+    assert results[1]["validation"] == "CONFIRM"
+    assert results[1]["confidence"] == 90
+
+    # Transaction 2: default CONFIRM (no response)
+    assert results[2]["validation"] == "CONFIRM"
+    assert results[2]["category"] == "Groceries"
+    assert results[2]["confidence"] == 80  # Original confidence
+    assert "No validation response" in results[2]["reasoning"]
+
+
+def test_parse_validation_batch_response_empty():
+    """Test batch parsing with empty validation list."""
+    service = LLMCategorizationService()
+
+    validations = []
+    llm_response = "Some response"
+
+    results = service.parse_validation_batch_response(llm_response, validations)
+
+    # Should return empty dict
+    assert results == {}
+
+
+def test_validate_batch_returns_marker():
+    """Test validate_batch returns proper marker dict."""
+    service = LLMCategorizationService()
+
+    validations = [
+        {
+            "transaction": {"id": 1, "payee": "Woolworths"},
+            "suggested_category": "Groceries",
+            "confidence": 75,
+        }
+    ]
+
+    result = service.validate_batch(validations)
+
+    # Should return marker dict
+    assert result["_needs_llm"] is True
+    assert "_prompt" in result
+    assert "_transaction_ids" in result
+    assert "_validations" in result  # New: validations for parsing
+    assert result["_type"] == "validation"
+
+    # Should include transaction ID
+    assert result["_transaction_ids"] == [1]
+
+    # Should include original validations
+    assert result["_validations"] == validations
+
+    # Prompt should contain validation instructions
+    assert "Woolworths" in result["_prompt"]
+    assert "Groceries" in result["_prompt"]
+    assert "75" in result["_prompt"]

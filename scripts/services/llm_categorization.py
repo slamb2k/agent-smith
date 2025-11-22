@@ -294,6 +294,7 @@ Alternatively, you can use JSON format:
             "_needs_llm": True,
             "_prompt": prompt,
             "_transaction_ids": [v["transaction"]["id"] for v in validations],
+            "_validations": validations,  # Pass through for parsing
             "_type": "validation",
         }
 
@@ -409,3 +410,60 @@ If you REJECT, suggest a better category.
             "confidence": adjusted_confidence,
             "reasoning": reasoning,
         }
+
+    def parse_validation_batch_response(
+        self,
+        llm_response: str,
+        validations: List[Dict[str, Any]],
+    ) -> Dict[int, Dict[str, Any]]:
+        """Parse batch validation response from LLM.
+
+        Args:
+            llm_response: Raw LLM response with multiple validations
+            validations: Original validation request dicts with:
+                - transaction: Transaction dict
+                - suggested_category: Category from rule
+                - confidence: Rule confidence score
+
+        Returns:
+            Dict mapping transaction IDs to validation results:
+                - validation: "CONFIRM" or "REJECT"
+                - confidence: Adjusted confidence (0-100)
+                - reasoning: Explanation
+                - category: Original or new category (if REJECT)
+        """
+        results = {}
+
+        # Split response into validation blocks (numbered 1, 2, 3...)
+        blocks = re.split(r"(?:^|\n)(\d+)\.", llm_response, flags=re.MULTILINE)
+        blocks = [b.strip() for b in blocks if b.strip()]
+
+        # Process each validation block
+        for i, val_dict in enumerate(validations):
+            txn = val_dict["transaction"]
+            txn_id = txn["id"]
+            original_category = val_dict["suggested_category"]
+            original_confidence = val_dict["confidence"]
+
+            # Try to find matching block (index i*2 because split includes numbers)
+            if i * 2 + 1 < len(blocks):
+                block_text = blocks[i * 2 + 1]
+
+                # Parse this validation response
+                val_result = self.parse_validation_response(
+                    llm_response=block_text,
+                    original_category=original_category,
+                    original_confidence=original_confidence,
+                )
+
+                results[txn_id] = val_result
+            else:
+                # No response for this transaction - default to CONFIRM
+                results[txn_id] = {
+                    "validation": "CONFIRM",
+                    "category": original_category,
+                    "confidence": original_confidence,
+                    "reasoning": "No validation response from LLM",
+                }
+
+        return results

@@ -119,9 +119,11 @@ class CategorizationWorkflow:
 
         # Delegate to appropriate orchestrator method
         if operation_type == "validation":
+            validations = marker_result.get("_validations", [])
             return self.llm_orchestrator.execute_validation(
                 prompt=prompt,
                 transaction_ids=transaction_ids,
+                validations=validations,
                 service=self.llm_service,
             )
         else:

@@ -277,3 +277,17 @@ class PocketSmithClient:
         return cast(
             Dict[str, Any], self.post(f"/categories/{category_id}/category_rules", data=data)
         )
+
+    def get_transaction_accounts(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get all transaction accounts for a user.
+
+        Transaction accounts are the specific accounts where transactions are recorded.
+
+        Args:
+            user_id: PocketSmith user ID
+
+        Returns:
+            List of transaction account objects with name, id, type, current_balance, etc.
+        """
+        logger.info(f"Fetching transaction accounts for user {user_id}")
+        return cast(List[Dict[str, Any]], self.get(f"/users/{user_id}/transaction_accounts"))
