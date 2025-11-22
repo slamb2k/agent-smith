@@ -17,7 +17,9 @@ This index provides a comprehensive overview of the repository structure for bot
 | `.claude/` | Directory | Claude Code configuration and commands | Active |
 | `docs/` | Directory | Documentation and design specifications | Active |
 | `ai_docs/` | Directory | Documentation for AI agents/subagents | Active |
-| `build/` | Directory | Reference materials (temporary, pre-publish) | Temporary |
+| `scripts/` | Directory | Python code organized by function | Active |
+| `data/` | Directory | Working data and configuration | Active |
+| `tests/` | Directory | Test suite (unit + integration) | Active |
 
 ---
 
@@ -58,25 +60,6 @@ Documentation specifically formatted for AI agents and subagents to reference du
 **Purpose:** Provides AI agents with comprehensive references without needing to download documentation repeatedly. Optimized for LLM consumption.
 
 **See:** [ai_docs/INDEX.md](ai_docs/INDEX.md)
-
----
-
-### `/build/` - Reference Materials (Temporary)
-
-Contains reference materials from previous PocketSmith migration work. This directory will be removed before final publication as useful content is incorporated into Agent Smith.
-
-| Path | Description | Type |
-|------|-------------|------|
-| `build/docs/` | Migration documentation (9 files) | Reference |
-| `build/scripts/` | Python scripts from migration work (40+ files) | Reference |
-
-**Purpose:** Preserve previous work for reference during Agent Smith development.
-
-**Status:** Temporary - will be removed before publish
-
-**Contents:**
-- `build/docs/` - Category hierarchy planning, migration guides, implementation notes
-- `build/scripts/` - Python scripts for categorization, analysis, migration, reporting
 
 ---
 
@@ -254,7 +237,7 @@ Contains all unit and integration tests.
 
 - **PocketSmith API Reference:** [ai_docs/pocketsmith-api-documentation.md](ai_docs/pocketsmith-api-documentation.md)
 - **Agent Smith Architecture:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
-- **Reference Scripts:** [build/scripts/](build/scripts/)
+- **Lessons Learned:** [docs/design/LESSONS_LEARNED.md](docs/design/LESSONS_LEARNED.md)
 
 ### Key Documents
 
@@ -262,36 +245,35 @@ Contains all unit and integration tests.
 |----------|---------|----------|
 | [README.md](README.md) | Project overview | All |
 | [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md) | Complete design spec | Developers, AI agents |
+| [docs/design/LESSONS_LEARNED.md](docs/design/LESSONS_LEARNED.md) | Migration insights | Developers, AI agents |
 | [ai_docs/pocketsmith-api-documentation.md](ai_docs/pocketsmith-api-documentation.md) | API reference | AI agents |
 
 ---
 
 ## File Counts
 
-- **Documentation Files:** 2 (+ 9 in build/docs)
-- **Design Specifications:** 1
-- **AI Reference Docs:** 1
-- **Reference Scripts:** 40+ (in build/scripts)
+- **Documentation Files:** 3 (design spec + lessons learned + README)
+- **AI Reference Docs:** 1 (PocketSmith API)
+- **Python Scripts:** 60+ files across scripts/ directory
+- **Test Files:** 35+ test files (350 tests total)
 
 ---
 
 ## Repository Size
 
-- **Active Files:** ~812KB
-- **Build Reference:** ~1MB
-- **Total:** ~2MB
-- **Backup (original work):** 341MB at `../budget-smith-backup-20251120_093733/`
+- **Active Files:** ~1.8MB (production-ready)
+- **Backup (original migration work):** 341MB at `../budget-smith-backup-20251120_093733/`
 
 ---
 
 ## Notes
 
 - `.env` file contains sensitive API keys and is protected by `.gitignore`
-- `build/` directory is temporary and will be removed before publication
-- All useful content from `build/` will be incorporated into Agent Smith skill structure
-- Complete backup of original work exists at `../budget-smith-backup-20251120_093733/`
+- All insights from previous migration work documented in `docs/design/LESSONS_LEARNED.md`
+- Complete backup of original migration work exists at `../budget-smith-backup-20251120_093733/`
+- Repository is publication-ready (all temporary reference materials removed)
 
 ---
 
-**Last Updated:** 2025-11-21
-**Repository Version:** Phase 8 Complete (100% Implementation)
+**Last Updated:** 2025-11-23
+**Repository Version:** 1.2.0 - Publication Ready
