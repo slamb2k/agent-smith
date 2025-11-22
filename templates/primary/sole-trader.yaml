@@ -1,0 +1,141 @@
+name: Sole Trader / Contractor
+layer: primary
+description: |
+  ABN holder running a business as a sole trader or independent contractor.
+  Includes quarterly BAS obligations and GST tracking.
+
+categories:
+  - name: "Business Income"
+    parent: null
+    description: "Income from ABN-related business activities"
+
+  - name: "Business Expenses"
+    parent: null
+    description: "Tax-deductible business expenses"
+
+  - name: "Business Expenses:Office Supplies"
+    parent: "Business Expenses"
+    description: "Stationery, software, subscriptions"
+
+  - name: "Business Expenses:Travel"
+    parent: "Business Expenses"
+    description: "Business travel and accommodation"
+
+  - name: "Business Expenses:Home Office"
+    parent: "Business Expenses"
+    description: "Home office expenses (percentage allocation)"
+
+  - name: "Business Expenses:Professional Development"
+    parent: "Business Expenses"
+    description: "Training, courses, professional memberships"
+
+  - name: "Business Expenses:Marketing"
+    parent: "Business Expenses"
+    description: "Advertising, website, business cards"
+
+  - name: "GST Collected"
+    parent: "Business Income"
+    description: "GST component of business income"
+
+  - name: "GST Paid"
+    parent: "Business Expenses"
+    description: "GST component of business expenses"
+
+labels:
+  - name: "Tax Deductible"
+    description: "Business expense claimable on tax return"
+    color: "green"
+    auto_apply: false
+
+  - name: "GST Applicable"
+    description: "Includes GST component for BAS"
+    color: "blue"
+    auto_apply: true
+
+  - name: "Business Use"
+    description: "Business-related expense or income"
+    color: "purple"
+    auto_apply: true
+
+  - name: "Home Office"
+    description: "Home office percentage claim"
+    color: "brown"
+    auto_apply: false
+
+  - name: "Input Tax Credit"
+    description: "Eligible for GST credit on BAS"
+    color: "darkblue"
+    auto_apply: false
+
+rules:
+  - id: abn-payment-detection
+    pattern: "ABN.*payment|invoice.*paid|client.*payment|contractor.*payment"
+    category: "Business Income"
+    confidence: high
+    description: "Detect ABN payments from clients"
+    labels: ["Business Use", "GST Applicable"]
+
+  - id: home-office-percentage
+    pattern: "electricity|internet|rent|mortgage.*interest"
+    category: "Business Expenses:Home Office"
+    confidence: medium
+    percentage: 20
+    description: "Allocate home expenses to business use"
+    requires_user_confirmation: true
+    labels: ["Tax Deductible", "Business Use", "Home Office"]
+
+  - id: office-supplies
+    pattern: "officeworks|staples|adobe|microsoft.*365|canva|software"
+    category: "Business Expenses:Office Supplies"
+    confidence: high
+    description: "Detect office supply and software purchases"
+    labels: ["Tax Deductible", "Business Use", "GST Applicable"]
+
+  - id: professional-development
+    pattern: "course|training|conference|webinar|udemy|coursera|linkedin.*learning"
+    category: "Business Expenses:Professional Development"
+    confidence: medium
+    description: "Detect professional development expenses"
+    labels: ["Tax Deductible", "Business Use", "GST Applicable"]
+
+  - id: marketing-expense
+    pattern: "google.*ads|facebook.*ads|instagram.*ads|domain.*registration|web.*hosting|vistaprint"
+    category: "Business Expenses:Marketing"
+    confidence: high
+    description: "Detect marketing and advertising expenses"
+    labels: ["Tax Deductible", "Business Use", "GST Applicable"]
+
+tax_tracking:
+  bas_enabled: true
+  bas_frequency: quarterly
+  gst_method: cash
+  instant_asset_writeoff: true
+  instant_asset_threshold: 20000
+  home_office_percentage: 20
+
+alerts:
+  - type: quarterly_bas_reminder
+    schedule: quarterly
+    before_days: 14
+    message: "BAS due in 14 days - ensure all invoices and expenses are recorded"
+
+  - type: instant_asset_threshold
+    trigger: transaction_over_threshold
+    threshold: 20000
+    message: "Purchase over $20k - may require depreciation schedule instead of instant write-off"
+
+  - type: gst_registration_threshold
+    trigger: annual_income_exceeds
+    threshold: 75000
+    category: "Business Income"
+    message: "Business income approaching $75k - GST registration may be required"
+
+dependencies:
+  requires: []
+  conflicts_with: ["payg-employee", "small-business"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 1
