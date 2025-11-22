@@ -1,5 +1,5 @@
 {
-  "name": "agent-smith-plugin",
+  "name": "smith",
   "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
   "version": "1.3.6",
   "author": {
@@ -18,19 +18,14 @@
     "australian-tax"
   ],
   "commands": [
-    "./commands/install.md",
-    "./commands/categorize.md",
-    "./commands/analyze.md",
-    "./commands/scenario.md",
-    "./commands/report.md",
-    "./commands/optimize.md",
-    "./commands/tax.md",
-    "./commands/health.md"
+    "${CLAUDE_PLUGIN_ROOT}/commands/install.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/categorize.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/analyze.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/scenario.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/report.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/optimize.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/tax.md",
+    "${CLAUDE_PLUGIN_ROOT}/commands/health.md"
   ],
-  "agents": [
-    "./.claude/agents/graphite-ops-template.md"
-  ],
-  "hooks": [
-    "./.claude-plugin/hooks.json"
-  ]
+  "hooks": "${CLAUDE_PLUGIN_ROOT}/hooks.json"
 }

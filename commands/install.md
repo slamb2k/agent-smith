@@ -1,5 +1,5 @@
 ---
-name: agent-smith:install
+name: smith:install
 description: Interactive Agent Smith setup wizard with intelligent suggestions based on your financial setup
 argument-hints:
   - "[--reset]"
@@ -574,16 +574,17 @@ Example:
 run_agent_smith() {
     local script_path="$1"
     shift  # Remove first argument, leaving remaining args
-    local user_cwd=$(pwd)
 
-    if [ -f "./scripts/$script_path" ]; then
-        # Repository mode
-        uv run python -u "scripts/$script_path" "$@"
-    elif [ -f "$HOME/.claude/plugins/agent-smith-plugin/scripts/$script_path" ]; then
-        # Plugin mode
-        (cd "$HOME/.claude/plugins/agent-smith-plugin" && USER_CWD="$user_cwd" uv run python -u "scripts/$script_path" "$@")
+    if [ -n "${CLAUDE_PLUGIN_ROOT}" ]; then
+        # Plugin mode - use CLAUDE_PLUGIN_ROOT environment variable
+        uv run python -u "${CLAUDE_PLUGIN_ROOT}/scripts/$script_path" "$@"
+    elif [ -f "./scripts/$script_path" ]; then
+        # Development/repository mode - use relative path
+        uv run python -u "./scripts/$script_path" "$@"
     else
         echo "Error: Agent Smith script not found: $script_path"
+        echo "CLAUDE_PLUGIN_ROOT: ${CLAUDE_PLUGIN_ROOT:-not set}"
+        echo "Current directory: $(pwd)"
         return 1
     fi
 }

@@ -1,5 +1,5 @@
 ---
-name: agent-smith:scenario
+name: smith:scenario
 description: Model financial scenarios with what-if analysis, projections, and optimization
 argument-hints:
   - "<historical|projection|optimization|tax> \"<description>\""

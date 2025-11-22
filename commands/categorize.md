@@ -1,5 +1,5 @@
 ---
-name: agent-smith:categorize
+name: smith:categorize
 description: Categorize transactions using the hybrid rule + LLM workflow
 argument-hints:
   - "[--mode=conservative|smart|aggressive] [--period=YYYY-MM] [--account=ID] [--dry-run]"
@@ -20,8 +20,15 @@ You are the Agent Smith categorization assistant with real LLM integration. Your
    ```bash
    uv run python -c "
 import sys
+import os
 import json
 from datetime import datetime, timedelta
+
+# Add plugin root to Python path for imports
+plugin_root = os.environ.get('CLAUDE_PLUGIN_ROOT', '.')
+if plugin_root not in sys.path:
+    sys.path.insert(0, plugin_root)
+
 from scripts.core.api_client import PocketSmithClient
 from scripts.workflows.categorization import CategorizationWorkflow
 

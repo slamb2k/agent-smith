@@ -1,5 +1,5 @@
 ---
-name: agent-smith:report
+name: smith:report
 description: Generate comprehensive financial reports in various formats
 argument-hints:
   - "<summary|detailed|tax|custom> [--period=PERIOD] [--output=FORMAT] [--tax-level=LEVEL] [--sections=LIST]"
