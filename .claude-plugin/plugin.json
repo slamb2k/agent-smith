@@ -18,14 +18,14 @@
     "australian-tax"
   ],
   "commands": [
-    "./.claude/commands/install.md",
-    "./.claude/commands/categorize.md",
-    "./.claude/commands/analyze.md",
-    "./.claude/commands/scenario.md",
-    "./.claude/commands/report.md",
-    "./.claude/commands/optimize.md",
-    "./.claude/commands/tax.md",
-    "./.claude/commands/health.md"
+    "./commands/install.md",
+    "./commands/categorize.md",
+    "./commands/analyze.md",
+    "./commands/scenario.md",
+    "./commands/report.md",
+    "./commands/optimize.md",
+    "./commands/tax.md",
+    "./commands/health.md"
   ],
   "agents": [
     "./.claude/agents/graphite-ops-template.md"
