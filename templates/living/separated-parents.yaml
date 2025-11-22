@@ -4,63 +4,45 @@ description: |
   Managing finances with child support obligations and shared custody expenses.
   Tracks child-related spending for tax and legal documentation.
 
-categories:
-  - name: "Child Support Paid"
-    parent: null
-    description: "Child support payments to former partner"
-
-  - name: "Child Support Received"
-    parent: null
-    description: "Child support received from former partner"
-
-  - name: "Kids:Activities"
-    parent: null
-    description: "Sports, music lessons, extracurricular activities"
-
-  - name: "Kids:Medical"
-    parent: null
-    description: "Medical, dental, therapy expenses"
-
-  - name: "Kids:Education"
-    parent: null
-    description: "School fees, uniforms, books, excursions"
-
-  - name: "Kids:Shared Custody Expenses"
-    parent: null
-    description: "Expenses during custody periods"
+categories: []
+  # No special categories needed - use standard expense categories
+  # Labels indicate child-related expenses and which parent paid
 
 rules:
   - id: child-support-payment
     pattern: "child.*support|CSA.*payment|maintenance.*payment"
-    category: "Child Support Paid"
+    # No category override - transactions should be categorized as Transfer or similar
     confidence: high
-    description: "Detect child support payments"
-    labels: ["Child Support"]
+    description: "Label child support payments"
+    labels: ["Child Support", "Child Support Paid"]
 
   - id: child-support-received
     pattern: "child.*support.*received|CSA.*deposit"
-    category: "Child Support Received"
+    # No category override - transactions should be categorized as Transfer or Income
     confidence: high
-    description: "Detect child support receipts"
-    labels: ["Child Support"]
+    description: "Label child support receipts"
+    labels: ["Child Support", "Child Support Received"]
 
   - id: kids-activities
     pattern: "sport|swimming|dance|music.*lessons|scouts|karate"
-    category: "Kids:Activities"
+    # No category override - use standard Entertainment/Recreation category
     confidence: medium
-    description: "Detect children's activity expenses"
+    description: "Label children's activity expenses"
+    labels: ["Kids Expense"]
 
   - id: kids-medical
     pattern: "pediatric|child.*doctor|dentist.*kids|orthodontist|therapy.*child"
-    category: "Kids:Medical"
+    # No category override - use standard Medical/Health category
     confidence: medium
-    description: "Detect children's medical expenses"
+    description: "Label children's medical expenses"
+    labels: ["Kids Expense", "Medical"]
 
   - id: kids-education
     pattern: "school.*fees|uniform.*school|textbook|excursion|tuckshop"
-    category: "Kids:Education"
+    # No category override - use standard Education category
     confidence: high
-    description: "Detect education-related expenses"
+    description: "Label education-related expenses"
+    labels: ["Kids Expense", "Education"]
 
 tax_tracking:
   child_support_documentation: true

@@ -4,57 +4,19 @@ description: |
   Living with partner/spouse with mix of joint and separate accounts.
   Some expenses shared (bills, groceries), some kept separate (personal spending).
 
-categories:
-  - name: "Shared:Bills"
-    parent: null
-    description: "Household bills split with partner"
-
-  - name: "Shared:Groceries"
-    parent: null
-    description: "Shared grocery shopping"
-
-  - name: "Shared:Household Items"
-    parent: null
-    description: "Shared furniture, appliances, home improvements"
-
-  - name: "Personal:Discretionary"
-    parent: null
-    description: "Personal spending (not shared)"
-
-  - name: "Personal:Transport"
-    parent: null
-    description: "Individual transport costs"
+categories: []
+  # No special categories needed - use standard expense categories
+  # Account indicates if shared, labels indicate who paid
 
 rules:
-  - id: shared-rent
-    pattern: "rent|rental.*payment"
-    category: "Shared:Bills"
+  - id: shared-expense-labeling
+    pattern: ".*"
+    # No category override - use existing categorization
+    # Just apply labels based on account and contributor
     confidence: high
     split_percentage: 50
-    description: "Rent split 50/50 with partner"
+    description: "Label shared expenses with contributor info"
     labels: ["Shared Expense"]
-
-  - id: shared-utilities
-    pattern: "electricity|gas|water|internet"
-    category: "Shared:Bills"
-    confidence: high
-    split_percentage: 50
-    description: "Utilities split 50/50 with partner"
-    labels: ["Shared Expense"]
-
-  - id: shared-groceries
-    pattern: "woolworths|coles|aldi|iga|grocery"
-    category: "Shared:Groceries"
-    confidence: high
-    split_percentage: 50
-    description: "Groceries split 50/50 with partner"
-    labels: ["Shared Expense"]
-
-  - id: personal-discretionary
-    pattern: "entertainment|dining|clothing|hobbies"
-    category: "Personal:Discretionary"
-    confidence: medium
-    description: "Personal discretionary spending"
 
 tax_tracking:
   expense_splitting_enabled: true
