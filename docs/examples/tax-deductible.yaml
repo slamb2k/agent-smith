@@ -1,0 +1,240 @@
+# Tax Deductible Example (Australian ATO)
+# Rules for tracking tax-deductible expenses with ATO codes
+
+metadata:
+  name: Tax Deductible Tracking
+  description: Track work-related and investment deductions (Australian ATO)
+  use_case: Tax optimization for Australian taxpayers
+  jurisdiction: AU
+  tax_year: 2024-2025
+
+rules:
+  # ═══════════════════════════════════════════════════════════
+  # WORK-RELATED EXPENSES (ATO: D1)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Work Software
+    patterns: [MICROSOFT, ADOBE, OFFICE 365, GITHUB, JETBRAINS]
+    category: Work > Software
+    confidence: 90
+
+  - type: category
+    name: Professional Development
+    patterns: [COURSERA, UDEMY, LINKEDIN LEARNING, CONFERENCE, TRAINING]
+    category: Work > Professional Development
+    confidence: 90
+
+  - type: category
+    name: Office Supplies
+    patterns: [OFFICEWORKS, STAPLES, OFFICE SUPPLIES]
+    category: Work > Office Supplies
+    confidence: 85
+
+  # Label all work expenses as tax deductible
+  - type: label
+    name: Tax Deductible - Work Expenses
+    when:
+      categories: [Work, Professional Development, Office Supplies, Software]
+    labels: [Tax Deductible, ATO: D1, Work-related other expenses]
+
+  # ═══════════════════════════════════════════════════════════
+  # HOME OFFICE EXPENSES (ATO: D2)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Home Office Equipment
+    patterns: [DESK, CHAIR, MONITOR, KEYBOARD, OFFICE FURNITURE]
+    category: Home Office > Equipment
+    confidence: 85
+
+  - type: label
+    name: Tax Deductible - Home Office
+    when:
+      categories: [Home Office]
+    labels: [Tax Deductible, ATO: D2, Home office expenses]
+
+  # Internet/phone - only work-related portion deductible
+  - type: category
+    name: Internet Service
+    patterns: [TELSTRA, OPTUS, TPG, NBN]
+    category: Bills > Internet
+    confidence: 90
+
+  - type: label
+    name: Apportion for Work Use
+    when:
+      categories: [Internet, Phone, Mobile]
+    labels: [Tax Deductible, ATO: D2, Apportion Work Percentage, Calculate Work Use]
+
+  # ═══════════════════════════════════════════════════════════
+  # WORK-RELATED TRAVEL (ATO: D3)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Work Travel - Transport
+    patterns: [UBER, TAXI, TRAIN, BUS]
+    accounts: [Work Credit Card, Personal]
+    category: Work > Travel
+    confidence: 80
+
+  - type: label
+    name: Tax Deductible - Work Travel
+    when:
+      categories: [Work > Travel, Work > Accommodation, Work > Meals]
+    labels: [Tax Deductible, ATO: D3, Work-related travel expenses]
+
+  # Substantiation required for travel expenses
+  - type: label
+    name: Travel Substantiation
+    when:
+      categories: [Work > Travel]
+      amount_operator: ">"
+      amount_value: 75  # Taxi/Uber threshold
+    labels: [Receipt Required, Substantiation]
+
+  # ═══════════════════════════════════════════════════════════
+  # SELF-EDUCATION (ATO: D4)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: Tax Deductible - Self Education
+    when:
+      categories: [Professional Development, Training, Conference, Education]
+    labels: [Tax Deductible, ATO: D4, Self-education expenses]
+
+  # Textbooks and course materials
+  - type: category
+    name: Course Materials
+    patterns: [TEXTBOOK, COURSE MATERIAL, BOOK DEPOSITORY, ACADEMIC]
+    category: Professional Development > Materials
+    confidence: 80
+
+  # ═══════════════════════════════════════════════════════════
+  # INVESTMENT DEDUCTIONS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Investment Management
+    patterns: [COMMSEC, SELFWEALTH, STAKE, BROKERAGE, TRADING FEE]
+    category: Investments > Fees
+    confidence: 90
+
+  - type: label
+    name: Investment Expense Deduction
+    when:
+      categories: [Investments > Fees, Investments > Interest]
+    labels: [Tax Deductible, Investment Deduction, Dividend/Interest Offset]
+
+  # ═══════════════════════════════════════════════════════════
+  # RENTAL PROPERTY DEDUCTIONS
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Rental Property - Maintenance
+    patterns: [PLUMBER, ELECTRICIAN, PROPERTY REPAIR, RENTAL MAINTENANCE]
+    accounts: [Rental Property, Investment]
+    category: Rental > Maintenance
+    confidence: 85
+
+  - type: category
+    name: Rental Property - Management
+    patterns: [PROPERTY MANAGEMENT, REAL ESTATE FEES, RENTAL AGENT]
+    accounts: [Rental Property, Investment]
+    category: Rental > Management Fees
+    confidence: 90
+
+  - type: label
+    name: Rental Property Deduction
+    when:
+      categories: [Rental]
+    labels: [Tax Deductible, Rental Property, Offset Rental Income]
+
+  # ═══════════════════════════════════════════════════════════
+  # SUBSTANTIATION REQUIREMENTS
+  # ═══════════════════════════════════════════════════════════
+
+  # General $300 threshold
+  - type: label
+    name: Receipt Required (>$300)
+    when:
+      categories: [Work, Professional Development, Home Office]
+      amount_operator: ">"
+      amount_value: 300
+    labels: [Receipt Required, ATO Substantiation, Keep Documentation]
+
+  # Immediate deduction for assets <$300
+  - type: label
+    name: Immediate Deduction (<$300)
+    when:
+      categories: [Work > Equipment, Home Office > Equipment]
+      amount_operator: "<="
+      amount_value: 300
+    labels: [Immediate Deduction, No Depreciation Required]
+
+  # Instant asset write-off (<$20,000 for small business)
+  - type: label
+    name: Instant Asset Write-off
+    when:
+      categories: [Work > Equipment, Home Office > Equipment]
+      amount_operator: "<"
+      amount_value: 20000
+    labels: [Instant Asset Write-off, Small Business, Full Deduction]
+
+  # ═══════════════════════════════════════════════════════════
+  # CAPITAL GAINS TAX (CGT)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: category
+    name: Share Purchase
+    patterns: [COMMSEC, SELFWEALTH, SHARE PURCHASE, BUY ORDER]
+    category: Investments > Share Purchase
+    confidence: 90
+
+  - type: category
+    name: Share Sale
+    patterns: [SHARE SALE, SELL ORDER]
+    category: Investments > Share Sale
+    confidence: 90
+
+  - type: label
+    name: CGT Event
+    when:
+      categories: [Investments > Share Purchase, Investments > Share Sale, Crypto > Buy, Crypto > Sell]
+    labels: [CGT Event, Track Cost Base, Hold >12mo for 50% Discount]
+
+  # ═══════════════════════════════════════════════════════════
+  # GST TRACKING (for businesses)
+  # ═══════════════════════════════════════════════════════════
+
+  - type: label
+    name: GST Claimable
+    when:
+      categories: [Work, Office Supplies, Software, Equipment]
+      amount_operator: ">"
+      amount_value: 11  # GST applies to $10+ (div 11 for GST component)
+    labels: [GST Claimable, BAS G11, Calculate GST Credit]
+
+  # ═══════════════════════════════════════════════════════════
+  # HIGH-PRIORITY DEDUCTIONS
+  # ═══════════════════════════════════════════════════════════
+
+  # Large work expenses requiring immediate documentation
+  - type: label
+    name: High Value Deduction
+    when:
+      categories: [Work, Professional Development, Home Office]
+      amount_operator: ">"
+      amount_value: 1000
+    labels: [High Value, Priority Documentation, Review with Accountant]
+
+  # ═══════════════════════════════════════════════════════════
+  # DISCLAIMERS & WARNINGS
+  # ═══════════════════════════════════════════════════════════
+
+  # All tax deductions should include disclaimer
+  - type: label
+    name: Tax Advice Disclaimer
+    when:
+      categories: [Work, Professional Development, Home Office, Investments, Rental]
+    labels: [Consult Tax Agent, Professional Advice Recommended]
