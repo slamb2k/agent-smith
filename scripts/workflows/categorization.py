@@ -5,6 +5,7 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from scripts.orchestration.conductor import SubagentConductor, OperationType
+from scripts.orchestration.llm_subagent import LLMSubagent
 from scripts.core.unified_rules import UnifiedRuleEngine
 from scripts.services.llm_categorization import LLMCategorizationService
 from scripts.core.rule_engine import IntelligenceMode
@@ -77,6 +78,9 @@ class CategorizationWorkflow:
         # Initialize LLM categorization service
         self.llm_service = LLMCategorizationService()
 
+        # Initialize LLM subagent orchestrator
+        self.llm_orchestrator = LLMSubagent(test_mode=False)
+
     def should_use_subagent(self, transaction_count: int) -> bool:
         """Determine if should use subagent for categorization.
 
@@ -90,6 +94,84 @@ class CategorizationWorkflow:
             operation_type=OperationType.CATEGORIZATION,
             transaction_count=transaction_count,
         )
+
+    def _orchestrate_llm_call(
+        self,
+        marker_result: Dict[str, Any],
+    ) -> Dict[int, Dict[str, Any]]:
+        """Orchestrate LLM call by detecting marker and delegating.
+
+        Args:
+            marker_result: Result from service method (may contain _needs_llm marker)
+
+        Returns:
+            Actual LLM results (or empty dict if no marker)
+        """
+        # Check if this is a marker dict
+        if not isinstance(marker_result, dict) or not marker_result.get("_needs_llm"):
+            # Return empty dict if not a marker (shouldn't happen in normal flow)
+            return {}
+
+        # Extract marker data
+        prompt = marker_result["_prompt"]
+        transaction_ids = marker_result["_transaction_ids"]
+        operation_type = marker_result.get("_type", "categorization")
+
+        # Delegate to appropriate orchestrator method
+        if operation_type == "validation":
+            return self.llm_orchestrator.execute_validation(
+                prompt=prompt,
+                transaction_ids=transaction_ids,
+                service=self.llm_service,
+            )
+        else:
+            return self.llm_orchestrator.execute_categorization(
+                prompt=prompt,
+                transaction_ids=transaction_ids,
+                service=self.llm_service,
+            )
+
+    def _execute_batch_categorization(
+        self,
+        transactions: List[Dict[str, Any]],
+        categories: List[Dict[str, Any]],
+    ) -> Dict[int, Dict[str, Any]]:
+        """Execute batch categorization with LLM orchestration.
+
+        Args:
+            transactions: List of transactions to categorize
+            categories: Available categories
+
+        Returns:
+            Dict mapping transaction IDs to categorization results
+        """
+        # Get marker result from service
+        marker_result = self.llm_service.categorize_batch(
+            transactions=transactions,
+            categories=categories,
+            mode=IntelligenceMode(self.mode),
+        )
+
+        # Orchestrate LLM call
+        return self._orchestrate_llm_call(marker_result)
+
+    def _execute_batch_validation(
+        self,
+        validations: List[Dict[str, Any]],
+    ) -> Dict[int, Dict[str, Any]]:
+        """Execute batch validation with LLM orchestration.
+
+        Args:
+            validations: List of validation dicts
+
+        Returns:
+            Dict mapping transaction IDs to validation results
+        """
+        # Get marker result from service
+        marker_result = self.llm_service.validate_batch(validations)
+
+        # Orchestrate LLM call
+        return self._orchestrate_llm_call(marker_result)
 
     def build_summary(self, results: Dict[str, Any], total: int) -> str:
         """Build human-readable summary of categorization results.
@@ -195,6 +277,181 @@ class CategorizationWorkflow:
             "reasoning": llm_result.get("reasoning", ""),
         }
 
+    def categorize_transactions_batch(
+        self,
+        transactions: List[Dict[str, Any]],
+        available_categories: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Categorize multiple transactions using batch processing.
+
+        This implements the hybrid workflow:
+        1. Apply rules to all transactions
+        2. Batch uncategorized transactions → LLM (Case 1)
+        3. Batch medium-confidence validations → LLM (Case 2)
+        4. Apply labels to all categorized transactions
+
+        Args:
+            transactions: List of transaction dicts
+            available_categories: Available categories for LLM
+
+        Returns:
+            Dict with:
+            - results: Dict[int, Dict] - Categorization results per transaction
+            - stats: Dict - Processing statistics
+        """
+        mode = self._get_intelligence_mode()
+
+        # Batch size based on intelligence mode
+        batch_sizes = {
+            IntelligenceMode.CONSERVATIVE: 20,
+            IntelligenceMode.SMART: 50,
+            IntelligenceMode.AGGRESSIVE: 100,
+        }
+        batch_size = batch_sizes[mode]
+
+        results = {}
+        stats = {
+            "total": len(transactions),
+            "rule_matches": 0,
+            "llm_categorized": 0,
+            "llm_validated": 0,
+            "skipped": 0,
+        }
+
+        # Phase 1: Apply rules to all transactions
+        logger.info(f"Applying rules to {len(transactions)} transactions...")
+        uncategorized = []
+        needs_validation = []
+
+        for txn in transactions:
+            rule_result = self.rule_engine.categorize_and_label(txn)
+
+            if rule_result["category"] is not None:
+                # Rule matched
+                results[txn["id"]] = {
+                    "category": rule_result["category"],
+                    "labels": rule_result["labels"],
+                    "confidence": rule_result["confidence"],
+                    "source": "rule",
+                    "llm_used": False,
+                }
+                stats["rule_matches"] += 1
+
+                # Check if medium confidence (needs validation)
+                if self._should_validate_with_llm(rule_result["confidence"], mode):
+                    needs_validation.append(
+                        {
+                            "transaction": txn,
+                            "suggested_category": rule_result["category"],
+                            "confidence": rule_result["confidence"],
+                        }
+                    )
+            else:
+                # No rule match
+                uncategorized.append(txn)
+
+        # Phase 2: Batch uncategorized transactions (Case 1)
+        if uncategorized:
+            logger.info(
+                f"Batch categorizing {len(uncategorized)} uncategorized "
+                f"transactions (batch size: {batch_size})..."
+            )
+
+            for i in range(0, len(uncategorized), batch_size):
+                batch = uncategorized[i : i + batch_size]
+                logger.info(f"Processing batch {i // batch_size + 1} ({len(batch)} transactions)")
+
+                # Execute batch categorization with orchestration
+                llm_results = self._execute_batch_categorization(
+                    transactions=batch,
+                    categories=available_categories,
+                )
+
+                # Process LLM results and apply labels
+                for txn in batch:
+                    txn_id = txn["id"]
+
+                    if txn_id in llm_results:
+                        llm_result = llm_results[txn_id]
+
+                        # Apply labels to LLM-categorized transaction
+                        txn_with_category = txn.copy()
+                        txn_with_category["category"] = {"title": llm_result["category"]}
+                        label_result = self.rule_engine.categorize_and_label(txn_with_category)
+
+                        results[txn_id] = {
+                            "category": llm_result["category"],
+                            "labels": label_result["labels"],
+                            "confidence": llm_result["confidence"],
+                            "source": "llm",
+                            "llm_used": True,
+                            "reasoning": llm_result.get("reasoning", ""),
+                        }
+                        stats["llm_categorized"] += 1
+                    else:
+                        # LLM returned no result
+                        results[txn_id] = {
+                            "category": None,
+                            "labels": [],
+                            "confidence": 0,
+                            "source": "none",
+                            "llm_used": True,
+                        }
+                        stats["skipped"] += 1
+
+        # Phase 3: Batch medium-confidence validation (Case 2)
+        if needs_validation:
+            logger.info(
+                f"Validating {len(needs_validation)} medium-confidence "
+                f"categorizations (batch size: {batch_size})..."
+            )
+
+            for i in range(0, len(needs_validation), batch_size):
+                batch = needs_validation[i : i + batch_size]
+                logger.info(
+                    f"Processing validation batch {i // batch_size + 1} ({len(batch)} validations)"
+                )
+
+                # Execute batch validation with orchestration
+                validation_results = self._execute_batch_validation(validations=batch)
+
+                # Process validation results
+                for val in batch:
+                    txn = val["transaction"]
+                    txn_id = txn["id"]
+
+                    if txn_id in validation_results:
+                        val_result = validation_results[txn_id]
+
+                        # Check validation decision
+                        if val_result["validation"] == "CONFIRM":
+                            # LLM confirmed - upgrade confidence
+                            results[txn_id]["confidence"] = val_result["confidence"]
+                            stats["llm_validated"] += 1
+                        elif val_result["validation"] == "REJECT":
+                            # LLM rejected - update category and labels
+                            new_category = val_result["category"]
+
+                            # Apply labels to new category
+                            txn_with_category = txn.copy()
+                            txn_with_category["category"] = {"title": new_category}
+                            label_result = self.rule_engine.categorize_and_label(txn_with_category)
+
+                            results[txn_id] = {
+                                "category": new_category,
+                                "labels": label_result["labels"],
+                                "confidence": val_result["confidence"],
+                                "source": "rule+llm",
+                                "llm_used": True,
+                                "reasoning": val_result.get("reasoning", ""),
+                            }
+                            stats["llm_validated"] += 1
+
+        return {
+            "results": results,
+            "stats": stats,
+        }
+
     def _get_intelligence_mode(self) -> IntelligenceMode:
         """Convert mode string to IntelligenceMode enum."""
         mode_map = {
@@ -247,6 +504,32 @@ class CategorizationWorkflow:
 
         # Ask if between ask_threshold and auto_threshold
         return ask_threshold <= confidence < auto_threshold
+
+    def _should_validate_with_llm(self, confidence: int, mode: IntelligenceMode) -> bool:
+        """Determine if rule-based categorization should be validated with LLM.
+
+        Args:
+            confidence: Confidence score from rule (0-100)
+            mode: Intelligence mode
+
+        Returns:
+            True if should validate with LLM (medium confidence range)
+        """
+        # Conservative mode: never validate with LLM (user reviews all)
+        if mode == IntelligenceMode.CONSERVATIVE:
+            return False
+
+        # Medium confidence ranges by mode
+        validation_ranges = {
+            IntelligenceMode.SMART: (70, 89),  # 70-89% needs validation
+            IntelligenceMode.AGGRESSIVE: (50, 79),  # 50-79% needs validation
+        }
+
+        if mode not in validation_ranges:
+            return False
+
+        min_conf, max_conf = validation_ranges[mode]
+        return min_conf <= confidence <= max_conf
 
     def suggest_rule_from_llm_result(
         self, transaction: Dict[str, Any], result: Dict[str, Any]

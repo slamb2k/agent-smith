@@ -74,33 +74,16 @@ def test_categorize_batch_basic():
         {"title": "Transport", "parent": "Transport"},
     ]
 
-    # Mock LLM response parsing
-    def mock_parse(response, txn_ids):
-        return {
-            1: {
-                "transaction_id": 1,
-                "category": "Groceries",
-                "confidence": 95,
-                "reasoning": "Test",
-            },
-            2: {
-                "transaction_id": 2,
-                "category": "Transport",
-                "confidence": 90,
-                "reasoning": "Test",
-            },
-        }
-
-    service.parse_categorization_response = mock_parse
-
     results = service.categorize_batch(transactions, categories, mode=IntelligenceMode.SMART)
 
-    # Should return dict keyed by transaction ID
+    # Should return marker dict (not actual results) - Real LLM Integration change
     assert isinstance(results, dict)
-    assert 1 in results
-    assert 2 in results
-    assert results[1]["category"] == "Groceries"
-    assert results[1]["confidence"] == 95
+    assert results["_needs_llm"] is True
+    assert "_prompt" in results
+    assert "_transaction_ids" in results
+    assert results["_transaction_ids"] == [1, 2]
+    assert isinstance(results["_prompt"], str)
+    assert len(results["_prompt"]) > 0
 
 
 def test_intelligence_mode_conservative():
@@ -145,7 +128,7 @@ def test_intelligence_mode_aggressive():
 
 
 def test_categorize_batch_filters_by_mode():
-    """Test that categorize_batch respects intelligence mode filtering."""
+    """Test that categorize_batch includes mode in prompt."""
     service = LLMCategorizationService()
 
     transactions = [
@@ -156,42 +139,19 @@ def test_categorize_batch_filters_by_mode():
 
     categories = [{"title": "Test", "parent": "Test"}]
 
-    # Mock LLM response with different confidence levels
-    def mock_parse(response, txn_ids):
-        return {
-            1: {
-                "transaction_id": 1,
-                "category": "Test",
-                "confidence": 95,
-                "reasoning": "High",
-            },
-            2: {
-                "transaction_id": 2,
-                "category": "Test",
-                "confidence": 75,
-                "reasoning": "Medium",
-            },
-            3: {
-                "transaction_id": 3,
-                "category": "Test",
-                "confidence": 50,
-                "reasoning": "Low",
-            },
-        }
-
-    service.parse_categorization_response = mock_parse
-
-    # Smart mode: only return high confidence (≥90%) in auto_apply
+    # Smart mode: should return marker with mode in prompt
     results = service.categorize_batch(transactions, categories, mode=IntelligenceMode.SMART)
 
-    # All transactions should be present but with different action flags
-    assert len(results) == 3
-    # Transaction 1 (95%) should auto-apply
-    assert results[1]["confidence"] == 95
-    # Transaction 2 (75%) should ask
-    assert results[2]["confidence"] == 75
-    # Transaction 3 (50%) should skip
-    assert results[3]["confidence"] == 50
+    # Should be marker dict
+    assert results["_needs_llm"] is True
+    assert "_prompt" in results
+
+    # Prompt should include mode information
+    prompt = results["_prompt"]
+    assert "SMART" in prompt or "smart" in prompt.lower()
+
+    # Should include all transaction IDs
+    assert results["_transaction_ids"] == [1, 2, 3]
 
 
 def test_build_prompt_includes_mode():
