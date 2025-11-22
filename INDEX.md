@@ -276,4 +276,4 @@ Contains all unit and integration tests.
 ---
 
 **Last Updated:** 2025-11-23
-**Repository Version:** 1.2.0 - Publication Ready
+**Repository Version:** 1.3.0 - Publication Ready
