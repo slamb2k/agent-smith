@@ -277,3 +277,40 @@ def test_recommend_template_case_insensitive_substring():
     recommendation = analyzer._recommend_template(accounts, categories)
 
     assert recommendation == "advanced"
+
+
+def test_discovery_analyzer_analyze():
+    """Test complete discovery analysis."""
+    mock_client = Mock()
+    mock_client.get_user.return_value = {
+        "id": 12345,
+        "login": "test@example.com",
+    }
+    mock_client.get_accounts.return_value = [
+        {"id": 100, "title": "Checking", "institution": {"title": "Test Bank"}},
+    ]
+    mock_client.get_categories.return_value = [
+        {"id": 300, "title": "Groceries", "parent_id": None},
+    ]
+    mock_client.get_transactions.return_value = [
+        {
+            "id": 1,
+            "payee": "Store",
+            "amount": -50.00,
+            "date": "2025-11-01",
+            "category": {"id": 300},
+            "transaction_account": {"id": 100},
+        },
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=mock_client)
+    report = analyzer.analyze()
+
+    assert report.user_id == 12345
+    assert report.user_email == "test@example.com"
+    assert len(report.accounts) == 1
+    assert report.accounts[0].transaction_count == 1
+    assert len(report.categories) == 1
+    assert report.transactions.total_count == 1
+    assert report.transactions.uncategorized_count == 0
+    assert report.recommendation == "simple"

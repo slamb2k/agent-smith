@@ -235,3 +235,59 @@ class DiscoveryAnalyzer:
 
         # Default to simple
         return "simple"
+
+    def analyze(self, include_health_check: bool = False) -> DiscoveryReport:
+        """Run complete discovery analysis.
+
+        Args:
+            include_health_check: Whether to run baseline health check
+
+        Returns:
+            DiscoveryReport with all analysis results
+
+        Raises:
+            ValueError: If client is not configured
+        """
+        if self.client is None:
+            raise ValueError("Client must be configured to run analysis")
+
+        # Fetch user info
+        user_data = self.client.get_user()
+        user_id = user_data["id"]
+        user_email = user_data.get("login", "unknown")
+
+        # Fetch all data
+        accounts = self._fetch_accounts()
+        categories = self._fetch_categories()
+        transactions = self._fetch_transaction_summary()
+
+        # Update account transaction counts
+        for account in accounts:
+            account.transaction_count = transactions.by_account.get(account.id, 0)
+            # Uncategorized count would need separate query - simplified for now
+
+        # Update category transaction counts
+        # (Would need to count from transactions - simplified for now)
+
+        # Get template recommendation
+        recommendation = self._recommend_template(accounts, categories)
+
+        # Optional: Run baseline health check
+        baseline_health_score = None
+        if include_health_check:
+            # TODO: Integrate with health check system
+            # from scripts.health.engine import HealthCheckEngine
+            # engine = HealthCheckEngine()
+            # result = engine.run_all(...)
+            # baseline_health_score = result.overall_score
+            pass
+
+        return DiscoveryReport(
+            user_id=user_id,
+            user_email=user_email,
+            accounts=accounts,
+            categories=categories,
+            transactions=transactions,
+            baseline_health_score=baseline_health_score,
+            recommendation=recommendation,
+        )
