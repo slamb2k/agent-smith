@@ -34,24 +34,6 @@ def initialize_data_from_assets() -> None:
             shutil.copy2(source, dest)
             print(f"Initialized {dest} from {source}")
 
-    # Create empty subdirectories if they don't exist
-    subdirs = [
-        "cache",
-        "tax",
-        "merchants",
-        "scenarios",
-        "scenarios/scenario_results",
-        "health",
-        "health/health_history",
-        "goals",
-        "investments",
-        "alerts",
-        "audit",
-    ]
-
-    for subdir in subdirs:
-        (data_dir / subdir).mkdir(parents=True, exist_ok=True)
-
 
 if __name__ == "__main__":
     initialize_data_from_assets()
