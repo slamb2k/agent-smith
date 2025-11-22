@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Converted to Plugin-Only Distribution**
+  - Removed `marketplace.json` - now distributed as a standalone plugin only
+  - Simpler installation: `claude plugin install https://github.com/slamb2k/agent-smith`
+  - Better suited for single-plugin architecture
+
 - **Living Templates Refactored to Label-Based Approach**
   - Removed special categories from `shared-hybrid` and `separated-parents` templates
   - Now use standard expense categories (Bills, Groceries, Medical, Education, etc.)
