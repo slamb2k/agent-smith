@@ -150,3 +150,75 @@ def test_discovery_analyzer_fetch_transactions():
     assert summary.uncategorized_count == 1
     assert summary.date_range_start == date(2025, 11, 1)
     assert summary.date_range_end == date(2025, 11, 15)
+
+
+def test_recommend_template_simple():
+    """Test simple template recommendation for single user."""
+    mock_client = Mock()
+    mock_client.get_user.return_value = {"id": 12345}
+    mock_client.get_accounts.return_value = [
+        {"id": 100, "title": "Checking", "institution": {"title": "Bank"}},
+    ]
+    mock_client.get_categories.return_value = [
+        {"id": 300, "title": "Groceries", "parent_id": None},
+    ]
+    mock_client.get_transactions.return_value = []
+
+    analyzer = DiscoveryAnalyzer(client=mock_client)
+    recommendation = analyzer._recommend_template(
+        accounts=[AccountSummary(100, "Checking", "Bank", 0, 0)],
+        categories=[CategorySummary(300, "Groceries", None, 0, Decimal("0"))],
+    )
+
+    assert recommendation == "simple"
+
+
+def test_recommend_template_shared_household():
+    """Test shared household template for joint accounts."""
+    accounts = [
+        AccountSummary(100, "Joint Savings", "Bank", 50, 10),
+        AccountSummary(200, "Personal", "Bank", 30, 5),
+    ]
+    categories = [
+        CategorySummary(300, "Groceries", None, 25, Decimal("-500")),
+        CategorySummary(301, "Shared Expense", None, 15, Decimal("-300")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "shared-household"
+
+
+def test_recommend_template_separated_families():
+    """Test separated families template for child support tracking."""
+    accounts = [
+        AccountSummary(100, "Personal", "Bank", 50, 10),
+    ]
+    categories = [
+        CategorySummary(300, "Child Support", None, 10, Decimal("-800")),
+        CategorySummary(301, "Kids Activities", None, 5, Decimal("-200")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "separated-families"
+
+
+def test_recommend_template_advanced():
+    """Test advanced template for investment tracking."""
+    accounts = [
+        AccountSummary(100, "Personal", "Bank", 100, 20),
+        AccountSummary(200, "Business", "Bank", 50, 10),
+    ]
+    categories = [
+        CategorySummary(300, "Investment", None, 15, Decimal("5000")),
+        CategorySummary(301, "Capital Gains", None, 3, Decimal("1200")),
+        CategorySummary(302, "Business Expenses", None, 25, Decimal("-3000")),
+    ]
+
+    analyzer = DiscoveryAnalyzer(client=None)
+    recommendation = analyzer._recommend_template(accounts, categories)
+
+    assert recommendation == "advanced"

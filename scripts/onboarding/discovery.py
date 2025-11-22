@@ -170,3 +170,62 @@ class DiscoveryAnalyzer:
             date_range_end=date_range_end,
             by_account=by_account,
         )
+
+    def _recommend_template(
+        self,
+        accounts: List[AccountSummary],
+        categories: List[CategorySummary],
+    ) -> str:
+        """Recommend a template based on account and category structure.
+
+        Args:
+            accounts: List of account summaries
+            categories: List of category summaries
+
+        Returns:
+            Template name: simple, separated-families, shared-household, or advanced
+        """
+        # Extract category titles for pattern matching
+        category_titles = {cat.title.lower() for cat in categories}
+        account_names = {acc.name.lower() for acc in accounts}
+
+        # Check for separated families indicators
+        separated_indicators = {
+            "child support",
+            "kids activities",
+            "kids",
+            "children",
+            "child care",
+            "school fees",
+            "custody",
+        }
+        if any(indicator in category_titles for indicator in separated_indicators):
+            return "separated-families"
+
+        # Check for advanced indicators
+        advanced_indicators = {
+            "investment",
+            "capital gains",
+            "cgt",
+            "business expenses",
+            "dividends",
+            "rental income",
+            "crypto",
+            "shares",
+        }
+        business_accounts = any("business" in name for name in account_names)
+        has_investments = any(indicator in category_titles for indicator in advanced_indicators)
+
+        if has_investments or business_accounts:
+            return "advanced"
+
+        # Check for shared household indicators
+        shared_indicators = {"shared", "joint", "household", "split"}
+        has_shared = any(indicator in category_titles for indicator in shared_indicators)
+        joint_accounts = any("joint" in name or "shared" in name for name in account_names)
+
+        if has_shared or (joint_accounts and len(accounts) > 1):
+            return "shared-household"
+
+        # Default to simple
+        return "simple"
