@@ -21,18 +21,13 @@ build-python/
 .tox/
 htmlcov/
 
-# Agent Smith working data (not for git)
+# Agent Smith runtime directories (created on-demand)
 *.log
 *_analysis.json
 *_data.json
-backups/*
-!backups/INDEX.md
-reports/*
-!reports/INDEX.md
-logs/*
-!logs/INDEX.md
-
-# Runtime data directory (initialized from assets/ on first run)
+backups/
+reports/
+logs/
 data/
 
 # Skill build artifacts (scripts are copied during build)
