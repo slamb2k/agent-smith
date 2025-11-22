@@ -73,19 +73,36 @@ Display the following block of text:
 ### Stage 1: Welcome & Prerequisites Check
 
 Greet the user and verify they have:
-1. Agent Smith installed
-2. API key configured in .env
+1. Agent Smith plugin installed (verify via plugin system)
+2. API key configured in .env (in current directory)
 3. PocketSmith account accessible
 
-If any prerequisite is missing, guide them to INSTALL.md.
+**IMPORTANT:** When Agent Smith is installed as a plugin, the codebase is in the plugin directory, NOT the user's working directory. The user only needs:
+- A `.env` file with `POCKETSMITH_API_KEY` in their working directory
+- Agent Smith plugin installed
+
+**Plugin Detection:**
+Check if this command is running from the plugin by looking for the plugin installation path. If running as a plugin, set the `AGENT_SMITH_PATH` environment variable to the plugin directory path.
+
+If the user doesn't have a `.env` file, guide them to create one:
+```bash
+echo "POCKETSMITH_API_KEY=your_key_here" > .env
+```
+
+Get API key from: https://app.pocketsmith.com/keys/new
 
 ### Stage 2: Discovery
 
-Run the discovery script to analyze their PocketSmith account:
+Run the discovery script to analyze their PocketSmith account.
 
+**Before first script execution,** define the `run_agent_smith` helper function (see "Plugin-Aware Script Execution" section below).
+
+**Run discovery:**
 ```bash
-uv run python -u scripts/onboarding/discovery.py
+run_agent_smith "onboarding/discovery.py"
 ```
+
+**Note:** The `.env` file should be in the user's current working directory. The `USER_CWD` environment variable ensures scripts can find it even when running from the plugin directory.
 
 **What to look for:**
 - Account count and types
@@ -104,7 +121,7 @@ uv run python -u scripts/onboarding/discovery.py
 Based on discovery, recommend a template:
 
 ```bash
-uv run python scripts/setup/template_selector.py
+run_agent_smith "setup/template_selector.py"
 ```
 
 **Templates:**
@@ -154,10 +171,10 @@ Recommend starting with recent transactions:
 **Run categorization:**
 ```bash
 # Dry run first
-uv run python scripts/operations/batch_categorize.py --mode=dry_run --period=2025-11
+run_agent_smith "operations/batch_categorize.py" --mode=dry_run --period=2025-11
 
 # Apply if satisfied
-uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-11
+run_agent_smith "operations/batch_categorize.py" --mode=apply --period=2025-11
 ```
 
 **After each batch:**
@@ -203,6 +220,36 @@ Provide the user with ongoing usage patterns:
 - **Save onboarding state** in `data/onboarding_state.json` to resume if interrupted
 - **Celebrate progress** - Show metrics like "1,245 → 87 uncategorized transactions"
 - **Be patient** - First categorization can take time for large datasets
+
+## Plugin-Aware Script Execution
+
+**All Python scripts must be run using this pattern** to work in both repository and plugin modes:
+
+```bash
+# Helper function to run Agent Smith scripts (define once at start)
+run_agent_smith() {
+    local script_path="$1"
+    shift  # Remove first argument, leaving remaining args
+    local user_cwd=$(pwd)
+
+    if [ -f "./scripts/$script_path" ]; then
+        # Repository mode
+        uv run python -u "scripts/$script_path" "$@"
+    elif [ -f "$HOME/.claude-plugin/plugins/agent-smith-plugin/scripts/$script_path" ]; then
+        # Plugin mode
+        (cd "$HOME/.claude-plugin/plugins/agent-smith-plugin" && USER_CWD="$user_cwd" uv run python -u "scripts/$script_path" "$@")
+    else
+        echo "Error: Agent Smith script not found: $script_path"
+        return 1
+    fi
+}
+```
+
+Then call scripts like:
+```bash
+run_agent_smith "onboarding/discovery.py"
+run_agent_smith "operations/batch_categorize.py" --mode=dry_run --period=2025-11
+```
 
 ## Execution
 

@@ -309,7 +309,27 @@ class DiscoveryAnalyzer:
 def main() -> None:
     """CLI entry point for discovery analysis."""
     import sys
+    import os
+    from pathlib import Path
     from scripts.core.api_client import PocketSmithClient
+
+    # Load .env file (plugin-aware)
+    # When run as a plugin, USER_CWD environment variable should point to user's directory
+    try:
+        from dotenv import load_dotenv
+
+        user_dir = os.getenv("USER_CWD", os.getcwd())
+        env_path = Path(user_dir) / ".env"
+
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"Loaded configuration from: {env_path}")
+        else:
+            # Fallback to searching from current directory
+            load_dotenv()
+    except ImportError:
+        # python-dotenv not available - rely on environment variables
+        pass
 
     print("=" * 70)
     print("Agent Smith - PocketSmith Discovery Analysis")
