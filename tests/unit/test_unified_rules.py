@@ -279,3 +279,233 @@ def test_category_rule_with_normalized_payee():
     assert rule_with_exclusion.matches({"payee": "UBER *TRIP ABC123"}) is True
     # Should exclude after normalization
     assert rule_with_exclusion.matches({"payee": "UBER EATS ORDER 456789"}) is False
+
+
+def test_categorize_and_label_basic(tmp_path):
+    """Test two-phase categorization and labeling."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: category
+    name: WOOLWORTHS → Groceries
+    patterns: [WOOLWORTHS]
+    category: Groceries
+    confidence: 95
+
+  - type: label
+    name: Personal Groceries
+    when:
+      categories: [Groceries]
+      accounts: [Personal]
+    labels: [Personal, Essential]
+
+  - type: label
+    name: Shared Groceries
+    when:
+      categories: [Groceries]
+      accounts: [Shared Bills]
+    labels: [Shared Expense]
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "id": 123,
+        "payee": "WOOLWORTHS METRO",
+        "amount": -45.50,
+        "_account_name": "Personal",
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # Phase 1: Category should match
+    assert result["category"] == "Groceries"
+    assert result["confidence"] == 95
+    assert result["matched_rules"] == ["WOOLWORTHS → Groceries"]
+
+    # Phase 2: Only Personal Groceries label should match (not Shared)
+    assert "Personal" in result["labels"]
+    assert "Essential" in result["labels"]
+    assert "Shared Expense" not in result["labels"]
+
+
+def test_categorize_and_label_multiple_label_matches(tmp_path):
+    """Test multiple label rules matching same transaction."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: label
+    name: Groceries Label
+    when:
+      categories: [Groceries]
+    labels: [Food]
+
+  - type: label
+    name: Large Purchase
+    when:
+      amount_operator: ">"
+      amount_value: 100
+    labels: [Large Purchase, Review]
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "category": {"title": "Groceries"},
+        "amount": -150.00,
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # Both label rules should match
+    assert "Food" in result["labels"]
+    assert "Large Purchase" in result["labels"]
+    assert "Review" in result["labels"]
+    # Labels should be deduplicated
+    assert len(result["labels"]) == 3
+
+
+def test_categorize_and_label_no_category_match(tmp_path):
+    """Test when no category rule matches."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: category
+    name: WOOLWORTHS → Groceries
+    patterns: [WOOLWORTHS]
+    category: Groceries
+    confidence: 95
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "id": 123,
+        "payee": "UNKNOWN MERCHANT",
+        "amount": -45.50,
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # No category match
+    assert result["category"] is None
+    assert result["confidence"] is None
+    assert result["matched_rules"] == []
+
+
+def test_categorize_and_label_no_label_match(tmp_path):
+    """Test when category matches but no label rules match."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: category
+    name: WOOLWORTHS → Groceries
+    patterns: [WOOLWORTHS]
+    category: Groceries
+    confidence: 95
+
+  - type: label
+    name: Large Purchase
+    when:
+      amount_operator: ">"
+      amount_value: 100
+    labels: [Large Purchase]
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "id": 123,
+        "payee": "WOOLWORTHS METRO",
+        "amount": -45.50,
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # Category should match
+    assert result["category"] == "Groceries"
+    assert result["confidence"] == 95
+
+    # No label match (amount too small)
+    assert result["labels"] == []
+
+
+def test_categorize_and_label_first_category_match_only(tmp_path):
+    """Test that only FIRST matching category rule is returned (short-circuit)."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: category
+    name: WOOLWORTHS → Groceries
+    patterns: [WOOLWORTHS]
+    category: Groceries
+    confidence: 95
+
+  - type: category
+    name: WOOLWORTHS → Shopping
+    patterns: [WOOLWORTHS]
+    category: Shopping
+    confidence: 80
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "id": 123,
+        "payee": "WOOLWORTHS METRO",
+        "amount": -45.50,
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # Should return FIRST match only
+    assert result["category"] == "Groceries"
+    assert result["confidence"] == 95
+    assert len(result["matched_rules"]) == 1
+    assert result["matched_rules"][0] == "WOOLWORTHS → Groceries"
+
+
+def test_categorize_and_label_deduplicates_labels(tmp_path):
+    """Test that duplicate labels are deduplicated."""
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - type: label
+    name: Rule 1
+    when:
+      categories: [Groceries]
+    labels: [Food, Essential]
+
+  - type: label
+    name: Rule 2
+    when:
+      categories: [Groceries]
+    labels: [Essential, Personal]
+"""
+    )
+
+    engine = UnifiedRuleEngine(rules_file=rules_file)
+
+    transaction = {
+        "category": {"title": "Groceries"},
+    }
+
+    result = engine.categorize_and_label(transaction)
+
+    # Essential appears in both rules but should only appear once
+    assert result["labels"].count("Essential") == 1
+    assert "Food" in result["labels"]
+    assert "Essential" in result["labels"]
+    assert "Personal" in result["labels"]
+    assert len(result["labels"]) == 3

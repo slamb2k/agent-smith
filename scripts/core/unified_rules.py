@@ -274,3 +274,52 @@ class UnifiedRuleEngine:
             when_amount_value=when.get("amount_value"),
             when_uncategorized=when.get("uncategorized", False),
         )
+
+    def categorize_and_label(self, transaction: Dict[str, Any]) -> Dict[str, Any]:
+        """Categorize and label a transaction using two-phase execution.
+
+        Phase 1: Apply category rules (returns FIRST match only - short-circuit)
+        Phase 2: Apply label rules (collects ALL matching labels)
+
+        Args:
+            transaction: Transaction dict
+
+        Returns:
+            Result dict with keys:
+            - category: str | None - Matched category or None
+            - labels: List[str] - List of all matched labels (deduplicated)
+            - confidence: int | None - Confidence score from matched category rule
+            - matched_rules: List[str] - List of matched rule names
+        """
+        result: Dict[str, Any] = {
+            "category": None,
+            "labels": [],
+            "confidence": None,
+            "matched_rules": [],
+        }
+
+        # Phase 1: Categorization (short-circuit on first match)
+        for category_rule in self.category_rules:
+            if category_rule.matches(transaction):
+                result["category"] = category_rule.category
+                result["confidence"] = category_rule.confidence
+                result["matched_rules"].append(category_rule.name)
+
+                # Update transaction with matched category for Phase 2
+                transaction = transaction.copy()
+                transaction["category"] = {"title": category_rule.category}
+
+                # Short-circuit: return first match only
+                break
+
+        # Phase 2: Labeling (accumulate all matches)
+        labels = set()
+        for label_rule in self.label_rules:
+            if label_rule.matches(transaction):
+                labels.update(label_rule.labels)
+
+        # Convert set to sorted list for consistent ordering and deduplication
+        if labels:
+            result["labels"] = sorted(list(labels))
+
+        return result
