@@ -290,12 +290,10 @@ class DiscoveryAnalyzer:
         # Optional: Run baseline health check
         baseline_health_score = None
         if include_health_check:
-            # TODO: Integrate with health check system
-            # from scripts.health.engine import HealthCheckEngine
-            # engine = HealthCheckEngine()
-            # result = engine.run_all(...)
-            # baseline_health_score = result.overall_score
-            pass
+            from scripts.onboarding.baseline_health import BaselineHealthChecker
+
+            checker = BaselineHealthChecker(client=self.client)
+            baseline_health_score = checker.run_baseline_check()
 
         return DiscoveryReport(
             user_id=user_id,
