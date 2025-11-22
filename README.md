@@ -115,18 +115,28 @@ agent-smith/
 
 ### Installation
 
+See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+
+### First-Time Setup
+
+**Launch the interactive onboarding wizard:**
+
 ```bash
-# Clone repository
-git clone <repository-url>
-cd agent-smith
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure API key
-cp .env.sample .env
-# Edit .env and add your POCKETSMITH_API_KEY
+/agent-smith-onboard
 ```
+
+This guided 8-stage process will:
+1. Discover your PocketSmith account structure
+2. Recommend and apply a rule template
+3. Help you customize rules for your needs
+4. Configure intelligence modes
+5. Incrementally categorize your transactions
+6. Show measurable improvement with health scores
+7. Provide ongoing usage guidance
+
+**Time required:** 30-60 minutes
+
+**For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
 
 ### Running Tests
 
