@@ -153,7 +153,7 @@ uv run python -u scripts/operations/batch_categorize.py --mode=dry_run
 
 ## Version History
 
-- **1.3.7** - Complete implementation (all 8 phases)
+- **1.3.8** - Complete implementation (all 8 phases)
 - **1.0.0** - Initial skill package
 
 ## Notes
