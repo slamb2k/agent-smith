@@ -413,7 +413,7 @@ If you encounter issues during migration:
 1. Check migration logs for errors
 2. Review `data/rules.yaml.backup_*` files to restore if needed
 3. Test with `--dry-run` mode before committing changes
-4. Use `/agent-smith-categorize` command for interactive testing
+4. Use `/smith:categorize` command for interactive testing
 5. See `docs/design/2025-11-20-agent-smith-design.md` for detailed rule engine documentation
 
 ## Summary

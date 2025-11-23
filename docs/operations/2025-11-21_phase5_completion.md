@@ -313,7 +313,7 @@ tests/integration/
 
 Planned capabilities:
 - Subagent orchestration system for heavy computations
-- 8 slash commands including `/agent-smith-scenario`
+- 8 slash commands including `/smith:scenario`
 - Conversational workflow for scenario exploration
 - Batch scenario processing
 - Multi-scenario comparison

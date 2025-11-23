@@ -12,12 +12,12 @@ class TestSlashCommands:
 
     def test_main_command_exists(self):
         """Main agent-smith command file exists."""
-        cmd_path = Path(".claude/commands/agent-smith.md")
-        assert cmd_path.exists(), "agent-smith.md command file not found"
+        cmd_path = Path(".claude/commands/smith.md")
+        assert cmd_path.exists(), "smith.md command file not found"
 
     def test_main_command_content(self):
         """Main command has proper content structure."""
-        cmd_path = Path(".claude/commands/agent-smith.md")
+        cmd_path = Path(".claude/commands/smith.md")
         content = cmd_path.read_text()
 
         # Check for key sections
@@ -36,7 +36,7 @@ class TestSlashCommands:
         assert commands_dir.exists()
 
         expected_commands = [
-            "agent-smith.md",
+            "smith.md",
             "agent-smith-categorize.md",
             "agent-smith-analyze.md",
             "agent-smith-scenario.md",

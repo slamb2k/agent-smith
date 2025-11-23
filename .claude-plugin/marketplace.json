@@ -1,17 +1,16 @@
 {
   "name": "free-agents",
   "owner": {
-    "name": "Agent Smith Development",
-    "email": "dev@agent-smith.local"
+    "name": "Agents - Free to good home",
+    "email": "slamb2k@users.noreply.github.com"
   },
-  "marketplace_version": "1",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "plugins": [
     {
       "name": "smith",
       "description": "Intelligent financial management skill for Claude Code with PocketSmith API integration",
-      "version": "1.3.6",
-      "source": "./agent-smith-plugin/"
+      "source": "./agent-smith-plugin",
+      "category": "finance"
     }
   ]
 }

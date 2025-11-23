@@ -26,7 +26,7 @@ Agent Smith's onboarding is an 8-stage interactive process that:
 
 ```bash
 # Launch the onboarding wizard
-/agent-smith-onboard
+/smith:install
 ```
 
 Claude will guide you through each stage interactively.
@@ -235,23 +235,23 @@ Remaining priorities:
 
 **Daily/Weekly:**
 ```bash
-/agent-smith-categorize --mode=smart --period=2025-11
+/smith:categorize --mode=smart --period=2025-11
 ```
 
 **Monthly:**
 ```bash
-/agent-smith-analyze spending --period=2025-11
-/agent-smith-health --quick
+/smith:analyze spending --period=2025-11
+/smith:health --quick
 ```
 
 **Quarterly:**
 ```bash
-/agent-smith-tax deductions --period=2024-25
+/smith:tax deductions --period=2024-25
 ```
 
 **Annual (EOFY):**
 ```bash
-/agent-smith-tax eofy
+/smith:tax eofy
 ```
 
 **Time:** 2 minutes
@@ -266,7 +266,7 @@ If onboarding is interrupted, your progress is saved in `data/onboarding_state.j
 
 **Resume:**
 ```bash
-/agent-smith-onboard
+/smith:install
 ```
 
 Claude will detect saved state and offer to resume from where you left off.
@@ -274,7 +274,7 @@ Claude will detect saved state and offer to resume from where you left off.
 **Start Over:**
 ```bash
 uv run python -c "from scripts.onboarding.state import OnboardingState; OnboardingState().reset()"
-/agent-smith-onboard
+/smith:install
 ```
 
 ### Discovery Fails

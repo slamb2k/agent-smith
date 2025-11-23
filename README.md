@@ -162,7 +162,7 @@ For development setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIB
 **Launch Agent Smith with integrated onboarding:**
 
 ```bash
-/agent-smith:install
+/smith:install
 ```
 
 **First-time users:** This guided 8-stage onboarding process will:
@@ -567,17 +567,17 @@ context.set_preference("tax_level", "full")
 
 **Slash Commands (8 commands):**
 ```bash
-# Main conversational entry
-/agent-smith
+# Main conversational entry (onboarding and intelligent suggestions)
+/smith:install
 
 # Quick operations
-/agent-smith-categorize --mode=smart --period=2025-11
-/agent-smith-analyze spending --period=2025
-/agent-smith-scenario historical "What if I cut dining by 25%?"
-/agent-smith-report tax --period=2024-25 --tax-level=full
-/agent-smith-optimize subscriptions
-/agent-smith-tax deductions --period=2024-25
-/agent-smith-health --full
+/smith:categorize --mode=smart --period=2025-11
+/smith:analyze spending --period=2025
+/smith:scenario historical "What if I cut dining by 25%?"
+/smith:report tax --period=2024-25 --tax-level=full
+/smith:optimize subscriptions
+/smith:tax deductions --period=2024-25
+/smith:health --full
 ```
 
 **Interactive Workflows:**

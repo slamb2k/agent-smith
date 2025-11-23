@@ -944,10 +944,10 @@ if __name__ == "__main__":
 
 ### Task 6: Add Slash Command Integration
 
-**Goal:** Create `/agent-smith-categorize` slash command that uses batch workflow.
+**Goal:** Create `/smith:categorize` slash command that uses batch workflow.
 
 **Files to Create:**
-- `.claude/commands/agent-smith-categorize.md`
+- `.claude/commands/smith:categorize.md`
 
 **Implementation:**
 
@@ -985,7 +985,7 @@ You are the Agent Smith categorization assistant. Your job is to:
 **Example interaction:**
 
 ```
-User: /agent-smith-categorize
+User: /smith:categorize
 Assistant: I'll help categorize your transactions. What period would you like to process?
   - "2025-11" for November 2025
   - "last-30-days" for recent transactions
@@ -1021,7 +1021,7 @@ Would you like to create rules for any of these patterns?
 ```
 
 **Testing:**
-- Manual test: `/agent-smith-categorize` in Claude Code
+- Manual test: `/smith:categorize` in Claude Code
 - Verify interactive prompts work
 - Verify dry-run shows preview
 - Verify apply mode updates transactions
