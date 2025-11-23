@@ -2,9 +2,11 @@
 
 Quick-access commands for common financial management operations.
 
+**Main Interface:** Use the Agent Smith skill directly for natural language financial conversations and ad-hoc analysis.
+
 ## All Commands
 
-1. `/smith:install` - Main entry point with onboarding and intelligent suggestions
+1. `/smith:install` - Installation and onboarding wizard
 2. `/smith:categorize` - Transaction categorization
 3. `/smith:analyze` - Financial analysis
 4. `/smith:scenario` - Scenario modeling
@@ -17,7 +19,7 @@ Quick-access commands for common financial management operations.
 
 ### /smith:install
 
-Main entry point for Agent Smith with integrated onboarding and intelligent suggestions.
+Installation and onboarding wizard with intelligent suggestions.
 
 **Use for:**
 - First-time setup and onboarding (8 stages)
