@@ -90,15 +90,17 @@ The onboarding process will:
 
 ### Daily Usage
 
+**Main Interface:** Use the Agent Smith skill directly for natural language financial conversations and ad-hoc analysis.
+
 **Slash Commands** (8 specialized commands):
-- `/agent-smith` - Main conversational entry
-- `/agent-smith-categorize [--mode] [--period]` - Transaction categorization
-- `/agent-smith-analyze [type] [--period]` - Financial analysis
-- `/agent-smith-scenario [type] [description]` - Scenario modeling
-- `/agent-smith-report [format] [--period]` - Report generation
-- `/agent-smith-optimize [target]` - Optimization operations
-- `/agent-smith-tax [operation] [--period]` - Tax intelligence
-- `/agent-smith-health [--full]` - Health check
+- `/smith:install` - Installation and onboarding wizard
+- `/smith:categorize [--mode] [--period]` - Transaction categorization
+- `/smith:analyze [type] [--period]` - Financial analysis
+- `/smith:scenario [type] [description]` - Scenario modeling
+- `/smith:report [format] [--period]` - Report generation
+- `/smith:optimize [target]` - Optimization operations
+- `/smith:tax [operation] [--period]` - Tax intelligence
+- `/smith:health [--full]` - Health check
 
 ## Python Scripts
 

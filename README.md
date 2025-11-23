@@ -567,7 +567,7 @@ context.set_preference("tax_level", "full")
 
 **Slash Commands (8 commands):**
 ```bash
-# Main conversational entry (onboarding and intelligent suggestions)
+# Installation and onboarding
 /smith:install
 
 # Quick operations
@@ -579,6 +579,9 @@ context.set_preference("tax_level", "full")
 /smith:tax deductions --period=2024-25
 /smith:health --full
 ```
+
+**Main conversational interface:** Use the Agent Smith skill directly for natural language
+financial conversations, questions, and ad-hoc analysis.
 
 **Interactive Workflows:**
 - Guided categorization with AI assistance

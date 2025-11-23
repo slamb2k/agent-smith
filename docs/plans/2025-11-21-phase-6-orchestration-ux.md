@@ -2256,7 +2256,7 @@ context.set_preference("tax_level", "full")
 
 **Slash Commands (8 commands):**
 ```bash
-# Main conversational entry
+# Installation and onboarding
 /agent-smith
 
 # Quick operations
@@ -2302,7 +2302,7 @@ Add to `.claude/commands/` section:
 
 ```markdown
 - `.claude/commands/` - Slash commands for Agent Smith (8 files, Phase 6)
-  - `agent-smith.md` - Main conversational entry point
+  - `agent-smith.md` - Installation and onboarding point
   - `agent-smith-categorize.md` - Transaction categorization
   - `agent-smith-analyze.md` - Financial analysis
   - `agent-smith-scenario.md` - Scenario modeling
@@ -2679,7 +2679,7 @@ Quick-access commands for common financial management operations.
 
 ## All Commands
 
-1. `/agent-smith` - Main conversational entry point
+1. `/agent-smith` - Installation and onboarding point
 2. `/smith:categorize` - Transaction categorization
 3. `/smith:analyze` - Financial analysis
 4. `/smith:scenario` - Scenario modeling
@@ -2971,7 +2971,7 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 - Result aggregation from parallel subagents
 
 ### Slash Commands
-- Main conversational entry (/agent-smith)
+- Installation and onboarding (/agent-smith)
 - Categorization (/smith:categorize)
 - Analysis (/smith:analyze)
 - Scenario modeling (/smith:scenario)

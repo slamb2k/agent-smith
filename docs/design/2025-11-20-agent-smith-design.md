@@ -779,23 +779,27 @@ CONSTRAINTS:
 ### Command Structure
 
 ```
-.claude/commands/
-├── agent-smith.md                      # Main conversational entry
-├── agent-smith-categorize.md           # Transaction categorization
-├── agent-smith-analyze.md              # Financial analysis
-├── agent-smith-report.md               # Report generation
-├── agent-smith-scenario.md             # Scenario modeling
-├── agent-smith-optimize.md             # Optimization operations
-├── agent-smith-tax.md                  # Tax intelligence
-└── agent-smith-health.md               # Health check
+agent-smith-plugin/commands/
+├── install.md                          # Installation and onboarding
+├── categorize.md                       # Transaction categorization
+├── analyze.md                          # Financial analysis
+├── report.md                           # Report generation
+├── scenario.md                         # Scenario modeling
+├── optimize.md                         # Optimization operations
+├── tax.md                              # Tax intelligence
+└── health.md                           # Health check
 ```
+
+**Main conversational interface:** The Agent Smith skill provides natural language
+financial conversations and ad-hoc analysis. Use slash commands for specific operations.
 
 ### Command Definitions
 
-**1. `/smith:install` - Main Conversational Entry**
+**1. `/smith:install` - Installation and Onboarding**
 ```markdown
-Start a conversational Agent Smith session for complex multi-step operations.
-Use for workflows involving multiple operations or guided assistance.
+Interactive setup wizard with intelligent suggestions based on your financial setup.
+Guides first-time users through 8-stage onboarding and provides returning users
+with priority actions and optimization opportunities.
 ```
 
 **2. `/smith:categorize [--mode] [--period]`**

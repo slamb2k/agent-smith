@@ -780,7 +780,7 @@ CONSTRAINTS:
 
 ```
 .claude/commands/
-├── agent-smith.md                      # Main conversational entry
+├── agent-smith.md                      # Installation and onboarding
 ├── agent-smith-categorize.md           # Transaction categorization
 ├── agent-smith-analyze.md              # Financial analysis
 ├── agent-smith-report.md               # Report generation

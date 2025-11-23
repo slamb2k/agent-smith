@@ -187,17 +187,20 @@ FINANCIAL_YEAR_END=06-30
 
 **User preferences:** `data/config.json` (household settings, alerts, report formats, benchmarking)
 
-## Slash Commands (Future)
+## Slash Commands
 
-Agent Smith will provide 8 slash commands in `.claude/commands/`:
-- `/agent-smith` - Main conversational entry
-- `/agent-smith-categorize` - Transaction categorization
-- `/agent-smith-analyze` - Financial analysis
-- `/agent-smith-scenario` - Scenario modeling
-- `/agent-smith-report` - Multi-format reports
-- `/agent-smith-optimize` - Category/rule/spending optimization
-- `/agent-smith-tax` - Tax intelligence operations
-- `/agent-smith-health` - PocketSmith setup health check
+Agent Smith provides 8 slash commands in `agent-smith-plugin/commands/`:
+- `/smith:install` - Installation and onboarding wizard
+- `/smith:categorize` - Transaction categorization
+- `/smith:analyze` - Financial analysis
+- `/smith:scenario` - Scenario modeling
+- `/smith:report` - Multi-format reports
+- `/smith:optimize` - Category/rule/spending optimization
+- `/smith:tax` - Tax intelligence operations
+- `/smith:health` - PocketSmith setup health check
+
+**Main conversational interface:** Use the Agent Smith skill directly for natural language
+financial conversations and ad-hoc analysis.
 
 **Note:** When creating slash commands, **immediately prompt user to restart Claude Code**.
 

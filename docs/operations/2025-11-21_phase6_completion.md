@@ -105,7 +105,7 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 - Result aggregation from parallel subagents
 
 ### Slash Commands
-- Main conversational entry (/agent-smith)
+- Installation and onboarding (/agent-smith)
 - Categorization (/smith:categorize)
 - Analysis (/smith:analyze)
 - Scenario modeling (/smith:scenario)
