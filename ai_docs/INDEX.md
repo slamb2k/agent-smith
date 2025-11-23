@@ -52,7 +52,7 @@ AI agents need quick access to comprehensive references without repeatedly downl
 - Budget analysis
 - API error troubleshooting
 
-### [skill-suthoring-best-practices.md](skill-suthoring-best-practices.md)
+### [skill-authoring-best-practices.md](skill-authoring-best-practices.md)
 
 **Skill Authoring Best Practices (Claude Code)**
 
