@@ -172,6 +172,8 @@ def test_recommend_template_simple():
     recommendation = analyzer._recommend_template(
         accounts=[AccountSummary(100, "Checking", "Bank", 0, 0)],
         categories=[CategorySummary(300, "Groceries", None, 0, Decimal("0"))],
+        transactions=[],
+        account_classifications=[],
     )
 
     assert recommendation.primary == "payg-employee"
@@ -191,7 +193,7 @@ def test_recommend_template_shared_household():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     assert recommendation.living == "shared-hybrid"
 
@@ -207,7 +209,7 @@ def test_recommend_template_separated_families():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     assert recommendation.living == "separated-parents"
 
@@ -225,7 +227,7 @@ def test_recommend_template_advanced():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     assert recommendation.primary == "sole-trader" or len(recommendation.additional) > 0
 
@@ -238,7 +240,7 @@ def test_recommend_template_separated_families_substring():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     assert recommendation.living == "separated-parents"
 
@@ -251,7 +253,7 @@ def test_recommend_template_advanced_substring():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     # "investment" in category should trigger share-investor additional template
     assert "share-investor" in recommendation.additional
@@ -268,7 +270,7 @@ def test_recommend_template_shared_household_substring():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     assert recommendation.living == "shared-hybrid"
 
@@ -281,7 +283,7 @@ def test_recommend_template_case_insensitive_substring():
     ]
 
     analyzer = DiscoveryAnalyzer(client=None)
-    recommendation = analyzer._recommend_template(accounts, categories)
+    recommendation = analyzer._recommend_template(accounts, categories, [], [])
 
     # "investment" (case-insensitive) should trigger share-investor additional template
     assert "share-investor" in recommendation.additional
