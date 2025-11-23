@@ -1,6 +1,6 @@
 # AI Documentation Index
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-23
 
 This directory contains documentation specifically formatted for AI agents and subagents to reference during Agent Smith operations.
 
@@ -51,6 +51,31 @@ AI agents need quick access to comprehensive references without repeatedly downl
 - Account operations
 - Budget analysis
 - API error troubleshooting
+
+### [skill-suthoring-best-practices.md](skill-suthoring-best-practices.md)
+
+**Skill Authoring Best Practices (Claude Code)**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+
+**Contents:**
+- Core principles (Concise is key, Progressive disclosure)
+- Structure and organization
+- Writing effective instructions
+- Code examples and templates
+- Testing and validation
+- Common patterns and anti-patterns
+
+**Purpose:** Reference guide for developing and maintaining the Agent Smith skill package, ensuring adherence to Claude Code best practices for skill authoring.
+
+**Use Cases:**
+- Skill development and maintenance
+- SKILL.md optimization
+- Documentation structure decisions
+- Progressive disclosure implementation
+- Context window optimization
 
 ---
 
@@ -150,6 +175,6 @@ Documents in this directory are:
 
 ---
 
-**Current Document Count:** 1
+**Current Document Count:** 2
 **Planned Documents:** 4+ core documents + tax subdirectory
-**Total Size:** ~12KB (current)
+**Total Size:** ~54KB (current)
