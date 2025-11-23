@@ -1,9 +1,33 @@
 """Discovery analyzer for PocketSmith account structure."""
 
+import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
+
+@dataclass
+class AccountClassification:
+    """Classification of an account type."""
+
+    account_id: int
+    account_name: str
+    institution: str
+    account_type: str  # "household_shared", "parenting_shared", "individual"
+    confidence: float  # 0.0-1.0
+    indicators: List[str]  # Keywords/patterns that triggered classification
+
+
+@dataclass
+class NameSuggestion:
+    """Suggested names for a shared context."""
+
+    context: str  # "household_shared" or "parenting_shared"
+    person_1: Optional[str]
+    person_2: Optional[str]
+    confidence: float  # 0.0-1.0
+    source: str  # "account_name", "category_names", "transaction_notes"
 
 
 @dataclass
@@ -13,6 +37,7 @@ class TemplateRecommendation:
     primary: str  # E.g., "payg-employee" or "sole-trader"
     living: str  # E.g., "single", "shared-hybrid", "separated-parents"
     additional: List[str]  # E.g., ["property-investor", "share-investor"]
+    name_suggestions: Dict[str, NameSuggestion] = field(default_factory=dict)  # Context -> names
 
 
 @dataclass
@@ -59,6 +84,7 @@ class DiscoveryReport:
     transactions: TransactionSummary
     baseline_health_score: Optional[int]
     recommendation: TemplateRecommendation
+    account_classifications: List[AccountClassification] = field(default_factory=list)
 
 
 class DiscoveryAnalyzer:
@@ -195,10 +221,229 @@ class DiscoveryAnalyzer:
             by_account=by_account,
         )
 
+    def _parse_names_from_text(self, text: str) -> List[str]:
+        """Extract person names from text using regex patterns.
+
+        Args:
+            text: Text to parse for names
+
+        Returns:
+            List of extracted names (maximum 2)
+        """
+        # Pattern 1: "Name1 & Name2" or "Name1 and Name2"
+        pattern1 = r"([A-Z][a-z]+)\s+(?:&|and)\s+([A-Z][a-z]+)"
+        match = re.search(pattern1, text)
+        if match:
+            return [match.group(1), match.group(2)]
+
+        # Pattern 2: "Name1's" possessive form
+        pattern2 = r"([A-Z][a-z]+)'s"
+        matches = re.findall(pattern2, text)
+        if matches:
+            return list(set(matches))[:2]
+
+        # Pattern 3: Capitalized words (less confident)
+        pattern3 = r"\b([A-Z][a-z]{2,})\b"
+        matches = re.findall(pattern3, text)
+        # Filter out common account/category words
+        common_words = {
+            "Account",
+            "Bills",
+            "Shared",
+            "Joint",
+            "Kids",
+            "Children",
+            "Bank",
+            "Card",
+            "Savings",
+            "Checking",
+            "Credit",
+            "Debit",
+        }
+        names = [m for m in matches if m not in common_words]
+
+        return names[:2]
+
+    def _extract_names_from_account(
+        self,
+        account: AccountSummary,
+        transactions: List[Dict[str, Any]],
+        categories: List[CategorySummary],
+    ) -> Optional[NameSuggestion]:
+        """Extract names from account-specific data.
+
+        Args:
+            account: Account to analyze
+            transactions: All transactions (will filter to this account)
+            categories: All categories
+
+        Returns:
+            NameSuggestion or None if no names found
+        """
+        # Strategy 1: Try account name first
+        names_from_account = self._parse_names_from_text(account.name)
+        if len(names_from_account) == 2:
+            return NameSuggestion(
+                context="",  # Will be set by caller
+                person_1=names_from_account[0],
+                person_2=names_from_account[1],
+                confidence=0.9,
+                source="account_name",
+            )
+        elif len(names_from_account) == 1:
+            return NameSuggestion(
+                context="",
+                person_1=names_from_account[0],
+                person_2=None,
+                confidence=0.7,
+                source="account_name",
+            )
+
+        # Strategy 2: Try category names used in this account
+        account_txns = [
+            t for t in transactions if t.get("transaction_account", {}).get("id") == account.id
+        ]
+
+        account_category_ids = {
+            t.get("category", {}).get("id") for t in account_txns if t.get("category")
+        }
+
+        account_categories = [cat for cat in categories if cat.id in account_category_ids]
+
+        for cat in account_categories:
+            names_from_category = self._parse_names_from_text(cat.title)
+            if len(names_from_category) >= 1:
+                return NameSuggestion(
+                    context="",
+                    person_1=names_from_category[0],
+                    person_2=names_from_category[1] if len(names_from_category) > 1 else None,
+                    confidence=0.6,
+                    source="category_names",
+                )
+
+        # Strategy 3: Try transaction notes (if available)
+        # Note: This is optional and depends on transactions having notes
+        for txn in account_txns[:50]:  # Check first 50 transactions
+            if "note" in txn and txn["note"]:
+                names_from_note = self._parse_names_from_text(txn["note"])
+                if len(names_from_note) >= 1:
+                    return NameSuggestion(
+                        context="",
+                        person_1=names_from_note[0],
+                        person_2=names_from_note[1] if len(names_from_note) > 1 else None,
+                        confidence=0.4,
+                        source="transaction_notes",
+                    )
+
+        return None
+
+    def _classify_accounts(
+        self,
+        accounts: List[AccountSummary],
+        transactions: List[Dict[str, Any]],
+        categories: List[CategorySummary],
+    ) -> List[AccountClassification]:
+        """Classify each account as household-shared, parenting-shared, or individual.
+
+        Args:
+            accounts: List of account summaries
+            transactions: All transactions
+            categories: All categories
+
+        Returns:
+            List of AccountClassification objects
+        """
+        classifications = []
+
+        for account in accounts:
+            account_name_lower = account.name.lower()
+
+            # Get transactions for THIS account only
+            account_txns = [
+                t for t in transactions if t.get("transaction_account", {}).get("id") == account.id
+            ]
+
+            # Extract categories used in THIS account
+            account_category_ids = {
+                t.get("category", {}).get("id") for t in account_txns if t.get("category")
+            }
+
+            account_category_titles = {
+                cat.title.lower() for cat in categories if cat.id in account_category_ids
+            }
+
+            # Classification logic
+            household_indicators = {"shared", "joint", "household", "bills", "house"}
+            parenting_indicators = {
+                "kids",
+                "children",
+                "child",
+                "custody",
+                "child support",
+                "parenting",
+                "school",
+            }
+
+            # Check account name
+            household_score = sum(1.0 for ind in household_indicators if ind in account_name_lower)
+            parenting_score = sum(1.0 for ind in parenting_indicators if ind in account_name_lower)
+
+            # Check categories (with lower weight)
+            household_score += (
+                sum(
+                    1.0
+                    for ind in household_indicators
+                    if any(ind in cat for cat in account_category_titles)
+                )
+                * 0.5
+            )
+            parenting_score += (
+                sum(
+                    1.0
+                    for ind in parenting_indicators
+                    if any(ind in cat for cat in account_category_titles)
+                )
+                * 0.5
+            )
+
+            # Determine account type
+            indicators_found = []
+            if household_score > parenting_score and household_score > 0:
+                account_type = "household_shared"
+                confidence = min(household_score / 3.0, 1.0)
+                indicators_found = [
+                    ind for ind in household_indicators if ind in account_name_lower
+                ]
+            elif parenting_score > 0:
+                account_type = "parenting_shared"
+                confidence = min(parenting_score / 3.0, 1.0)
+                indicators_found = [
+                    ind for ind in parenting_indicators if ind in account_name_lower
+                ]
+            else:
+                account_type = "individual"
+                confidence = 0.8
+                indicators_found = ["no shared indicators"]
+
+            classifications.append(
+                AccountClassification(
+                    account_id=account.id,
+                    account_name=account.name,
+                    institution=account.institution,
+                    account_type=account_type,
+                    confidence=confidence,
+                    indicators=indicators_found,
+                )
+            )
+
+        return classifications
+
     def _recommend_template(
         self,
         accounts: List[AccountSummary],
         categories: List[CategorySummary],
+        transactions: List[Dict[str, Any]],
+        account_classifications: List[AccountClassification],
     ) -> TemplateRecommendation:
         """Recommend templates based on account and category structure.
 
@@ -210,9 +455,11 @@ class DiscoveryAnalyzer:
         Args:
             accounts: List of account summaries
             categories: List of category summaries
+            transactions: All transactions
+            account_classifications: Account classification results
 
         Returns:
-            TemplateRecommendation with primary, living, and additional templates
+            TemplateRecommendation with primary, living, additional, and name_suggestions
         """
         # Extract category titles for pattern matching
         category_titles = {cat.title.lower() for cat in categories}
@@ -284,7 +531,54 @@ class DiscoveryAnalyzer:
         if has_investments:
             additional.append("share-investor")
 
-        return TemplateRecommendation(primary=primary, living=living, additional=additional)
+        # Extract names from classified accounts
+        name_suggestions: Dict[str, NameSuggestion] = {}
+
+        # Try to find household shared account with names
+        household_accounts = [
+            acc for acc in account_classifications if acc.account_type == "household_shared"
+        ]
+        if household_accounts:
+            # Sort by confidence and try highest confidence first
+            household_accounts.sort(key=lambda x: x.confidence, reverse=True)
+            for classified_acc in household_accounts:
+                # Find the AccountSummary object
+                account_summary = next(
+                    (a for a in accounts if a.id == classified_acc.account_id), None
+                )
+                if account_summary:
+                    suggestion = self._extract_names_from_account(
+                        account_summary, transactions, categories
+                    )
+                    if suggestion:
+                        suggestion.context = "household_shared"
+                        name_suggestions["household_shared"] = suggestion
+                        break
+
+        # Try to find parenting shared account with names
+        parenting_accounts = [
+            acc for acc in account_classifications if acc.account_type == "parenting_shared"
+        ]
+        if parenting_accounts:
+            # Sort by confidence and try highest confidence first
+            parenting_accounts.sort(key=lambda x: x.confidence, reverse=True)
+            for classified_acc in parenting_accounts:
+                # Find the AccountSummary object
+                account_summary = next(
+                    (a for a in accounts if a.id == classified_acc.account_id), None
+                )
+                if account_summary:
+                    suggestion = self._extract_names_from_account(
+                        account_summary, transactions, categories
+                    )
+                    if suggestion:
+                        suggestion.context = "parenting_shared"
+                        name_suggestions["parenting_shared"] = suggestion
+                        break
+
+        return TemplateRecommendation(
+            primary=primary, living=living, additional=additional, name_suggestions=name_suggestions
+        )
 
     def analyze(self, include_health_check: bool = False) -> DiscoveryReport:
         """Run complete discovery analysis.
@@ -309,18 +603,26 @@ class DiscoveryAnalyzer:
         # Fetch all data
         accounts = self._fetch_accounts(user_id)
         categories = self._fetch_categories(user_id)
-        transactions = self._fetch_transaction_summary(user_id)
+        transaction_summary = self._fetch_transaction_summary(user_id)
+
+        # Fetch raw transactions for classification
+        raw_transactions = self.client.get_transactions(user_id)
 
         # Update account transaction counts
         for account in accounts:
-            account.transaction_count = transactions.by_account.get(account.id, 0)
+            account.transaction_count = transaction_summary.by_account.get(account.id, 0)
             # Uncategorized count would need separate query - simplified for now
 
         # Update category transaction counts
         # (Would need to count from transactions - simplified for now)
 
+        # Classify accounts
+        account_classifications = self._classify_accounts(accounts, raw_transactions, categories)
+
         # Get template recommendation
-        recommendation = self._recommend_template(accounts, categories)
+        recommendation = self._recommend_template(
+            accounts, categories, raw_transactions, account_classifications
+        )
 
         # Optional: Run baseline health check
         baseline_health_score = None
@@ -335,9 +637,10 @@ class DiscoveryAnalyzer:
             user_email=user_email,
             accounts=accounts,
             categories=categories,
-            transactions=transactions,
+            transactions=transaction_summary,
             baseline_health_score=baseline_health_score,
             recommendation=recommendation,
+            account_classifications=account_classifications,
         )
 
 
