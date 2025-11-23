@@ -183,6 +183,8 @@ For development setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIB
 
 **Time required (first time):** 30-60 minutes
 
+**Reset option:** Use `/smith:install --reset` to delete all data and start over (requires confirmation)
+
 **For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
 
 ### Running Tests
@@ -568,7 +570,7 @@ context.set_preference("tax_level", "full")
 **Slash Commands (8 commands):**
 ```bash
 # Installation and onboarding
-/smith:install
+/smith:install [--reset]
 
 # Quick operations
 /smith:categorize --mode=smart --period=2025-11
