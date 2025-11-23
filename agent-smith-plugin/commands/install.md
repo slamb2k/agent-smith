@@ -258,6 +258,11 @@ How should we apply the templates to your PocketSmith account?
 Choose strategy (1/2/3):
 ```
 
+**Map user choice to strategy argument:**
+- Choice 1 → `add_new`
+- Choice 2 → `smart_merge` (note: underscore, not hyphen)
+- Choice 3 → `replace`
+
 Save user choice to `data/onboarding_state.json`.
 
 **Step 4c: Preview Before Apply**
@@ -576,8 +581,23 @@ run_agent_smith() {
     shift  # Remove first argument, leaving remaining args
 
     if [ -n "${CLAUDE_PLUGIN_ROOT}" ]; then
-        # Plugin mode - use CLAUDE_PLUGIN_ROOT environment variable
-        uv run python -u "${CLAUDE_PLUGIN_ROOT}/scripts/$script_path" "$@"
+        # Plugin mode - scripts are in skills/agent-smith/ subdirectory
+        local skill_dir="${CLAUDE_PLUGIN_ROOT}/skills/agent-smith"
+        local user_cwd="$(pwd)"
+
+        if [ ! -d "$skill_dir" ]; then
+            echo "Error: Agent Smith skill directory not found: $skill_dir"
+            return 1
+        fi
+
+        # Run from skill directory with:
+        # - USER_CWD: preserve user's working directory for .env access
+        # - env -u VIRTUAL_ENV: ignore conflicting virtual environments
+        # uv will automatically use the plugin's .venv
+        (cd "$skill_dir" && \
+         USER_CWD="$user_cwd" \
+         env -u VIRTUAL_ENV -u VIRTUAL_ENV_PROMPT \
+         uv run python -u "scripts/$script_path" "$@")
     elif [ -f "./scripts/$script_path" ]; then
         # Development/repository mode - use relative path
         uv run python -u "./scripts/$script_path" "$@"
