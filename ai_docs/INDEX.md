@@ -169,7 +169,7 @@ Documents in this directory are:
 ## Quick Links
 
 - **Back to Repository:** [../README.md](../README.md)
-- **Repository Index:** [../INDEX.md](../INDEX.md)
+- **Contributing Guide:** [../CONTRIBUTING.md](../CONTRIBUTING.md)
 - **Design Documentation:** [../docs/INDEX.md](../docs/INDEX.md)
 - **Agent Smith Design:** [../docs/design/2025-11-20-agent-smith-design.md](../docs/design/2025-11-20-agent-smith-design.md)
 
