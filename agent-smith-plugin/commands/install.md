@@ -581,7 +581,7 @@ run_agent_smith() {
     shift  # Remove first argument, leaving remaining args
 
     if [ -n "${CLAUDE_PLUGIN_ROOT}" ]; then
-        # Plugin mode - scripts are in skills/agent-smith/ subdirectory
+        # Plugin mode - run from skill directory with USER_CWD set and venv isolation
         local skill_dir="${CLAUDE_PLUGIN_ROOT}/skills/agent-smith"
         local user_cwd="$(pwd)"
 
@@ -599,7 +599,7 @@ run_agent_smith() {
          env -u VIRTUAL_ENV -u VIRTUAL_ENV_PROMPT \
          uv run python -u "scripts/$script_path" "$@")
     elif [ -f "./scripts/$script_path" ]; then
-        # Development/repository mode - use relative path
+        # Development/repository mode - run from current directory
         uv run python -u "./scripts/$script_path" "$@"
     else
         echo "Error: Agent Smith script not found: $script_path"
