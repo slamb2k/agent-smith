@@ -139,6 +139,173 @@ run_agent_smith "onboarding/discovery.py"
 - Summarize their PocketSmith setup
 - Highlight the uncategorized transaction count
 - Show the recommended template
+- Display account classifications (household_shared, parenting_shared, individual)
+- Show any name suggestions detected
+
+### Stage 2b: Account Selection (Interactive)
+
+**IMPORTANT:** This stage enables context-aware name detection by identifying which accounts are used for household vs parenting expenses.
+
+**Check if shared accounts were detected:**
+
+Look at the discovery report's `account_classifications` field. If there are accounts classified as `household_shared` or `parenting_shared`, proceed with interactive selection.
+
+**For Household Shared Accounts:**
+
+If `household_shared` accounts were detected:
+
+1. **Show detected accounts** with confidence scores:
+
+```
+I detected these potential household shared accounts:
+
+  1. Shared Bills - Simon & Caitlin (Macquarie Bank)
+      Confidence: 90%
+      Indicators: "shared" in account name
+
+  2. Joint Savings (CBA)
+      Confidence: 60%
+      Indicators: "joint" in account name
+
+Which account do you use for household shared expenses?
+```
+
+2. **Use AskUserQuestion** to let the user select:
+
+```python
+# Build options from household_shared accounts
+household_accounts = [acc for acc in report.account_classifications
+                      if acc.account_type == "household_shared"]
+
+if household_accounts:
+    # Sort by confidence
+    household_accounts.sort(key=lambda x: x.confidence, reverse=True)
+
+    options = []
+    for acc in household_accounts:
+        options.append({
+            "label": f"{acc.account_name} ({acc.institution})",
+            "description": f"Confidence: {acc.confidence*100:.0f}% - Indicators: {', '.join(acc.indicators)}"
+        })
+
+    # Ask user to select
+    response = AskUserQuestion(
+        questions=[{
+            "question": "Which account do you use for household shared expenses?",
+            "header": "Household Acct",
+            "options": options,
+            "multiSelect": false
+        }]
+    )
+
+    # User selected index or "Other"
+    # If "Other", show full account list and let them choose
+```
+
+3. **Extract names** from selected account:
+
+```python
+# Get the selected account
+selected_account = household_accounts[selected_index]
+
+# Extract names using the account-specific data
+suggestion = _extract_names_from_account(
+    selected_account,
+    transactions,
+    categories
+)
+
+# Show detected names
+if suggestion and suggestion.person_1:
+    if suggestion.person_2:
+        print(f"✓ Detected contributors: {suggestion.person_1} and {suggestion.person_2}")
+    else:
+        print(f"✓ Detected contributor: {suggestion.person_1}")
+
+    print(f"  Source: {suggestion.source} (confidence: {suggestion.confidence*100:.0f}%)")
+
+    # Ask for confirmation
+    response = AskUserQuestion(
+        questions=[{
+            "question": f"Use '{suggestion.person_1} and {suggestion.person_2}' for household shared expenses?",
+            "header": "Confirm Names",
+            "options": [
+                {"label": "Yes", "description": "Use these names"},
+                {"label": "No", "description": "I'll enter different names"}
+            ],
+            "multiSelect": false
+        }]
+    )
+
+    # If "No", ask for manual entry using AskUserQuestion with text input
+```
+
+4. **Save to template_config.json:**
+
+```python
+config = {
+    "household_shared_account": {
+        "account_id": selected_account.account_id,
+        "account_name": selected_account.account_name,
+        "person_1": confirmed_person_1,
+        "person_2": confirmed_person_2
+    }
+}
+```
+
+**For Parenting Shared Accounts:**
+
+If `parenting_shared` accounts were detected, repeat the same flow:
+
+1. Show detected parenting accounts with confidence scores
+2. Use AskUserQuestion to let user select
+3. Extract names from selected account
+4. Ask for confirmation
+5. Save to template_config.json under `parenting_shared_account`
+
+**Example output:**
+
+```
+=== Household Shared Account Selection ===
+
+I detected these potential household shared accounts:
+
+  1. Shared Bills - Simon & Caitlin (Macquarie Bank)
+      Confidence: 90%
+      Why: "shared" in account name
+
+Which account do you use for household shared expenses? (1): 1
+
+Analyzing 'Shared Bills - Simon & Caitlin' for contributor names...
+
+✓ Detected contributors: Simon and Caitlin
+  Source: account_name (confidence: 90%)
+
+Use 'Simon and Caitlin' for household shared expenses? (y/n): y
+
+=== Parenting Shared Account Selection ===
+
+I detected these potential parenting shared accounts:
+
+  1. Kids Account - Simon & Tori (CBA)
+      Confidence: 90%
+      Why: "kids" in account name
+
+Which account do you use for parenting/child expenses? (1): 1
+
+Analyzing 'Kids Account - Simon & Tori' for contributor names...
+
+✓ Detected contributors: Simon and Tori
+  Source: account_name (confidence: 90%)
+
+Use 'Simon and Tori' for parenting shared expenses? (y/n): y
+
+✓ Account selections saved to template_config.json
+```
+
+**If no shared accounts detected:**
+
+Skip this stage and continue to template selection.
 
 ### Stage 3: Template Selection
 

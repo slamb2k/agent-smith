@@ -724,7 +724,67 @@ def main() -> None:
             print(date_msg)
         print()
 
-        print(f"Recommended Template: {report.recommendation}")
+        # Account Classifications
+        if report.account_classifications:
+            household_accounts = [
+                acc
+                for acc in report.account_classifications
+                if acc.account_type == "household_shared"
+            ]
+            parenting_accounts = [
+                acc
+                for acc in report.account_classifications
+                if acc.account_type == "parenting_shared"
+            ]
+
+            if household_accounts or parenting_accounts:
+                print("Account Classifications:")
+                print()
+
+            if household_accounts:
+                print("  Household Shared Accounts:")
+                sorted_household = sorted(
+                    household_accounts, key=lambda x: x.confidence, reverse=True
+                )
+                classified_acc: AccountClassification
+                for classified_acc in sorted_household:
+                    print(f"    • {classified_acc.account_name} ({classified_acc.institution})")
+                    print(f"      Confidence: {classified_acc.confidence*100:.0f}%")
+                    print(f"      Indicators: {', '.join(classified_acc.indicators)}")
+                print()
+
+            if parenting_accounts:
+                print("  Parenting Shared Accounts:")
+                sorted_parenting = sorted(
+                    parenting_accounts, key=lambda x: x.confidence, reverse=True
+                )
+                acc_p: AccountClassification
+                for acc_p in sorted_parenting:
+                    print(f"    • {acc_p.account_name} ({acc_p.institution})")
+                    print(f"      Confidence: {acc_p.confidence*100:.0f}%")
+                    print(f"      Indicators: {', '.join(acc_p.indicators)}")
+                print()
+
+        # Name Suggestions
+        if report.recommendation.name_suggestions:
+            print("Name Suggestions:")
+            for context, suggestion in report.recommendation.name_suggestions.items():
+                context_label = "Household" if context == "household_shared" else "Parenting"
+                names: str
+                if suggestion.person_2:
+                    names = f"{suggestion.person_1} and {suggestion.person_2}"
+                else:
+                    names = suggestion.person_1 or "Unknown"
+                print(f"  {context_label}: {names}")
+                confidence_pct = f"{suggestion.confidence*100:.0f}%"
+                print(f"    Source: {suggestion.source} (confidence: {confidence_pct})")
+            print()
+
+        print("Recommended Template:")
+        print(f"  Primary: {report.recommendation.primary}")
+        print(f"  Living: {report.recommendation.living}")
+        if report.recommendation.additional:
+            print(f"  Additional: {', '.join(report.recommendation.additional)}")
         print()
 
         print("=" * 70)
