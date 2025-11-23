@@ -465,7 +465,7 @@ For detailed documentation, see the `references/` directory:
 
 ## Support
 
-**Version**: 1.3.7
+**Version**: 1.3.8
 
 **Documentation**: See references/ directory for comprehensive guides
 

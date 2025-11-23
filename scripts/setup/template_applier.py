@@ -1,6 +1,9 @@
 """Template applier with user choice and backup support."""
 
+import argparse
+import json
 import logging
+import sys
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from scripts.utils.backup import BackupManager
@@ -476,3 +479,92 @@ class TemplateApplier:
             category_id=category_id, payee_matches=payee_pattern
         )
         return created_rule
+
+
+def main() -> None:
+    """CLI interface for template application."""
+    parser = argparse.ArgumentParser(description="Apply merged templates to PocketSmith account")
+    parser.add_argument(
+        "--template", type=Path, required=True, help="Path to merged template JSON file"
+    )
+    parser.add_argument(
+        "--strategy",
+        choices=["add_new", "smart_merge", "replace"],
+        default="add_new",
+        help="Application strategy (default: add_new)",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without applying")
+    parser.add_argument("--apply", action="store_true", help="Apply changes (opposite of dry-run)")
+
+    args = parser.parse_args()
+
+    # Determine dry_run mode
+    dry_run = args.dry_run or not args.apply
+
+    # Load merged template
+    if not args.template.exists():
+        print(f"Error: Template file not found: {args.template}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(args.template, "r") as f:
+        merged_template = json.load(f)
+
+    # Initialize API client
+    try:
+        api_client = PocketSmithClient()
+    except Exception as e:
+        print(f"Error: Failed to initialize PocketSmith client: {e}", file=sys.stderr)
+        print("Make sure .env file exists with POCKETSMITH_API_KEY", file=sys.stderr)
+        sys.exit(1)
+
+    # Initialize backup manager
+    backup_manager = BackupManager()
+
+    # Initialize applier
+    applier = TemplateApplier(api_client=api_client, backup_manager=backup_manager)
+
+    # Display preview header
+    print("=" * 70)
+    if dry_run:
+        print("Template Application Preview (DRY RUN)")
+    else:
+        print("Template Application")
+    print("=" * 70)
+    print(f"Strategy: {args.strategy}")
+    print()
+
+    # Apply template
+    try:
+        result = applier.apply_template(
+            merged_template=merged_template, strategy=args.strategy, dry_run=dry_run
+        )
+
+        # Display results
+        print("\nSummary:")
+        print(f"  • {result.get('categories_created', 0)} categories created")
+        print(f"  • {result.get('categories_reused', 0)} categories reused")
+        print(f"  • {result.get('rules_created', 0)} rules created")
+        print(f"  • {result.get('rules_skipped', 0)} rules skipped")
+
+        if not dry_run and result.get("backup_path"):
+            print(f"  • Backup saved: {result['backup_path']}")
+
+        print()
+        templates_applied = merged_template.get("metadata", {}).get("templates_applied", [])
+        if templates_applied:
+            print("Templates Applied:")
+            for t in templates_applied:
+                print(f"  ✓ {t['name']} ({t['layer']}, priority {t['priority']})")
+
+        if dry_run:
+            print("\nTo apply these changes, run with --apply flag")
+        else:
+            print("\n✓ Template application complete!")
+
+    except Exception as e:
+        print(f"\nError during template application: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
