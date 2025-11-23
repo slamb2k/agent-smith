@@ -1,16 +1,19 @@
 ---
 title: Agent Smith Repository Cleanup Plan
 category: analysis
-status: complete
+status: archived
 created: 2025-11-23
 last_updated: 2025-11-23
-tags: [cleanup, repository-structure, build-artifacts, maintenance]
+tags: [cleanup, repository-structure, build-artifacts, maintenance, historical]
+archival_note: Superseded by marketplace distribution strategy
 ---
 
 # Agent Smith - Repository Cleanup Plan
 
 **Date**: 2025-11-23
 **Purpose**: Remove redundant and temporary directories after skill packaging
+
+> **⚠️ NOTE**: This document is historical. The packaged skill distribution approach was replaced with marketplace/plugin distribution on 2025-11-23. Many recommendations in this document (build-skill.sh, .skill packaging, etc.) are no longer applicable.
 
 ## Analysis Summary
 
