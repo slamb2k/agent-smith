@@ -1,0 +1,200 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-11-20",
+  "description": "Pattern-based deduction detection rules for Australian tax compliance (Level 2)",
+
+  "patterns": [
+    {
+      "id": "office_supplies",
+      "category_patterns": ["Office Supplies", "Stationery", "Business Supplies"],
+      "payee_patterns": ["Officeworks", "Office Depot", "Staples"],
+      "deductible": true,
+      "confidence": "high",
+      "ato_category": "Work-related other expenses",
+      "ato_code": "D5",
+      "reason": "Office supplies and stationery for work purposes",
+      "substantiation_notes": "Keep receipts for items over $300"
+    },
+    {
+      "id": "computer_equipment",
+      "category_patterns": ["Computer Equipment", "Electronics", "Technology"],
+      "payee_patterns": ["Apple Store", "JB Hi-Fi", "Harvey Norman"],
+      "keywords": ["laptop", "computer", "monitor", "keyboard", "mouse"],
+      "deductible": true,
+      "confidence": "medium",
+      "ato_category": "Work-related other expenses",
+      "ato_code": "D5",
+      "reason": "Computer equipment for work purposes",
+      "substantiation_notes": "Items over $300 require receipts. May qualify for instant asset write-off if under threshold.",
+      "instant_asset_write_off_eligible": true
+    },
+    {
+      "id": "professional_development",
+      "category_patterns": ["Professional Development", "Education", "Training", "Courses"],
+      "payee_patterns": ["LinkedIn", "Coursera", "Udemy", "Professional Association"],
+      "deductible": true,
+      "confidence": "high",
+      "ato_category": "Self-education expenses",
+      "ato_code": "D4",
+      "reason": "Professional development and education expenses",
+      "substantiation_notes": "Keep certificates and receipts"
+    },
+    {
+      "id": "home_office_furniture",
+      "category_patterns": ["Furniture", "Home Office"],
+      "keywords": ["desk", "chair", "office", "filing cabinet", "bookshelf"],
+      "deductible": true,
+      "confidence": "medium",
+      "ato_category": "Home office expenses",
+      "ato_code": "D2",
+      "reason": "Home office furniture and equipment",
+      "substantiation_notes": "Must be used primarily for work. Consider depreciation for items over $300."
+    },
+    {
+      "id": "mobile_phone",
+      "category_patterns": ["Mobile Phone", "Phone", "Telecommunications"],
+      "payee_patterns": ["Telstra", "Optus", "Vodafone"],
+      "deductible": true,
+      "confidence": "low",
+      "ato_category": "Work-related other expenses",
+      "ato_code": "D5",
+      "reason": "Mobile phone expenses - consider work/personal usage split",
+      "substantiation_notes": "Calculate work-related percentage. May need to apportion costs.",
+      "requires_apportionment": true
+    },
+    {
+      "id": "internet",
+      "category_patterns": ["Internet", "Utilities"],
+      "payee_patterns": ["Telstra", "Optus", "TPG", "Aussie Broadband"],
+      "keywords": ["internet", "broadband", "nbn"],
+      "deductible": true,
+      "confidence": "low",
+      "ato_category": "Home office expenses",
+      "ato_code": "D2",
+      "reason": "Internet expenses - consider work/personal usage split",
+      "substantiation_notes": "Calculate work-related percentage based on usage.",
+      "requires_apportionment": true
+    },
+    {
+      "id": "business_travel_taxi",
+      "category_patterns": ["Transport", "Taxi", "Rideshare"],
+      "payee_patterns": ["Uber", "DiDi", "Taxi", "Ola", "13CABS"],
+      "deductible": true,
+      "confidence": "medium",
+      "ato_category": "Work-related travel expenses",
+      "ato_code": "D1",
+      "reason": "Business travel - taxi/rideshare",
+      "substantiation_notes": "Trips over $75 require written evidence. Commuting to/from regular workplace NOT deductible.",
+      "special_threshold": 75,
+      "commuting_detection": true
+    },
+    {
+      "id": "vehicle_expenses",
+      "category_patterns": ["Fuel", "Car Maintenance", "Vehicle"],
+      "payee_patterns": ["BP", "Shell", "Caltex", "7-Eleven", "United Petroleum"],
+      "deductible": true,
+      "confidence": "low",
+      "ato_category": "Work-related car expenses",
+      "ato_code": "D2",
+      "reason": "Vehicle expenses - consider cents per km or logbook method",
+      "substantiation_notes": "Keep logbook or calculate km. Commuting NOT deductible.",
+      "requires_apportionment": true
+    },
+    {
+      "id": "groceries_personal",
+      "category_patterns": ["Groceries", "Food", "Supermarket"],
+      "payee_patterns": ["Woolworths", "Coles", "IGA", "Aldi"],
+      "deductible": false,
+      "confidence": "high",
+      "ato_category": "Personal expense",
+      "reason": "Personal groceries and food are not tax deductible for individuals",
+      "substantiation_notes": "Not deductible for individuals. May be deductible for businesses in specific circumstances."
+    },
+    {
+      "id": "clothing_personal",
+      "category_patterns": ["Clothing", "Fashion"],
+      "deductible": false,
+      "confidence": "high",
+      "ato_category": "Personal expense",
+      "reason": "Personal clothing is not tax deductible unless it is protective, occupation-specific, or uniform",
+      "substantiation_notes": "Only protective clothing, occupation-specific clothing, or registered uniforms are deductible."
+    },
+    {
+      "id": "protective_clothing",
+      "category_patterns": ["Work Clothing", "Safety Equipment"],
+      "keywords": ["uniform", "safety", "protective", "hi-vis", "steel cap"],
+      "deductible": true,
+      "confidence": "high",
+      "ato_category": "Work-related clothing expenses",
+      "ato_code": "D6",
+      "reason": "Protective clothing and occupation-specific uniforms",
+      "substantiation_notes": "Must be occupation-specific or protective. Conventional clothing not deductible."
+    },
+    {
+      "id": "subscriptions_professional",
+      "category_patterns": ["Subscriptions", "Professional Services"],
+      "keywords": ["professional", "membership", "association", "subscription"],
+      "deductible": true,
+      "confidence": "medium",
+      "ato_category": "Work-related other expenses",
+      "ato_code": "D5",
+      "reason": "Professional memberships and subscriptions",
+      "substantiation_notes": "Must be directly related to earning income."
+    },
+    {
+      "id": "entertainment_personal",
+      "category_patterns": ["Entertainment", "Dining", "Recreation"],
+      "deductible": false,
+      "confidence": "high",
+      "ato_category": "Personal expense",
+      "reason": "Personal entertainment and dining expenses are not deductible",
+      "substantiation_notes": "Not deductible unless it is a valid business meal meeting specific criteria."
+    },
+    {
+      "id": "books_technical",
+      "category_patterns": ["Books", "Media"],
+      "keywords": ["technical", "professional", "textbook", "reference"],
+      "deductible": true,
+      "confidence": "medium",
+      "ato_category": "Self-education expenses",
+      "ato_code": "D4",
+      "reason": "Technical and professional reference books",
+      "substantiation_notes": "Must be directly related to current work or income-earning activities."
+    }
+  ],
+
+  "substantiation_thresholds": {
+    "default": 300,
+    "taxi_rideshare": 75,
+    "laundry": 150,
+    "description": "ATO substantiation thresholds - amounts requiring written evidence"
+  },
+
+  "commuting_hours": {
+    "weekday_morning": {
+      "start": "06:00",
+      "end": "09:30",
+      "description": "Typical morning commute period"
+    },
+    "weekday_evening": {
+      "start": "16:30",
+      "end": "19:00",
+      "description": "Typical evening commute period"
+    },
+    "description": "Time periods indicating likely commuting (NOT deductible)"
+  },
+
+  "instant_asset_write_off": {
+    "threshold": 20000,
+    "description": "Instant asset write-off threshold (check current ATO guidelines)",
+    "notes": "Assets under this amount may be immediately deductible. Verify current year threshold."
+  },
+
+  "confidence_scoring": {
+    "high": "Clear patterns matching deductible/non-deductible categories with minimal ambiguity",
+    "medium": "Likely deductible but requires additional context or apportionment",
+    "low": "Ambiguous - needs manual review or additional information"
+  },
+
+  "disclaimer": "This is automated pattern matching only. Rules are based on general ATO guidelines and may not apply to individual circumstances. Always consult a registered tax agent for specific advice."
+}

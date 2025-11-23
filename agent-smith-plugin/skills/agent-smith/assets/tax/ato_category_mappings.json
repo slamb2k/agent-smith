@@ -1,0 +1,55 @@
+{
+  "mappings": [
+    {
+      "pocketsmith_category": "Groceries",
+      "ato_code": null,
+      "ato_category": "Personal expense",
+      "deductible": false,
+      "notes": "Not deductible for individuals. Business owners: keep receipts for food provided to staff.",
+      "substantiation_required": false
+    },
+    {
+      "pocketsmith_category": "Office Supplies",
+      "ato_code": "D5",
+      "ato_category": "Work-related other expenses",
+      "deductible": true,
+      "notes": "Keep receipts if under $300 total. Retain for 5 years.",
+      "substantiation_required": true,
+      "threshold": 300.0
+    },
+    {
+      "pocketsmith_category": "Transport",
+      "ato_code": "D1",
+      "ato_category": "Work-related car expenses",
+      "deductible": true,
+      "notes": "Must substantiate if using logbook or actual costs method. $0.78/km for cents per km method (2024-25).",
+      "substantiation_required": true
+    },
+    {
+      "pocketsmith_category": "Home & Utilities",
+      "ato_code": "D5",
+      "ato_category": "Work-related other expenses",
+      "deductible": true,
+      "notes": "Only home office portion deductible. Use fixed rate method (67c/hour) or actual costs method.",
+      "substantiation_required": true
+    },
+    {
+      "pocketsmith_category": "Professional Development",
+      "ato_code": "D4",
+      "ato_category": "Work-related self-education expenses",
+      "deductible": true,
+      "notes": "Must have sufficient connection to current income-earning activities.",
+      "substantiation_required": true
+    }
+  ],
+  "ato_categories": [
+    {"code": "D1", "name": "Work-related car expenses", "schedule": "D"},
+    {"code": "D2", "name": "Work-related travel expenses", "schedule": "D"},
+    {"code": "D3", "name": "Work-related clothing, laundry and dry-cleaning expenses", "schedule": "D"},
+    {"code": "D4", "name": "Work-related self-education expenses", "schedule": "D"},
+    {"code": "D5", "name": "Work-related other expenses", "schedule": "D"},
+    {"code": "D6", "name": "Work-related interest, dividend and other investment income deductions", "schedule": "D"},
+    {"code": "CGT", "name": "Capital gains tax", "schedule": "CGT"},
+    {"code": "BAS", "name": "Business activity statement", "schedule": "BAS"}
+  ]
+}

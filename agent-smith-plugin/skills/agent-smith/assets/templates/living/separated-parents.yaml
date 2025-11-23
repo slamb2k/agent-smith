@@ -1,0 +1,114 @@
+name: Separated/Divorced Parents
+layer: living
+description: |
+  Managing finances with child support obligations and shared custody expenses.
+  Tracks child-related spending for tax and legal documentation.
+
+categories: []
+  # No special categories needed - use standard expense categories
+  # Labels indicate child-related expenses and which parent paid
+
+rules:
+  - id: child-support-payment
+    pattern: "child.*support|CSA.*payment|maintenance.*payment"
+    # No category override - transactions should be categorized as Transfer or similar
+    confidence: high
+    description: "Label child support payments"
+    labels: ["Child Support", "Child Support Paid"]
+
+  - id: child-support-received
+    pattern: "child.*support.*received|CSA.*deposit"
+    # No category override - transactions should be categorized as Transfer or Income
+    confidence: high
+    description: "Label child support receipts"
+    labels: ["Child Support", "Child Support Received"]
+
+  - id: kids-activities
+    pattern: "sport|swimming|dance|music.*lessons|scouts|karate"
+    # No category override - use standard Entertainment/Recreation category
+    confidence: medium
+    description: "Label children's activity expenses"
+    labels: ["Kids Expense"]
+
+  - id: kids-medical
+    pattern: "pediatric|child.*doctor|dentist.*kids|orthodontist|therapy.*child"
+    # No category override - use standard Medical/Health category
+    confidence: medium
+    description: "Label children's medical expenses"
+    labels: ["Kids Expense", "Medical"]
+
+  - id: kids-education
+    pattern: "school.*fees|uniform.*school|textbook|excursion|tuckshop"
+    # No category override - use standard Education category
+    confidence: high
+    description: "Label education-related expenses"
+    labels: ["Kids Expense", "Education"]
+
+tax_tracking:
+  child_support_documentation: true
+  custody_expense_tracking: true
+
+alerts:
+  - type: child_support_reconciliation
+    schedule: monthly
+    message: "Reconcile child support payments and custody expenses"
+
+  - type: ato_documentation_reminder
+    schedule: annual
+    before_date: "06-15"
+    message: "EOFY - compile child-related expenses for tax return"
+
+labels:
+  - name: "Child Support"
+    description: "Child support payment or receipt"
+    color: "skyblue"
+    auto_apply: false
+
+  - name: "Custody Period"
+    description: "Expense during custody period"
+    color: "lightpurple"
+    auto_apply: false
+
+  - name: "Shared Child Expense"
+    description: "Child expense split with ex-partner"
+    color: "coral"
+    auto_apply: false
+
+  - name: "Contributor: {parent_a_name}"
+    description: "Paid by {parent_a_name}"
+    color: "orange"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Parent A:"
+
+  - name: "Contributor: {parent_b_name}"
+    description: "Paid by {parent_b_name}"
+    color: "cyan"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for Parent B:"
+
+  - name: "Kids: {child_1_name}"
+    description: "Expense for {child_1_name}"
+    color: "pink"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for first child:"
+
+  - name: "Kids: {child_2_name}"
+    description: "Expense for {child_2_name}"
+    color: "lightgreen"
+    auto_apply: false
+    requires_configuration: true
+    configuration_prompt: "Enter name for second child:"
+
+dependencies:
+  requires: []
+  conflicts_with: ["single", "shared-joint", "sharehouse"]
+  # Note: Can be combined with shared-hybrid for divorced parents now living with new partner
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 2

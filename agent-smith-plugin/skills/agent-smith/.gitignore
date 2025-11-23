@@ -1,0 +1,61 @@
+# Sensitive - NEVER commit
+.env
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build-python/
+.pytest_cache/
+.coverage
+.mypy_cache/
+.tox/
+htmlcov/
+
+# Agent Smith working data (not for git)
+*.log
+*_analysis.json
+*_data.json
+backups/*
+!backups/INDEX.md
+reports/*
+!reports/INDEX.md
+data/cache/
+logs/*
+!logs/INDEX.md
+
+# Onboarding state (tracked as template, but user's state will be overwritten)
+# Note: data/onboarding_state.json is committed as a template, but the user's
+# actual state will modify this file during onboarding. This is intentional.
+
+# Build reference (temporary - remove before publishing)
+build/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak

@@ -1,0 +1,28 @@
+{
+  "user_id": null,
+  "tax_level": "smart",
+  "intelligence_mode": "smart",
+  "alerts_enabled": true,
+  "alert_preferences": {
+    "budget": true,
+    "tax": true,
+    "patterns": true,
+    "optimization": true,
+    "frequency": "weekly"
+  },
+  "backup_before_mutations": true,
+  "auto_archive": true,
+  "default_report_formats": [
+    "markdown",
+    "csv"
+  ],
+  "household": {
+    "enabled": false,
+    "members": [],
+    "split_method": "proportional"
+  },
+  "benchmarking": {
+    "enabled": false,
+    "criteria": {}
+  }
+}
