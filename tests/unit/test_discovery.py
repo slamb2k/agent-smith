@@ -9,6 +9,7 @@ from scripts.onboarding.discovery import (
     AccountSummary,
     CategorySummary,
     TransactionSummary,
+    TemplateRecommendation,
 )
 
 
@@ -27,12 +28,15 @@ def test_discovery_report_structure():
             by_account={},
         ),
         baseline_health_score=None,
-        recommendation="simple",
+        recommendation=TemplateRecommendation(
+            primary="payg-employee", living="single", additional=[]
+        ),
     )
 
     assert report.user_id == 12345
     assert report.user_email == "test@example.com"
-    assert report.recommendation == "simple"
+    assert report.recommendation.primary == "payg-employee"
+    assert report.recommendation.living == "single"
 
 
 def test_account_summary_creation():
@@ -170,7 +174,9 @@ def test_recommend_template_simple():
         categories=[CategorySummary(300, "Groceries", None, 0, Decimal("0"))],
     )
 
-    assert recommendation == "simple"
+    assert recommendation.primary == "payg-employee"
+    assert recommendation.living == "single"
+    assert recommendation.additional == []
 
 
 def test_recommend_template_shared_household():
@@ -187,7 +193,7 @@ def test_recommend_template_shared_household():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "shared-household"
+    assert recommendation.living == "shared-hybrid"
 
 
 def test_recommend_template_separated_families():
@@ -203,7 +209,7 @@ def test_recommend_template_separated_families():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "separated-families"
+    assert recommendation.living == "separated-parents"
 
 
 def test_recommend_template_advanced():
@@ -221,7 +227,7 @@ def test_recommend_template_advanced():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "advanced"
+    assert recommendation.primary == "sole-trader" or len(recommendation.additional) > 0
 
 
 def test_recommend_template_separated_families_substring():
@@ -234,11 +240,11 @@ def test_recommend_template_separated_families_substring():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "separated-families"
+    assert recommendation.living == "separated-parents"
 
 
 def test_recommend_template_advanced_substring():
-    """Test advanced template with substring matching for 'My Investment Portfolio'."""
+    """Test investment template with substring matching for 'My Investment Portfolio'."""
     accounts = [AccountSummary(100, "Personal", "Bank", 100, 20)]
     categories = [
         CategorySummary(300, "My Investment Portfolio", None, 15, Decimal("5000")),
@@ -247,7 +253,8 @@ def test_recommend_template_advanced_substring():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "advanced"
+    # "investment" in category should trigger share-investor additional template
+    assert "share-investor" in recommendation.additional
 
 
 def test_recommend_template_shared_household_substring():
@@ -263,7 +270,7 @@ def test_recommend_template_shared_household_substring():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "shared-household"
+    assert recommendation.living == "shared-hybrid"
 
 
 def test_recommend_template_case_insensitive_substring():
@@ -276,7 +283,8 @@ def test_recommend_template_case_insensitive_substring():
     analyzer = DiscoveryAnalyzer(client=None)
     recommendation = analyzer._recommend_template(accounts, categories)
 
-    assert recommendation == "advanced"
+    # "investment" (case-insensitive) should trigger share-investor additional template
+    assert "share-investor" in recommendation.additional
 
 
 def test_discovery_analyzer_analyze():
@@ -313,4 +321,6 @@ def test_discovery_analyzer_analyze():
     assert len(report.categories) == 1
     assert report.transactions.total_count == 1
     assert report.transactions.uncategorized_count == 0
-    assert report.recommendation == "simple"
+    # Should recommend payg-employee + single (default for simple case)
+    assert report.recommendation.primary == "payg-employee"
+    assert report.recommendation.living == "single"

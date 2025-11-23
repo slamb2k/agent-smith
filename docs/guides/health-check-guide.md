@@ -104,17 +104,17 @@ How well actual spending matches budgets:
 Run a health check using the Agent Smith command:
 
 ```
-/agent-smith-health
+/smith:health
 ```
 
 ### Command Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `full` | Complete analysis of all dimensions | `/agent-smith-health full` |
-| `quick` | Fast check of critical metrics only | `/agent-smith-health quick` |
-| `dimension` | Check specific dimension | `/agent-smith-health data-quality` |
-| `compare` | Compare to previous check | `/agent-smith-health compare` |
+| `full` | Complete analysis of all dimensions | `/smith:health full` |
+| `quick` | Fast check of critical metrics only | `/smith:health quick` |
+| `dimension` | Check specific dimension | `/smith:health data-quality` |
+| `compare` | Compare to previous check | `/smith:health compare` |
 
 ### What Happens During a Health Check
 
@@ -283,7 +283,7 @@ RECOMMENDATIONS (5)
     Create rules for top 10 uncategorized merchants
     Issue: 15 merchants account for 60% of uncategorized transactions
     Impact: Could improve rule coverage by 12%
-    Action: Run `/agent-smith-categorize analyze` to generate rules
+    Action: Run `/smith:categorize analyze` to generate rules
     Effort: 15 minutes
 
   [HIGH] Moderate
@@ -327,7 +327,7 @@ TREND (Last 4 Weeks)
 
 ================================================================================
 Next scheduled check: 2025-01-22 00:00
-Run `/agent-smith-health compare` to see detailed changes
+Run `/smith:health compare` to see detailed changes
 ================================================================================
 ```
 
@@ -351,7 +351,7 @@ Run `/agent-smith-health compare` to see detailed changes
 **Cause**: Large transaction history or slow API response
 
 **Solution**:
-1. Use `/agent-smith-health quick` for faster results
+1. Use `/smith:health quick` for faster results
 2. Check your internet connection
 3. Try again during off-peak hours
 
@@ -362,7 +362,7 @@ Run `/agent-smith-health compare` to see detailed changes
 **Solution**:
 1. Force sync your PocketSmith accounts
 2. Clear Agent Smith cache: check `data/cache/`
-3. Run a full health check: `/agent-smith-health full`
+3. Run a full health check: `/smith:health full`
 
 #### "Recommendations don't apply to my situation"
 
@@ -387,7 +387,7 @@ Run `/agent-smith-health compare` to see detailed changes
 If issues persist:
 
 1. Check `data/logs/` for error details
-2. Run `/agent-smith-health --debug` for verbose output
+2. Run `/smith:health --debug` for verbose output
 3. Review the design documentation at `docs/design/`
 
 ---
@@ -396,11 +396,11 @@ If issues persist:
 
 | Task | Command |
 |------|---------|
-| Run full health check | `/agent-smith-health` |
-| Quick check | `/agent-smith-health quick` |
-| Check specific dimension | `/agent-smith-health data-quality` |
-| Compare to last check | `/agent-smith-health compare` |
-| View trends | `/agent-smith-health trends` |
+| Run full health check | `/smith:health` |
+| Quick check | `/smith:health quick` |
+| Check specific dimension | `/smith:health data-quality` |
+| Compare to last check | `/smith:health compare` |
+| View trends | `/smith:health trends` |
 | Configure alerts | `/agent-smith configure alerts` |
 
 ---

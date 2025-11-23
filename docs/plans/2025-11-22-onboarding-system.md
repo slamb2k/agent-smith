@@ -4,7 +4,7 @@
 
 **Goal:** Build a guided first-run onboarding workflow that discovers user's PocketSmith data, helps customize rule templates, and incrementally categorizes transactions with visible progress tracking.
 
-**Architecture:** Eight-stage interactive workflow orchestrated by `/agent-smith-onboard` slash command. Discovery phase analyzes PocketSmith account structure, template selector recommends based on user data, interactive customization validates accounts/categories/merchants, incremental categorization processes transactions in batches, and health checks show before/after improvement.
+**Architecture:** Eight-stage interactive workflow orchestrated by `/smith:install` slash command. Discovery phase analyzes PocketSmith account structure, template selector recommends based on user data, interactive customization validates accounts/categories/merchants, incremental categorization processes transactions in batches, and health checks show before/after improvement.
 
 **Tech Stack:** Python 3.9+, PocketSmith API (via scripts.core.api_client), YAML rules (scripts.core.unified_rules), Health check system (scripts.health.*), Claude SDK for conversational orchestration
 
@@ -998,12 +998,12 @@ git commit -m "feat: integrate baseline health check with discovery"
 ## Task 7: Onboarding Slash Command - Initial Structure
 
 **Files:**
-- Create: `.claude/commands/agent-smith-onboard.md`
+- Create: `.claude/commands/smith:install.md`
 - Modify: `.claude/commands/INDEX.md`
 
 **Step 1: Create slash command file**
 
-Create `.claude/commands/agent-smith-onboard.md`:
+Create `.claude/commands/smith:install.md`:
 
 ```markdown
 ---
@@ -1126,7 +1126,7 @@ uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-
 After categorization, run health check to show improvement:
 
 ```bash
-/agent-smith-health --full
+/smith:health --full
 ```
 
 **Show before/after:**
@@ -1140,17 +1140,17 @@ After categorization, run health check to show improvement:
 Provide the user with ongoing usage patterns:
 
 **Daily/Weekly:**
-- Categorize new transactions: `/agent-smith-categorize --mode=smart`
+- Categorize new transactions: `/smith:categorize --mode=smart`
 
 **Monthly:**
-- Spending analysis: `/agent-smith-analyze spending --period=YYYY-MM`
-- Quick health check: `/agent-smith-health --quick`
+- Spending analysis: `/smith:analyze spending --period=YYYY-MM`
+- Quick health check: `/smith:health --quick`
 
 **Quarterly:**
-- Tax deduction review: `/agent-smith-tax deductions --period=YYYY-YY`
+- Tax deduction review: `/smith:tax deductions --period=YYYY-YY`
 
 **Annual (EOFY):**
-- Tax preparation: `/agent-smith-tax eofy`
+- Tax preparation: `/smith:tax eofy`
 
 ## Important Notes
 
@@ -1175,7 +1175,7 @@ Add entry:
 
 **Purpose:** Guide new users through discovery, template selection, customization, and initial categorization
 
-**Usage:** `/agent-smith-onboard`
+**Usage:** `/smith:install`
 
 **Stages:**
 1. Prerequisites check
@@ -1192,14 +1192,14 @@ Add entry:
 
 **Step 3: Test the command**
 
-Run in Claude Code: `/agent-smith-onboard`
+Run in Claude Code: `/smith:install`
 
 Expected: Claude starts the onboarding wizard, greeting user and checking prerequisites
 
 **Step 4: Commit**
 
 ```bash
-git add .claude/commands/agent-smith-onboard.md .claude/commands/INDEX.md
+git add .claude/commands/smith:install.md .claude/commands/INDEX.md
 git commit -m "feat: add onboarding slash command with 8-stage workflow"
 ```
 
@@ -1464,7 +1464,7 @@ Agent Smith's onboarding is an 8-stage interactive process that:
 
 ```bash
 # Launch the onboarding wizard
-/agent-smith-onboard
+/smith:install
 ```
 
 Claude will guide you through each stage interactively.
@@ -1673,23 +1673,23 @@ Remaining priorities:
 
 **Daily/Weekly:**
 ```bash
-/agent-smith-categorize --mode=smart --period=2025-11
+/smith:categorize --mode=smart --period=2025-11
 ```
 
 **Monthly:**
 ```bash
-/agent-smith-analyze spending --period=2025-11
-/agent-smith-health --quick
+/smith:analyze spending --period=2025-11
+/smith:health --quick
 ```
 
 **Quarterly:**
 ```bash
-/agent-smith-tax deductions --period=2024-25
+/smith:tax deductions --period=2024-25
 ```
 
 **Annual (EOFY):**
 ```bash
-/agent-smith-tax eofy
+/smith:tax eofy
 ```
 
 **Time:** 2 minutes
@@ -1704,7 +1704,7 @@ If onboarding is interrupted, your progress is saved in `data/onboarding_state.j
 
 **Resume:**
 ```bash
-/agent-smith-onboard
+/smith:install
 ```
 
 Claude will detect saved state and offer to resume from where you left off.
@@ -1712,7 +1712,7 @@ Claude will detect saved state and offer to resume from where you left off.
 **Start Over:**
 ```bash
 uv run python -c "from scripts.onboarding.state import OnboardingState; OnboardingState().reset()"
-/agent-smith-onboard
+/smith:install
 ```
 
 ### Discovery Fails
@@ -1827,7 +1827,7 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 **Launch the interactive onboarding wizard:**
 
 ```bash
-/agent-smith-onboard
+/smith:install
 ```
 
 This guided 8-stage process will:
@@ -1868,7 +1868,7 @@ Modify `INSTALL.md`, add section after "Verification":
 After installation and verification, run the interactive onboarding wizard:
 
 ```bash
-/agent-smith-onboard
+/smith:install
 ```
 
 **What it does:**
@@ -1896,7 +1896,7 @@ uv run python scripts/operations/batch_categorize.py --mode=dry_run --period=202
 uv run python scripts/operations/batch_categorize.py --mode=apply --period=2025-11
 
 # 5. Health Check
-/agent-smith-health --full
+/smith:health --full
 ```
 
 **For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
@@ -1917,7 +1917,7 @@ This implementation plan creates a comprehensive onboarding system for Agent Smi
 
 ✅ **Discovery Script** - Analyzes PocketSmith account structure, recommends templates
 ✅ **Baseline Health Check** - Establishes "before" metrics to show improvement
-✅ **Onboarding Slash Command** - `/agent-smith-onboard` guides users through 8-stage workflow
+✅ **Onboarding Slash Command** - `/smith:install` guides users through 8-stage workflow
 ✅ **State Tracking** - Saves progress, allows resume if interrupted
 ✅ **Documentation** - Complete user guide with troubleshooting
 

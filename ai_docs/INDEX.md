@@ -1,6 +1,8 @@
 # AI Documentation Index
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-23
+**Document Count:** 7
+**Total Size:** ~147KB
 
 This directory contains documentation specifically formatted for AI agents and subagents to reference during Agent Smith operations.
 
@@ -19,13 +21,16 @@ AI agents need quick access to comprehensive references without repeatedly downl
 
 ## Current Documentation
 
-### [pocketsmith-api-documentation.md](pocketsmith-api-documentation.md)
+### PocketSmith API Reference
+
+#### [pocketsmith-api-documentation.md](pocketsmith-api-documentation.md)
 
 **PocketSmith API v2.0 Reference (Offline)**
 
 **Source:** https://developers.pocketsmith.com/
 **Last Updated:** 2025-11-16
 **Version:** v2.0
+**Size:** 7.3KB
 
 **Contents:**
 - Introduction & Overview
@@ -51,6 +56,152 @@ AI agents need quick access to comprehensive references without repeatedly downl
 - Account operations
 - Budget analysis
 - API error troubleshooting
+
+### Claude Code Documentation
+
+#### [cc-skill-authoring-best-practices.md](cc-skill-authoring-best-practices.md)
+
+**Skill Authoring Best Practices**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 42KB
+
+**Contents:**
+- Core principles (Concise is key, Progressive disclosure)
+- Structure and organization
+- Writing effective instructions
+- Code examples and templates
+- Testing and validation
+- Common patterns and anti-patterns
+
+**Purpose:** Reference guide for developing and maintaining the Agent Smith skill package, ensuring adherence to Claude Code best practices for skill authoring.
+
+**Use Cases:**
+- Skill development and maintenance
+- SKILL.md optimization
+- Documentation structure decisions
+- Progressive disclosure implementation
+- Context window optimization
+
+#### [cc-plugins-overview.md](cc-plugins-overview.md)
+
+**Plugins Overview**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 13KB
+
+**Contents:**
+- Quickstart guide for creating plugins
+- Plugin system overview
+- Custom commands, agents, hooks, skills, and MCP servers
+- Local testing and development
+- Plugin structure and organization
+
+**Purpose:** Comprehensive guide for understanding and creating Claude Code plugins.
+
+**Use Cases:**
+- Plugin development and architecture
+- Understanding plugin capabilities
+- Creating custom commands and hooks
+- Local plugin testing
+
+#### [cc-plugins-reference.md](cc-plugins-reference.md)
+
+**Plugins Technical Reference**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 13KB
+
+**Contents:**
+- Plugin component schemas (commands, agents, hooks, skills, MCP servers)
+- CLI commands reference
+- plugin.json and marketplace.json specifications
+- Technical specifications and development tools
+
+**Purpose:** Complete technical specifications for the Claude Code plugin system.
+
+**Use Cases:**
+- Plugin configuration and schema validation
+- CLI command reference
+- Component development
+- Marketplace creation
+
+#### [cc-plugin-marketplaces.md](cc-plugin-marketplaces.md)
+
+**Plugin Marketplaces**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 14KB
+
+**Contents:**
+- Marketplace overview and benefits
+- Adding and using marketplaces
+- Creating custom marketplaces
+- Version management
+- Team distribution strategies
+
+**Purpose:** Guide for creating and managing plugin marketplaces for team and community distribution.
+
+**Use Cases:**
+- Marketplace creation and management
+- Team plugin distribution
+- Version tracking and updates
+- Source configuration (git, GitHub, local paths)
+
+#### [cc-slash-commands.md](cc-slash-commands.md)
+
+**Slash Commands Reference**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 22KB
+
+**Contents:**
+- Built-in slash commands reference
+- Plugin commands
+- Command invocation patterns
+- Command structure and frontmatter
+
+**Purpose:** Complete reference for Claude Code slash commands, both built-in and plugin-provided.
+
+**Use Cases:**
+- Command development
+- Understanding built-in commands
+- Plugin command creation
+- Command frontmatter configuration
+
+#### [cc-hooks.md](cc-hooks.md)
+
+**Hooks Reference**
+
+**Source:** Anthropic Claude Code Documentation
+**Last Updated:** 2025-11-23
+**Version:** Current
+**Size:** 36KB
+
+**Contents:**
+- Hook configuration and structure
+- Event types and matchers
+- Hook types (command, blocking, user-prompt-submit)
+- Advanced patterns and examples
+- Environment variables and context
+
+**Purpose:** Complete reference for implementing and configuring hooks in Claude Code.
+
+**Use Cases:**
+- Hook development and configuration
+- Event handling
+- Workflow automation
+- Custom validation and preprocessing
 
 ---
 
@@ -144,12 +295,13 @@ Documents in this directory are:
 ## Quick Links
 
 - **Back to Repository:** [../README.md](../README.md)
-- **Repository Index:** [../INDEX.md](../INDEX.md)
+- **Contributing Guide:** [../CONTRIBUTING.md](../CONTRIBUTING.md)
 - **Design Documentation:** [../docs/INDEX.md](../docs/INDEX.md)
 - **Agent Smith Design:** [../docs/design/2025-11-20-agent-smith-design.md](../docs/design/2025-11-20-agent-smith-design.md)
 
 ---
 
-**Current Document Count:** 1
-**Planned Documents:** 4+ core documents + tax subdirectory
-**Total Size:** ~12KB (current)
+**Summary:**
+- **PocketSmith API:** 1 document (7.3KB)
+- **Claude Code:** 6 documents (140KB)
+- **Total:** 7 documents (~147KB)

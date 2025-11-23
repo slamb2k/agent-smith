@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 from scripts.tax.ato_categories import ATOCategoryMapper
+from scripts.utils.plugin_paths import get_asset_path
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +30,7 @@ class DeductionDetector:
             patterns_file: Path to deduction patterns JSON file
         """
         if patterns_file is None:
-            project_root = Path(__file__).parent.parent.parent
-            patterns_file = project_root / "data" / "tax" / "deduction_patterns.json"
+            patterns_file = get_asset_path("tax", "deduction_patterns.json")
 
         self.patterns_file = Path(patterns_file)
         self.patterns: List[Dict[str, Any]] = []

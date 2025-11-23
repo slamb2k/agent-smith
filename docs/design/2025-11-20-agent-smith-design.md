@@ -779,26 +779,30 @@ CONSTRAINTS:
 ### Command Structure
 
 ```
-.claude/commands/
-├── agent-smith.md                      # Main conversational entry
-├── agent-smith-categorize.md           # Transaction categorization
-├── agent-smith-analyze.md              # Financial analysis
-├── agent-smith-report.md               # Report generation
-├── agent-smith-scenario.md             # Scenario modeling
-├── agent-smith-optimize.md             # Optimization operations
-├── agent-smith-tax.md                  # Tax intelligence
-└── agent-smith-health.md               # Health check
+agent-smith-plugin/commands/
+├── install.md                          # Installation and onboarding
+├── categorize.md                       # Transaction categorization
+├── analyze.md                          # Financial analysis
+├── report.md                           # Report generation
+├── scenario.md                         # Scenario modeling
+├── optimize.md                         # Optimization operations
+├── tax.md                              # Tax intelligence
+└── health.md                           # Health check
 ```
+
+**Main conversational interface:** The Agent Smith skill provides natural language
+financial conversations and ad-hoc analysis. Use slash commands for specific operations.
 
 ### Command Definitions
 
-**1. `/agent-smith` - Main Conversational Skill**
+**1. `/smith:install` - Installation and Onboarding**
 ```markdown
-Start a conversational Agent Smith session for complex multi-step operations.
-Use for workflows involving multiple operations or guided assistance.
+Interactive setup wizard with intelligent suggestions based on your financial setup.
+Guides first-time users through 8-stage onboarding and provides returning users
+with priority actions and optimization opportunities.
 ```
 
-**2. `/agent-smith-categorize [--mode] [--period]`**
+**2. `/smith:categorize [--mode] [--period]`**
 ```markdown
 Categorize uncategorized transactions with AI assistance.
 
@@ -809,11 +813,11 @@ Arguments:
   --dry-run                             Preview without applying
 
 Examples:
-  /agent-smith-categorize
-  /agent-smith-categorize --mode=aggressive --period=2025-11
+  /smith:categorize
+  /smith:categorize --mode=aggressive --period=2025-11
 ```
 
-**3. `/agent-smith-analyze [type] [--period]`**
+**3. `/smith:analyze [type] [--period]`**
 ```markdown
 Run financial analysis on PocketSmith data.
 
@@ -825,11 +829,11 @@ Arguments:
   --tax-level=reference|smart|full
 
 Examples:
-  /agent-smith-analyze spending --period=2025
-  /agent-smith-analyze trends --compare=2024
+  /smith:analyze spending --period=2025
+  /smith:analyze trends --compare=2024
 ```
 
-**4. `/agent-smith-scenario [type] [description]`**
+**4. `/smith:scenario [type] [description]`**
 ```markdown
 Model financial scenarios: what-if, projections, optimization, tax planning.
 
@@ -838,12 +842,12 @@ Arguments:
   description: Natural language scenario description
 
 Examples:
-  /agent-smith-scenario historical "What if I cut dining by 25% last year?"
-  /agent-smith-scenario projection "Can I afford $600/month car payment?"
-  /agent-smith-scenario tax "Buy $25k equipment before or after EOFY?"
+  /smith:scenario historical "What if I cut dining by 25% last year?"
+  /smith:scenario projection "Can I afford $600/month car payment?"
+  /smith:scenario tax "Buy $25k equipment before or after EOFY?"
 ```
 
-**5. `/agent-smith-report [format] [--period]`**
+**5. `/smith:report [format] [--period]`**
 ```markdown
 Generate comprehensive reports in various formats.
 
@@ -854,11 +858,11 @@ Arguments:
   --tax-level=reference|smart|full
 
 Examples:
-  /agent-smith-report summary --period=2025-Q4
-  /agent-smith-report tax --period=2024-25 --tax-level=full
+  /smith:report summary --period=2025-Q4
+  /smith:report tax --period=2024-25 --tax-level=full
 ```
 
-**6. `/agent-smith-optimize [target]`**
+**6. `/smith:optimize [target]`**
 ```markdown
 AI-assisted optimization for categories, rules, or spending.
 
@@ -866,11 +870,11 @@ Arguments:
   target: categories|rules|spending|subscriptions
 
 Examples:
-  /agent-smith-optimize categories
-  /agent-smith-optimize rules
+  /smith:optimize categories
+  /smith:optimize rules
 ```
 
-**7. `/agent-smith-tax [operation] [--period]`**
+**7. `/smith:tax [operation] [--period]`**
 ```markdown
 Tax-focused analysis, deduction tracking, compliance reporting.
 
@@ -880,11 +884,11 @@ Arguments:
   --level=reference|smart|full
 
 Examples:
-  /agent-smith-tax deductions --period=2024-25
-  /agent-smith-tax eofy
+  /smith:tax deductions --period=2024-25
+  /smith:tax eofy
 ```
 
-**8. `/agent-smith-health [--full]`**
+**8. `/smith:health [--full]`**
 ```markdown
 Evaluate PocketSmith setup and get optimization recommendations.
 
@@ -894,8 +898,8 @@ Arguments:
   --category=area           Specific area: categories|rules|tax|data
 
 Examples:
-  /agent-smith-health
-  /agent-smith-health --full
+  /smith:health
+  /smith:health --full
 ```
 
 ---

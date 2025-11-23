@@ -4,6 +4,7 @@ import pytest
 import shutil
 from pathlib import Path
 from scripts.setup.template_selector import TemplateSelector
+from tests.utils import get_asset_path
 
 
 @pytest.fixture
@@ -48,21 +49,36 @@ def template_selector(temp_templates_dir, temp_rules_file):
     return selector
 
 
-def test_list_templates(template_selector):
-    """Test listing available templates."""
-    templates = template_selector.list_templates()
+def test_list_templates():
+    """Test listing available templates in layered structure."""
+    selector = TemplateSelector()
+    templates = selector.list_templates()
 
     assert isinstance(templates, dict)
-    assert "simple" in templates
-    assert "separated-families" in templates
-    assert "shared-household" in templates
-    assert "advanced" in templates
+    # Should have three layers
+    assert "primary" in templates
+    assert "living" in templates
+    assert "additional" in templates
 
-    # Check template metadata structure
-    for template_key, template_info in templates.items():
-        assert "name" in template_info
-        assert "description" in template_info
-        assert "best_for" in template_info
+    # Each layer should be a list
+    assert isinstance(templates["primary"], list)
+    assert isinstance(templates["living"], list)
+    assert isinstance(templates["additional"], list)
+
+    # Primary should have at least payg-employee and sole-trader
+    primary_ids = [t["id"] for t in templates["primary"]]
+    assert "payg-employee" in primary_ids
+    assert "sole-trader" in primary_ids
+
+    # Living should have templates
+    living_ids = [t["id"] for t in templates["living"]]
+    assert "single" in living_ids
+    assert "shared-hybrid" in living_ids
+
+    # Additional should have templates
+    additional_ids = [t["id"] for t in templates["additional"]]
+    assert "property-investor" in additional_ids
+    assert "share-investor" in additional_ids
 
 
 def test_list_templates_metadata_content():
@@ -70,94 +86,55 @@ def test_list_templates_metadata_content():
     selector = TemplateSelector()
     templates = selector.list_templates()
 
-    # Verify Simple template
-    simple = templates["simple"]
-    assert "Single Person" in simple["name"]
-    assert "individual" in simple["description"].lower()
+    # Each template should have required metadata
+    for layer in ["primary", "living", "additional"]:
+        for template in templates[layer]:
+            assert "id" in template
+            assert "name" in template
+            assert "description" in template
+            assert "file" in template
 
-    # Verify Separated Families template
-    sep_families = templates["separated-families"]
-    assert "Separated" in sep_families["name"]
-    assert (
-        "child support" in sep_families["description"].lower()
-        or "kids" in sep_families["description"].lower()
-    )
+    # Verify specific template content
+    payg = next(t for t in templates["primary"] if t["id"] == "payg-employee")
+    assert "PAYG" in payg["name"] or "Employee" in payg["name"]
 
-    # Verify Shared Household template
-    shared = templates["shared-household"]
-    assert "Shared" in shared["name"]
-    assert "shared" in shared["description"].lower() or "couples" in shared["best_for"].lower()
-
-    # Verify Advanced template
-    advanced = templates["advanced"]
-    assert "Advanced" in advanced["name"]
-    assert (
-        "tax" in advanced["description"].lower() or "investment" in advanced["description"].lower()
-    )
+    single = next(t for t in templates["living"] if t["id"] == "single")
+    assert "Single" in single["name"]
 
 
-def test_apply_template_file_not_found(template_selector):
+def test_apply_templates_file_not_found():
     """Test applying non-existent template raises error."""
+    selector = TemplateSelector()
+
     with pytest.raises(FileNotFoundError):
-        template_selector.apply_template("nonexistent")
+        selector.apply_templates("nonexistent-primary", "single", [])
 
 
-def test_apply_template_without_backup(template_selector, temp_templates_dir, temp_rules_file):
-    """Test applying template without backup."""
-    # Create test template
-    test_template = temp_templates_dir / "test.yaml"
-    test_template.write_text("test content")
+def test_apply_templates_merges_correctly():
+    """Test that apply_templates merges templates correctly."""
+    selector = TemplateSelector()
 
-    # Apply template
-    template_selector.apply_template("test", backup=False)
+    # Apply primary + living templates
+    result = selector.apply_templates("payg-employee", "single", [])
 
-    # Verify template was copied
-    assert temp_rules_file.exists()
-    assert temp_rules_file.read_text() == "test content"
-
-    # Verify no backup was created
-    backup_file = temp_rules_file.with_suffix(".yaml.backup")
-    assert not backup_file.exists()
+    # Should have merged content
+    assert "categories" in result
+    assert "rules" in result
+    assert "labels" in result
+    assert len(result["categories"]) > 0
+    assert len(result["rules"]) > 0
 
 
-def test_apply_template_with_backup(template_selector, temp_templates_dir, temp_rules_file):
-    """Test applying template with backup of existing rules."""
-    # Create existing rules file
-    temp_rules_file.write_text("existing rules")
+def test_apply_templates_with_additional():
+    """Test applying templates with additional layer."""
+    selector = TemplateSelector()
 
-    # Create test template
-    test_template = temp_templates_dir / "test.yaml"
-    test_template.write_text("new template content")
+    # Apply all three layers
+    result = selector.apply_templates("payg-employee", "single", ["share-investor"])
 
-    # Apply template with backup
-    template_selector.apply_template("test", backup=True)
-
-    # Verify template was copied
-    assert temp_rules_file.exists()
-    assert temp_rules_file.read_text() == "new template content"
-
-    # Verify backup was created
-    backup_file = temp_rules_file.with_suffix(".yaml.backup")
-    assert backup_file.exists()
-    assert backup_file.read_text() == "existing rules"
-
-
-def test_apply_template_no_existing_rules(template_selector, temp_templates_dir, temp_rules_file):
-    """Test applying template when no rules.yaml exists."""
-    # Create test template
-    test_template = temp_templates_dir / "test.yaml"
-    test_template.write_text("template content")
-
-    # Apply template (backup=True should not fail even with no existing file)
-    template_selector.apply_template("test", backup=True)
-
-    # Verify template was copied
-    assert temp_rules_file.exists()
-    assert temp_rules_file.read_text() == "template content"
-
-    # Verify no backup was created (no existing file to backup)
-    backup_file = temp_rules_file.with_suffix(".yaml.backup")
-    assert not backup_file.exists()
+    # Should have content from all templates
+    assert "categories" in result
+    assert len(result["categories"]) > 7  # More than just primary
 
 
 def test_template_selector_initialization():
@@ -166,54 +143,70 @@ def test_template_selector_initialization():
 
     # Verify paths are set correctly
     assert selector.templates_dir.name == "templates"
-    assert selector.rules_file.name == "rules.yaml"
-    assert "data" in str(selector.templates_dir)
-    assert "data" in str(selector.rules_file)
+    assert selector.output_file.name == "config.json"  # New composable system uses config.json
+    assert "data" in str(selector.output_file)
 
 
 def test_template_files_exist():
-    """Test that all required template files exist."""
+    """Test that required template files exist in layered structure."""
     selector = TemplateSelector()
 
-    # Check all template files exist
-    templates = ["simple", "separated-families", "shared-household", "advanced"]
-    for template in templates:
-        template_file = selector.templates_dir / f"{template}.yaml"
-        assert template_file.exists(), f"Template file {template}.yaml not found"
+    # Check primary templates exist
+    primary_templates = ["payg-employee", "sole-trader"]
+    for template in primary_templates:
+        template_file = selector.templates_dir / "primary" / f"{template}.yaml"
+        assert template_file.exists(), f"Primary template {template}.yaml not found"
+
+    # Check living templates exist
+    living_templates = ["single", "shared-hybrid", "separated-parents"]
+    for template in living_templates:
+        template_file = selector.templates_dir / "living" / f"{template}.yaml"
+        assert template_file.exists(), f"Living template {template}.yaml not found"
 
 
 def test_template_files_valid_yaml():
-    """Test that all template files contain valid YAML with expected structure."""
+    """Test that template files contain valid YAML with expected structure."""
     import yaml
 
     selector = TemplateSelector()
-    templates = ["simple", "separated-families", "shared-household", "advanced"]
 
-    for template in templates:
-        template_file = selector.templates_dir / f"{template}.yaml"
+    # Test one template from each layer
+    test_files = [
+        selector.templates_dir / "primary" / "payg-employee.yaml",
+        selector.templates_dir / "living" / "single.yaml",
+        selector.templates_dir / "additional" / "share-investor.yaml",
+    ]
+
+    for template_file in test_files:
 
         # Load and validate YAML
         with open(template_file, "r") as f:
             data = yaml.safe_load(f)
 
-        # Verify structure
+        # Extract template name for error messages
+        template = template_file.stem
+
+        # Verify top-level required fields (new composable template schema)
+        assert "name" in data, f"{template}.yaml missing name"
+        assert "layer" in data, f"{template}.yaml missing layer"
+        assert "description" in data, f"{template}.yaml missing description"
         assert "metadata" in data, f"{template}.yaml missing metadata"
         assert "rules" in data, f"{template}.yaml missing rules"
+        assert "categories" in data, f"{template}.yaml missing categories"
+        assert "labels" in data, f"{template}.yaml missing labels"
 
         # Verify metadata fields
         metadata = data["metadata"]
-        assert "template_name" in metadata, f"{template}.yaml metadata missing template_name"
-        assert "description" in metadata, f"{template}.yaml metadata missing description"
-        assert "target_users" in metadata, f"{template}.yaml metadata missing target_users"
+        assert "created" in metadata, f"{template}.yaml metadata missing created"
+        assert "version" in metadata, f"{template}.yaml metadata missing version"
+        assert "priority" in metadata, f"{template}.yaml metadata missing priority"
+
+        # Verify layer is valid
+        assert data["layer"] in [
+            "primary",
+            "living",
+            "additional",
+        ], f"{template}.yaml invalid layer"
 
         # Verify rules is a list
         assert isinstance(data["rules"], list), f"{template}.yaml rules should be a list"
-
-        # Verify at least some rules exist
-        assert len(data["rules"]) > 0, f"{template}.yaml has no rules"
-
-        # Verify rule structure
-        for rule in data["rules"]:
-            assert "type" in rule, f"{template}.yaml rule missing type"
-            assert rule["type"] in ["category", "label"], f"{template}.yaml invalid rule type"
-            assert "name" in rule, f"{template}.yaml rule missing name"

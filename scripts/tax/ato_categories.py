@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+from scripts.utils.plugin_paths import get_asset_path
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,7 @@ class ATOCategoryMapper:
             mappings_file: Path to ATO category mappings JSON file
         """
         if mappings_file is None:
-            project_root = Path(__file__).parent.parent.parent
-            mappings_file = project_root / "data" / "tax" / "ato_category_mappings.json"
+            mappings_file = get_asset_path("tax", "ato_category_mappings.json")
 
         self.mappings_file = Path(mappings_file)
         self.mappings: Dict[str, Dict[str, Any]] = {}

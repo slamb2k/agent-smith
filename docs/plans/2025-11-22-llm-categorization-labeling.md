@@ -1417,7 +1417,7 @@ def main():
     print("1. Review data/rules.yaml and customize for your needs")
     print("2. Update merchant patterns for your region")
     print("3. Adjust account names to match your PocketSmith setup")
-    print("4. Run: /agent-smith-categorize --mode=dry-run to test")
+    print("4. Run: /smith:categorize --mode=dry-run to test")
 
 
 if __name__ == "__main__":
@@ -2951,7 +2951,7 @@ Agent Smith has three modes that control auto-apply behavior based on confidence
 
 **Set mode in command:**
 ```bash
-/agent-smith-categorize --mode=smart
+/smith:categorize --mode=smart
 ```
 
 ## LLM Integration
@@ -3137,7 +3137,7 @@ Track rule evolution over time.
 Check rule accuracy monthly:
 
 ```bash
-/agent-smith-analyze rules --period=last-month
+/smith:analyze rules --period=last-month
 ```
 
 Refine rules with low accuracy.

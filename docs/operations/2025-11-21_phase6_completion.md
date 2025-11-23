@@ -32,13 +32,13 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 
 **Files Created:**
 - `.claude/commands/agent-smith.md` - Main entry point
-- `.claude/commands/agent-smith-categorize.md` - Categorization
-- `.claude/commands/agent-smith-analyze.md` - Analysis
-- `.claude/commands/agent-smith-scenario.md` - Scenario modeling
-- `.claude/commands/agent-smith-report.md` - Report generation
-- `.claude/commands/agent-smith-optimize.md` - Optimization
-- `.claude/commands/agent-smith-tax.md` - Tax intelligence
-- `.claude/commands/agent-smith-health.md` - Health check
+- `.claude/commands/smith:categorize.md` - Categorization
+- `.claude/commands/smith:analyze.md` - Analysis
+- `.claude/commands/smith:scenario.md` - Scenario modeling
+- `.claude/commands/smith:report.md` - Report generation
+- `.claude/commands/smith:optimize.md` - Optimization
+- `.claude/commands/smith:tax.md` - Tax intelligence
+- `.claude/commands/smith:health.md` - Health check
 - `.claude/commands/INDEX.md` - Command reference
 
 **Features:**
@@ -105,14 +105,14 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 - Result aggregation from parallel subagents
 
 ### Slash Commands
-- Main conversational entry (/agent-smith)
-- Categorization (/agent-smith-categorize)
-- Analysis (/agent-smith-analyze)
-- Scenario modeling (/agent-smith-scenario)
-- Reporting (/agent-smith-report)
-- Optimization (/agent-smith-optimize)
-- Tax intelligence (/agent-smith-tax)
-- Health check (/agent-smith-health)
+- Installation and onboarding (/agent-smith)
+- Categorization (/smith:categorize)
+- Analysis (/smith:analyze)
+- Scenario modeling (/smith:scenario)
+- Reporting (/smith:report)
+- Optimization (/smith:optimize)
+- Tax intelligence (/smith:tax)
+- Health check (/smith:health)
 
 ### User Experience
 - Natural language scenario descriptions

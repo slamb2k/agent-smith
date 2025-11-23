@@ -5,32 +5,45 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *$py.class
 *.so
 .Python
 venv/
+.venv/
 env/
 ENV/
 *.egg-info/
+*.egg
+*.whl
 dist/
 build-python/
 .pytest_cache/
 .coverage
-.mypy_cache/
-.tox/
+.coverage.*
+coverage.xml
 htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.tox/
+.python-version
+.ipynb_checkpoints/
 
-# Agent Smith working data (not for git)
+# Agent Smith runtime directories (created on-demand)
 *.log
 *_analysis.json
 *_data.json
-backups/*
-!backups/INDEX.md
-reports/*
-!reports/INDEX.md
-data/cache/
-logs/*
-!logs/INDEX.md
+backups/
+reports/
+logs/
+data/
+
+# Marketplace distribution - scripts are maintained in main scripts/ directory
+# and synced to skill location, so we gitignore the copy
+agent-smith-plugin/skills/agent-smith/scripts/
 
 # Onboarding state (tracked as template, but user's state will be overwritten)
 # Note: data/onboarding_state.json is committed as a template, but the user's
@@ -54,8 +67,13 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.cursor/
+*.code-workspace
 
 # Temporary files
 *.tmp
 *.temp
 *.bak
+
+# Python distribution packages
+*.tar.gz

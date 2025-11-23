@@ -3,6 +3,7 @@
 import pytest
 from pathlib import Path
 from scripts.setup.template_schema import TemplateLoader, TemplateValidationError
+from tests.utils import get_asset_path
 
 
 def test_load_valid_template():
@@ -103,13 +104,13 @@ def test_load_template_from_file():
     loader = TemplateLoader()
 
     # Test that existing template file loads successfully
-    template = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
+    template = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
     assert template["name"] == "PAYG Employee"
     assert template["layer"] == "primary"
 
     # Test that non-existent file raises FileNotFoundError
     with pytest.raises(FileNotFoundError):
-        loader.load_from_file(Path("templates/primary/non-existent-template.yaml"))
+        loader.load_from_file(get_asset_path("templates", "primary", "non-existent-template.yaml"))
 
 
 def test_label_validation_valid():
@@ -227,7 +228,7 @@ def test_load_payg_employee_template():
     """Test loading the actual PAYG employee template."""
     loader = TemplateLoader()
 
-    template_path = Path("templates/primary/payg-employee.yaml")
+    template_path = get_asset_path("templates", "primary", "payg-employee.yaml")
     template = loader.load_from_file(template_path)
 
     # Verify structure
@@ -281,7 +282,7 @@ def test_load_sole_trader_template():
     """Test loading the sole trader template."""
     loader = TemplateLoader()
 
-    template_path = Path("templates/primary/sole-trader.yaml")
+    template_path = get_asset_path("templates", "primary", "sole-trader.yaml")
     template = loader.load_from_file(template_path)
 
     # Verify structure
@@ -361,7 +362,7 @@ def test_load_sole_trader_template():
 def test_load_single_template():
     """Test loading the single person template."""
     loader = TemplateLoader()
-    template = loader.load_from_file(Path("templates/living/single.yaml"))
+    template = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
 
     assert template["name"] == "Single Person"
     assert template["layer"] == "living"
@@ -374,7 +375,7 @@ def test_load_single_template():
 def test_load_shared_hybrid_template():
     """Test loading the shared hybrid template."""
     loader = TemplateLoader()
-    template = loader.load_from_file(Path("templates/living/shared-hybrid.yaml"))
+    template = loader.load_from_file(get_asset_path("templates", "living", "shared-hybrid.yaml"))
 
     assert template["name"] == "Shared Household - Hybrid Finances"
     assert template["layer"] == "living"
@@ -417,7 +418,9 @@ def test_load_shared_hybrid_template():
 def test_load_separated_parents_template():
     """Test loading the separated parents template."""
     loader = TemplateLoader()
-    template = loader.load_from_file(Path("templates/living/separated-parents.yaml"))
+    template = loader.load_from_file(
+        get_asset_path("templates", "living", "separated-parents.yaml")
+    )
 
     assert template["name"] == "Separated/Divorced Parents"
     assert template["layer"] == "living"
@@ -479,7 +482,9 @@ def test_load_separated_parents_template():
 def test_load_property_investor_template():
     """Test loading the property investor template."""
     loader = TemplateLoader()
-    template = loader.load_from_file(Path("templates/additional/property-investor.yaml"))
+    template = loader.load_from_file(
+        get_asset_path("templates", "additional", "property-investor.yaml")
+    )
 
     # Verify structure
     assert template["name"] == "Property Investor"
@@ -550,7 +555,9 @@ def test_load_property_investor_template():
 def test_load_share_investor_template():
     """Test loading the share investor template."""
     loader = TemplateLoader()
-    template = loader.load_from_file(Path("templates/additional/share-investor.yaml"))
+    template = loader.load_from_file(
+        get_asset_path("templates", "additional", "share-investor.yaml")
+    )
 
     # Verify structure
     assert template["name"] == "Share/ETF Investor"

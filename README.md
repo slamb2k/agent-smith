@@ -12,7 +12,27 @@ Agent Smith provides comprehensive PocketSmith API integration with advanced AI-
 
 📋 **Design Document:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
 
-📥 **Installation Guide:** [INSTALL.md](INSTALL.md)
+👥 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Distribution
+
+Agent Smith is distributed as a **Claude Code plugin/skill** via the marketplace system:
+
+- **Plugin Configuration**: `.claude-plugin/marketplace.json` and `.claude-plugin/plugin.json`
+- **Skill Source**: `agent-smith-plugin/skills/agent-smith/` - Complete skill definition
+- **Installation**: Users install via Claude Code marketplace or plugin commands
+
+The skill includes all Python scripts, documentation, rule templates, and configuration files needed to run Agent Smith within Claude Code.
+
+### For Contributors
+
+**Development Setup**: See [CONTRIBUTING.md](CONTRIBUTING.md) for complete development setup instructions.
+
+**Key Points**:
+- Main source code is in `scripts/` directory
+- Skill source is in `agent-smith-plugin/skills/agent-smith/`
+- Scripts are synced from `scripts/` to skill location (gitignored copy)
+- Use marketplace.json/plugin.json for distribution (not packaged .skill files)
 
 ## What is Agent Smith?
 
@@ -33,22 +53,42 @@ Agent Smith transforms PocketSmith from a passive tracking tool into an active f
 ```
 agent-smith/
 ├── README.md                    # This file
-├── INDEX.md                     # Directory navigation guide
+├── CONTRIBUTING.md              # Development setup and contribution guide
+├── CHANGELOG.md                 # Version history
 ├── .gitignore                   # Git ignore rules
 ├── .env                         # API configuration (not committed)
-├── requirements.txt             # Python dependencies
+├── pyproject.toml               # Python dependencies (uv)
+├── uv.lock                      # Dependency lock file
 ├── pytest.ini                   # Test configuration
+│
+├── .claude-plugin/              # Claude Code plugin configuration
+│   ├── marketplace.json         # Marketplace metadata
+│   └── plugin.json              # Plugin definition
+│
+├── agent-smith-plugin/          # Marketplace distribution
+│   ├── .claude-plugin/          # Plugin configuration
+│   │   └── plugin.json          # Plugin definition
+│   ├── commands/                # Slash command definitions
+│   └── skills/agent-smith/      # Skill source
+│       ├── SKILL.md             # Skill definition
+│       ├── README.md            # Skill documentation
+│       ├── scripts/             # Python code (synced from ../../../scripts/)
+│       ├── references/          # Documentation (loaded on-demand)
+│       ├── assets/              # Templates and seed data
+│       └── .env.sample          # Configuration template
 │
 ├── backups/                     # Timestamped backups (30-day retention)
 │   └── INDEX.md
 │
 ├── data/                        # Working data and state
 │   ├── INDEX.md
-│   └── config.json              # User preferences
+│   ├── config.json              # User preferences
+│   └── templates/               # Rule templates
 │
 ├── docs/                        # Documentation
 │   ├── INDEX.md
 │   ├── design/                  # Design specifications
+│   ├── guides/                  # User guides
 │   └── operations/              # Operation logs
 │
 ├── ai_docs/                     # AI agent documentation
@@ -61,7 +101,7 @@ agent-smith/
 ├── reports/                     # Generated reports (90-day retention)
 │   └── INDEX.md
 │
-├── scripts/                     # Python code
+├── scripts/                     # Python code (source)
 │   ├── INDEX.md
 │   ├── core/                    # Core libraries
 │   │   ├── api_client.py        # PocketSmith API wrapper ✓
@@ -115,14 +155,14 @@ agent-smith/
 
 ### Installation
 
-See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+For development setup and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### First-Time Setup
 
 **Launch Agent Smith with integrated onboarding:**
 
 ```bash
-/agent-smith:install
+/smith:install
 ```
 
 **First-time users:** This guided 8-stage onboarding process will:
@@ -142,6 +182,8 @@ See [INSTALL.md](INSTALL.md) for detailed installation instructions.
 - Maintenance recommendations
 
 **Time required (first time):** 30-60 minutes
+
+**Reset option:** Use `/smith:install --reset` to delete all data and start over (requires confirmation)
 
 **For detailed walkthrough:** See [Onboarding Guide](docs/guides/onboarding-guide.md)
 
@@ -527,18 +569,21 @@ context.set_preference("tax_level", "full")
 
 **Slash Commands (8 commands):**
 ```bash
-# Main conversational entry
-/agent-smith
+# Installation and onboarding
+/smith:install [--reset]
 
 # Quick operations
-/agent-smith-categorize --mode=smart --period=2025-11
-/agent-smith-analyze spending --period=2025
-/agent-smith-scenario historical "What if I cut dining by 25%?"
-/agent-smith-report tax --period=2024-25 --tax-level=full
-/agent-smith-optimize subscriptions
-/agent-smith-tax deductions --period=2024-25
-/agent-smith-health --full
+/smith:categorize --mode=smart --period=2025-11
+/smith:analyze spending --period=2025
+/smith:scenario historical "What if I cut dining by 25%?"
+/smith:report tax --period=2024-25 --tax-level=full
+/smith:optimize subscriptions
+/smith:tax deductions --period=2024-25
+/smith:health --full
 ```
+
+**Main conversational interface:** Use the Agent Smith skill directly for natural language
+financial conversations, questions, and ad-hoc analysis.
 
 **Interactive Workflows:**
 - Guided categorization with AI assistance

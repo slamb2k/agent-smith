@@ -875,13 +875,13 @@ You provide comprehensive financial management through:
 
 For quick operations, use these specialized commands:
 
-- `/agent-smith-categorize` - Categorize uncategorized transactions
-- `/agent-smith-analyze` - Run financial analysis
-- `/agent-smith-scenario` - Model financial scenarios
-- `/agent-smith-report` - Generate comprehensive reports
-- `/agent-smith-optimize` - Optimize categories, rules, or spending
-- `/agent-smith-tax` - Tax-focused analysis and compliance
-- `/agent-smith-health` - Evaluate PocketSmith setup
+- `/smith:categorize` - Categorize uncategorized transactions
+- `/smith:analyze` - Run financial analysis
+- `/smith:scenario` - Model financial scenarios
+- `/smith:report` - Generate comprehensive reports
+- `/smith:optimize` - Optimize categories, rules, or spending
+- `/smith:tax` - Tax-focused analysis and compliance
+- `/smith:health` - Evaluate PocketSmith setup
 
 ## Conversational Mode
 
@@ -954,7 +954,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 4: Categorization Command & Workflow
 
 **Files:**
-- Create: `.claude/commands/agent-smith-categorize.md`
+- Create: `.claude/commands/smith:categorize.md`
 - Create: `scripts/workflows/__init__.py`
 - Create: `scripts/workflows/categorization.py`
 - Create: `tests/unit/test_categorization_workflow.py`
@@ -1188,7 +1188,7 @@ Expected: PASS (all 7 tests)
 
 ### Step 5: Create categorization slash command
 
-Create `.claude/commands/agent-smith-categorize.md`:
+Create `.claude/commands/smith:categorize.md`:
 
 ```markdown
 Categorize uncategorized transactions in PocketSmith with AI assistance.
@@ -1196,7 +1196,7 @@ Categorize uncategorized transactions in PocketSmith with AI assistance.
 ## Usage
 
 ```
-/agent-smith-categorize [options]
+/smith:categorize [options]
 ```
 
 ## Options
@@ -1228,16 +1228,16 @@ Categorize uncategorized transactions in PocketSmith with AI assistance.
 
 ```bash
 # Categorize all uncategorized transactions (smart mode)
-/agent-smith-categorize
+/smith:categorize
 
 # Aggressive mode for November 2025
-/agent-smith-categorize --mode=aggressive --period=2025-11
+/smith:categorize --mode=aggressive --period=2025-11
 
 # Preview changes without applying (dry-run)
-/agent-smith-categorize --dry-run
+/smith:categorize --dry-run
 
 # Conservative mode for specific account
-/agent-smith-categorize --mode=conservative --account=12345
+/smith:categorize --mode=conservative --account=12345
 ```
 
 ## How It Works
@@ -1286,13 +1286,13 @@ Expected: test_commands_directory_structure will FAIL for missing other command 
 ### Step 7: Commit categorization workflow
 
 ```bash
-git add .claude/commands/agent-smith-categorize.md scripts/workflows/ tests/unit/test_categorization_workflow.py
+git add .claude/commands/smith:categorize.md scripts/workflows/ tests/unit/test_categorization_workflow.py
 git commit -m "feat(workflows): add categorization workflow and slash command
 
 - Implement CategorizationWorkflow with subagent delegation
 - Parse command arguments (mode, period, account, dry-run)
 - Build human-readable summaries
-- Create /agent-smith-categorize slash command
+- Create /smith:categorize slash command
 - Document intelligence modes and usage examples
 - Tests: 7 unit tests for workflow logic
 
@@ -1306,12 +1306,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 5: Analysis & Reporting Commands
 
 **Files:**
-- Create: `.claude/commands/agent-smith-analyze.md`
-- Create: `.claude/commands/agent-smith-report.md`
+- Create: `.claude/commands/smith:analyze.md`
+- Create: `.claude/commands/smith:report.md`
 
 ### Step 1: Create analysis slash command
 
-Create `.claude/commands/agent-smith-analyze.md`:
+Create `.claude/commands/smith:analyze.md`:
 
 ```markdown
 Run financial analysis on your PocketSmith data.
@@ -1319,7 +1319,7 @@ Run financial analysis on your PocketSmith data.
 ## Usage
 
 ```
-/agent-smith-analyze <type> [options]
+/smith:analyze <type> [options]
 ```
 
 ## Analysis Types
@@ -1341,19 +1341,19 @@ Run financial analysis on your PocketSmith data.
 
 ```bash
 # Spending analysis for 2025
-/agent-smith-analyze spending --period=2025
+/smith:analyze spending --period=2025
 
 # Trend analysis comparing 2024 vs 2025
-/agent-smith-analyze trends --period=2025 --compare=2024
+/smith:analyze trends --period=2025 --compare=2024
 
 # Category deep-dive for Dining
-/agent-smith-analyze category --category="Dining"
+/smith:analyze category --category="Dining"
 
 # Tax analysis for FY 2024-25 (full intelligence)
-/agent-smith-analyze tax --period=2024-25 --tax-level=full
+/smith:analyze tax --period=2024-25 --tax-level=full
 
 # AI insights for current month
-/agent-smith-analyze insights
+/smith:analyze insights
 ```
 
 ## What You'll Get
@@ -1395,7 +1395,7 @@ Run financial analysis on your PocketSmith data.
 
 ### Step 2: Create reporting slash command
 
-Create `.claude/commands/agent-smith-report.md`:
+Create `.claude/commands/smith:report.md`:
 
 ```markdown
 Generate comprehensive financial reports in various formats.
@@ -1403,7 +1403,7 @@ Generate comprehensive financial reports in various formats.
 ## Usage
 
 ```
-/agent-smith-report <format> [options]
+/smith:report <format> [options]
 ```
 
 ## Report Formats
@@ -1424,19 +1424,19 @@ Generate comprehensive financial reports in various formats.
 
 ```bash
 # Summary report for Q4 2025
-/agent-smith-report summary --period=2025-Q4
+/smith:report summary --period=2025-Q4
 
 # Detailed transaction report in Excel
-/agent-smith-report detailed --period=2025-11 --output=excel
+/smith:report detailed --period=2025-11 --output=excel
 
 # Tax report for FY 2024-25 (full intelligence)
-/agent-smith-report tax --period=2024-25 --tax-level=full
+/smith:report tax --period=2024-25 --tax-level=full
 
 # Custom report with specific sections
-/agent-smith-report custom --sections=spending,trends,goals
+/smith:report custom --sections=spending,trends,goals
 
 # Generate all formats
-/agent-smith-report summary --output=all
+/smith:report summary --output=all
 ```
 
 ## Report Sections
@@ -1501,11 +1501,11 @@ Expected: Still FAIL for remaining 4 command files (will create in Tasks 6-7)
 ### Step 4: Commit analysis and reporting commands
 
 ```bash
-git add .claude/commands/agent-smith-analyze.md .claude/commands/agent-smith-report.md
+git add .claude/commands/smith:analyze.md .claude/commands/smith:report.md
 git commit -m "feat(commands): add analysis and reporting slash commands
 
-- Create /agent-smith-analyze with 5 analysis types
-- Create /agent-smith-report with 4 report formats
+- Create /smith:analyze with 5 analysis types
+- Create /smith:report with 4 report formats
 - Document options for period, comparison, tax level
 - Support multiple output formats (MD, CSV, JSON, HTML, Excel)
 - Examples for common use cases
@@ -1520,12 +1520,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 6: Scenario & Optimization Commands
 
 **Files:**
-- Create: `.claude/commands/agent-smith-scenario.md`
-- Create: `.claude/commands/agent-smith-optimize.md`
+- Create: `.claude/commands/smith:scenario.md`
+- Create: `.claude/commands/smith:optimize.md`
 
 ### Step 1: Create scenario modeling slash command
 
-Create `.claude/commands/agent-smith-scenario.md`:
+Create `.claude/commands/smith:scenario.md`:
 
 ```markdown
 Model financial scenarios with what-if analysis, projections, and optimization.
@@ -1533,7 +1533,7 @@ Model financial scenarios with what-if analysis, projections, and optimization.
 ## Usage
 
 ```
-/agent-smith-scenario <type> "<description>"
+/smith:scenario <type> "<description>"
 ```
 
 ## Scenario Types
@@ -1551,21 +1551,21 @@ Describe your scenario in plain English. Agent Smith will interpret and execute.
 
 ```bash
 # Historical what-if scenarios
-/agent-smith-scenario historical "What if I reduced dining by 25% last quarter?"
-/agent-smith-scenario historical "Compare August vs September spending"
+/smith:scenario historical "What if I reduced dining by 25% last quarter?"
+/smith:scenario historical "Compare August vs September spending"
 
 # Future projections
-/agent-smith-scenario projection "Can I afford a $600/month car payment?"
-/agent-smith-scenario projection "Forecast expenses for next 6 months with 3% inflation"
+/smith:scenario projection "Can I afford a $600/month car payment?"
+/smith:scenario projection "Forecast expenses for next 6 months with 3% inflation"
 
 # Optimization scenarios
-/agent-smith-scenario optimization "Find subscription savings opportunities"
-/agent-smith-scenario optimization "Which categories are trending up?"
+/smith:scenario optimization "Find subscription savings opportunities"
+/smith:scenario optimization "Which categories are trending up?"
 
 # Tax scenarios
-/agent-smith-scenario tax "Should I buy $25k equipment before or after EOFY?"
-/agent-smith-scenario tax "Compare super contribution strategies"
-/agent-smith-scenario tax "Optimize CGT timing for shares purchased 11 months ago"
+/smith:scenario tax "Should I buy $25k equipment before or after EOFY?"
+/smith:scenario tax "Compare super contribution strategies"
+/smith:scenario tax "Optimize CGT timing for shares purchased 11 months ago"
 ```
 
 ## Scenario Capabilities
@@ -1620,7 +1620,7 @@ Describe your scenario in plain English. Agent Smith will interpret and execute.
 
 ### Step 2: Create optimization slash command
 
-Create `.claude/commands/agent-smith-optimize.md`:
+Create `.claude/commands/smith:optimize.md`:
 
 ```markdown
 AI-assisted optimization for categories, rules, spending, and subscriptions.
@@ -1628,7 +1628,7 @@ AI-assisted optimization for categories, rules, spending, and subscriptions.
 ## Usage
 
 ```
-/agent-smith-optimize <target> [options]
+/smith:optimize <target> [options]
 ```
 
 ## Optimization Targets
@@ -1648,19 +1648,19 @@ AI-assisted optimization for categories, rules, spending, and subscriptions.
 
 ```bash
 # Optimize category structure
-/agent-smith-optimize categories
+/smith:optimize categories
 
 # Improve rule accuracy and coverage
-/agent-smith-optimize rules
+/smith:optimize rules
 
 # Find spending reduction opportunities
-/agent-smith-optimize spending
+/smith:optimize spending
 
 # Analyze subscriptions and recurring charges
-/agent-smith-optimize subscriptions
+/smith:optimize subscriptions
 
 # Preview aggressive optimizations for dining
-/agent-smith-optimize spending --aggressive --focus=dining --preview
+/smith:optimize spending --aggressive --focus=dining --preview
 ```
 
 ## What Gets Optimized
@@ -1736,12 +1736,12 @@ Expected: Still FAIL for remaining 2 command files
 ### Step 4: Commit scenario and optimization commands
 
 ```bash
-git add .claude/commands/agent-smith-scenario.md .claude/commands/agent-smith-optimize.md
+git add .claude/commands/smith:scenario.md .claude/commands/smith:optimize.md
 git commit -m "feat(commands): add scenario and optimization slash commands
 
-- Create /agent-smith-scenario with 4 scenario types
+- Create /smith:scenario with 4 scenario types
 - Support natural language scenario descriptions
-- Create /agent-smith-optimize for 4 optimization targets
+- Create /smith:optimize for 4 optimization targets
 - Document what-if, projections, and tax scenarios
 - Examples for common optimization use cases
 
@@ -1755,12 +1755,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 7: Tax & Health Check Commands
 
 **Files:**
-- Create: `.claude/commands/agent-smith-tax.md`
-- Create: `.claude/commands/agent-smith-health.md`
+- Create: `.claude/commands/smith:tax.md`
+- Create: `.claude/commands/smith:health.md`
 
 ### Step 1: Create tax intelligence slash command
 
-Create `.claude/commands/agent-smith-tax.md`:
+Create `.claude/commands/smith:tax.md`:
 
 ```markdown
 Tax-focused analysis and compliance for Australian tax requirements.
@@ -1768,7 +1768,7 @@ Tax-focused analysis and compliance for Australian tax requirements.
 ## Usage
 
 ```
-/agent-smith-tax <operation> [options]
+/smith:tax <operation> [options]
 ```
 
 ## Tax Operations
@@ -1789,19 +1789,19 @@ Tax-focused analysis and compliance for Australian tax requirements.
 
 ```bash
 # Track deductible expenses for FY 2024-25
-/agent-smith-tax deductions --period=2024-25
+/smith:tax deductions --period=2024-25
 
 # CGT analysis with timing recommendations
-/agent-smith-tax cgt --period=2024-25 --level=full
+/smith:tax cgt --period=2024-25 --level=full
 
 # BAS worksheet preparation (GST only)
-/agent-smith-tax bas --period=2024-Q4
+/smith:tax bas --period=2024-Q4
 
 # Complete EOFY tax prep checklist
-/agent-smith-tax eofy
+/smith:tax eofy
 
 # Tax scenario: equipment purchase timing
-/agent-smith-tax scenario "Buy $25k equipment before or after EOFY?"
+/smith:tax scenario "Buy $25k equipment before or after EOFY?"
 ```
 
 ## Tax Intelligence Levels
@@ -1877,7 +1877,7 @@ Tax-focused analysis and compliance for Australian tax requirements.
 
 ### Step 2: Create health check slash command
 
-Create `.claude/commands/agent-smith-health.md`:
+Create `.claude/commands/smith:health.md`:
 
 ```markdown
 Evaluate your PocketSmith setup and get optimization recommendations.
@@ -1885,7 +1885,7 @@ Evaluate your PocketSmith setup and get optimization recommendations.
 ## Usage
 
 ```
-/agent-smith-health [options]
+/smith:health [options]
 ```
 
 ## Options
@@ -1909,16 +1909,16 @@ Evaluate your PocketSmith setup and get optimization recommendations.
 
 ```bash
 # Quick health check (essential checks)
-/agent-smith-health --quick
+/smith:health --quick
 
 # Full comprehensive analysis
-/agent-smith-health --full
+/smith:health --full
 
 # Focus on category structure
-/agent-smith-health --category=categories
+/smith:health --category=categories
 
 # Focus on tax compliance
-/agent-smith-health --category=tax
+/smith:health --category=tax
 ```
 
 ## What You'll Get
@@ -2007,12 +2007,12 @@ Expected: ALL PASS (all 8 command files now exist)
 ### Step 4: Commit tax and health check commands
 
 ```bash
-git add .claude/commands/agent-smith-tax.md .claude/commands/agent-smith-health.md
+git add .claude/commands/smith:tax.md .claude/commands/smith:health.md
 git commit -m "feat(commands): add tax and health check slash commands
 
-- Create /agent-smith-tax with 5 tax operations
+- Create /smith:tax with 5 tax operations
 - Support 3-tier tax intelligence levels
-- Create /agent-smith-health with 6 health score areas
+- Create /smith:health with 6 health score areas
 - Document Australian tax compliance (ATO guidelines)
 - EOFY preparation checklist
 - Tests: All 8 slash commands now complete
@@ -2256,17 +2256,17 @@ context.set_preference("tax_level", "full")
 
 **Slash Commands (8 commands):**
 ```bash
-# Main conversational entry
+# Installation and onboarding
 /agent-smith
 
 # Quick operations
-/agent-smith-categorize --mode=smart --period=2025-11
-/agent-smith-analyze spending --period=2025
-/agent-smith-scenario historical "What if I cut dining by 25%?"
-/agent-smith-report tax --period=2024-25 --tax-level=full
-/agent-smith-optimize subscriptions
-/agent-smith-tax deductions --period=2024-25
-/agent-smith-health --full
+/smith:categorize --mode=smart --period=2025-11
+/smith:analyze spending --period=2025
+/smith:scenario historical "What if I cut dining by 25%?"
+/smith:report tax --period=2024-25 --tax-level=full
+/smith:optimize subscriptions
+/smith:tax deductions --period=2024-25
+/smith:health --full
 ```
 
 **Interactive Workflows:**
@@ -2302,7 +2302,7 @@ Add to `.claude/commands/` section:
 
 ```markdown
 - `.claude/commands/` - Slash commands for Agent Smith (8 files, Phase 6)
-  - `agent-smith.md` - Main conversational entry point
+  - `agent-smith.md` - Installation and onboarding point
   - `agent-smith-categorize.md` - Transaction categorization
   - `agent-smith-analyze.md` - Financial analysis
   - `agent-smith-scenario.md` - Scenario modeling
@@ -2679,14 +2679,14 @@ Quick-access commands for common financial management operations.
 
 ## All Commands
 
-1. `/agent-smith` - Main conversational entry point
-2. `/agent-smith-categorize` - Transaction categorization
-3. `/agent-smith-analyze` - Financial analysis
-4. `/agent-smith-scenario` - Scenario modeling
-5. `/agent-smith-report` - Report generation
-6. `/agent-smith-optimize` - Optimization operations
-7. `/agent-smith-tax` - Tax intelligence
-8. `/agent-smith-health` - Health check
+1. `/agent-smith` - Installation and onboarding point
+2. `/smith:categorize` - Transaction categorization
+3. `/smith:analyze` - Financial analysis
+4. `/smith:scenario` - Scenario modeling
+5. `/smith:report` - Report generation
+6. `/smith:optimize` - Optimization operations
+7. `/smith:tax` - Tax intelligence
+8. `/smith:health` - Health check
 
 ## Command Descriptions
 
@@ -2700,7 +2700,7 @@ Main conversational skill for complex multi-step operations.
 - Multi-step workflows
 - Custom analysis
 
-### /agent-smith-categorize
+### /smith:categorize
 
 Categorize uncategorized transactions with AI assistance.
 
@@ -2712,10 +2712,10 @@ Categorize uncategorized transactions with AI assistance.
 
 **Example:**
 ```bash
-/agent-smith-categorize --mode=smart --period=2025-11
+/smith:categorize --mode=smart --period=2025-11
 ```
 
-### /agent-smith-analyze
+### /smith:analyze
 
 Run financial analysis on PocketSmith data.
 
@@ -2728,10 +2728,10 @@ Run financial analysis on PocketSmith data.
 
 **Example:**
 ```bash
-/agent-smith-analyze spending --period=2025
+/smith:analyze spending --period=2025
 ```
 
-### /agent-smith-scenario
+### /smith:scenario
 
 Model financial scenarios with what-if analysis.
 
@@ -2743,10 +2743,10 @@ Model financial scenarios with what-if analysis.
 
 **Example:**
 ```bash
-/agent-smith-scenario historical "What if I reduced dining by 25%?"
+/smith:scenario historical "What if I reduced dining by 25%?"
 ```
 
-### /agent-smith-report
+### /smith:report
 
 Generate comprehensive reports in multiple formats.
 
@@ -2760,10 +2760,10 @@ Generate comprehensive reports in multiple formats.
 
 **Example:**
 ```bash
-/agent-smith-report tax --period=2024-25 --output=excel
+/smith:report tax --period=2024-25 --output=excel
 ```
 
-### /agent-smith-optimize
+### /smith:optimize
 
 AI-assisted optimization for various targets.
 
@@ -2775,10 +2775,10 @@ AI-assisted optimization for various targets.
 
 **Example:**
 ```bash
-/agent-smith-optimize subscriptions
+/smith:optimize subscriptions
 ```
 
-### /agent-smith-tax
+### /smith:tax
 
 Tax-focused analysis and compliance.
 
@@ -2791,10 +2791,10 @@ Tax-focused analysis and compliance.
 
 **Example:**
 ```bash
-/agent-smith-tax deductions --period=2024-25 --level=full
+/smith:tax deductions --period=2024-25 --level=full
 ```
 
-### /agent-smith-health
+### /smith:health
 
 Evaluate PocketSmith setup health.
 
@@ -2813,7 +2813,7 @@ Evaluate PocketSmith setup health.
 
 **Example:**
 ```bash
-/agent-smith-health --full
+/smith:health --full
 ```
 
 ## Usage Patterns
@@ -2822,9 +2822,9 @@ Evaluate PocketSmith setup health.
 
 Use specialized commands for single-purpose operations:
 ```bash
-/agent-smith-categorize
-/agent-smith-analyze spending
-/agent-smith-health --quick
+/smith:categorize
+/smith:analyze spending
+/smith:health --quick
 ```
 
 ### Complex Workflows
@@ -2839,9 +2839,9 @@ Use main command for multi-step guidance:
 
 Chain commands for regular tasks:
 ```bash
-/agent-smith-categorize --mode=smart
-/agent-smith-analyze trends
-/agent-smith-health --category=rules
+/smith:categorize --mode=smart
+/smith:analyze trends
+/smith:health --category=rules
 ```
 
 ## Integration with Orchestration
@@ -2898,13 +2898,13 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 
 **Files Created:**
 - `.claude/commands/agent-smith.md` - Main entry point
-- `.claude/commands/agent-smith-categorize.md` - Categorization
-- `.claude/commands/agent-smith-analyze.md` - Analysis
-- `.claude/commands/agent-smith-scenario.md` - Scenario modeling
-- `.claude/commands/agent-smith-report.md` - Report generation
-- `.claude/commands/agent-smith-optimize.md` - Optimization
-- `.claude/commands/agent-smith-tax.md` - Tax intelligence
-- `.claude/commands/agent-smith-health.md` - Health check
+- `.claude/commands/smith:categorize.md` - Categorization
+- `.claude/commands/smith:analyze.md` - Analysis
+- `.claude/commands/smith:scenario.md` - Scenario modeling
+- `.claude/commands/smith:report.md` - Report generation
+- `.claude/commands/smith:optimize.md` - Optimization
+- `.claude/commands/smith:tax.md` - Tax intelligence
+- `.claude/commands/smith:health.md` - Health check
 - `.claude/commands/INDEX.md` - Command reference
 
 **Features:**
@@ -2971,14 +2971,14 @@ Phase 6 implemented the intelligent orchestration layer and user experience feat
 - Result aggregation from parallel subagents
 
 ### Slash Commands
-- Main conversational entry (/agent-smith)
-- Categorization (/agent-smith-categorize)
-- Analysis (/agent-smith-analyze)
-- Scenario modeling (/agent-smith-scenario)
-- Reporting (/agent-smith-report)
-- Optimization (/agent-smith-optimize)
-- Tax intelligence (/agent-smith-tax)
-- Health check (/agent-smith-health)
+- Installation and onboarding (/agent-smith)
+- Categorization (/smith:categorize)
+- Analysis (/smith:analyze)
+- Scenario modeling (/smith:scenario)
+- Reporting (/smith:report)
+- Optimization (/smith:optimize)
+- Tax intelligence (/smith:tax)
+- Health check (/smith:health)
 
 ### User Experience
 - Natural language scenario descriptions

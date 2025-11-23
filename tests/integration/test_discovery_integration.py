@@ -2,7 +2,7 @@
 
 import pytest
 from scripts.core.api_client import PocketSmithClient
-from scripts.onboarding.discovery import DiscoveryAnalyzer
+from scripts.onboarding.discovery import DiscoveryAnalyzer, TemplateRecommendation
 
 
 @pytest.mark.integration
@@ -19,7 +19,12 @@ def test_discovery_with_real_api():
     assert isinstance(report.accounts, list)
     assert isinstance(report.categories, list)
     assert report.transactions.total_count >= 0
-    assert report.recommendation in ["simple", "separated-families", "shared-household", "advanced"]
+
+    # Check recommendation structure (new composable template system)
+    assert isinstance(report.recommendation, TemplateRecommendation)
+    assert report.recommendation.primary in ["payg-employee", "sole-trader"]
+    assert report.recommendation.living in ["single", "shared-hybrid", "separated-parents"]
+    assert isinstance(report.recommendation.additional, list)
 
     # Print summary for manual verification
     print(f"\n{'='*60}")

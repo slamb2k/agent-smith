@@ -1,0 +1,16 @@
+{
+  "description": "Agent Smith session initialization",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

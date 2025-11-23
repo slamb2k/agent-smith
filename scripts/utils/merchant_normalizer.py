@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Set, Any, Optional
 
+from scripts.utils.plugin_paths import get_asset_path
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,7 @@ class MerchantNormalizer:
             mappings_file: Path to merchant mappings JSON
         """
         if mappings_file is None:
-            project_root = Path(__file__).parent.parent.parent
-            mappings_file = project_root / "data" / "merchants" / "merchant_mappings.json"
+            mappings_file = get_asset_path("merchants", "merchant_mappings.json")
 
         self.mappings_file = Path(mappings_file)
         self.mappings: Dict[str, List[str]] = {}

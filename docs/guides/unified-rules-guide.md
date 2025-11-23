@@ -87,10 +87,10 @@ Check the results and refine your rules:
 
 ```bash
 # See categorization summary
-/agent-smith-analyze spending --period=2025-11
+/smith:analyze spending --period=2025-11
 
 # Check uncategorized transactions
-/agent-smith-categorize --mode=smart --show-uncategorized
+/smith:categorize --mode=smart --show-uncategorized
 ```
 
 ## Rule Types
@@ -393,7 +393,7 @@ Rule match: "Business Supplies" (82% confidence)
 
 **In command:**
 ```bash
-/agent-smith-categorize --mode=smart
+/smith:categorize --mode=smart
 ```
 
 **In environment (.env):**
@@ -806,13 +806,13 @@ Check rule accuracy monthly:
 
 ```bash
 # Analyze categorization coverage
-/agent-smith-analyze rules --period=last-month
+/smith:analyze rules --period=last-month
 
 # See which rules are matching most often
-/agent-smith-analyze rules --sort=matches
+/smith:analyze rules --sort=matches
 
 # Find low-accuracy rules
-/agent-smith-analyze rules --min-accuracy=80
+/smith:analyze rules --min-accuracy=80
 ```
 
 Refine rules that have low accuracy or aren't matching as expected.
@@ -1326,7 +1326,7 @@ Next steps:
 1. Review data/rules.yaml and customize for your needs
 2. Update merchant patterns for your region
 3. Adjust account names to match your PocketSmith setup
-4. Run: /agent-smith-categorize --mode=dry-run to test
+4. Run: /smith:categorize --mode=dry-run to test
 ```
 
 **Programmatic usage:**

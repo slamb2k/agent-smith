@@ -2411,7 +2411,7 @@ Create: `reports/INDEX.md`
 ## Recent Reports
 
 No reports yet. Reports will be generated on demand via:
-- `/agent-smith-report` command
+- `/smith:report` command
 - Analysis operations
 - Tax intelligence operations
 

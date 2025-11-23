@@ -581,7 +581,7 @@ class DataQualityScorer(BaseScorer):
         if cat_rate < 1.0:
             uncategorized = total - categorized
             issues.append(f"{uncategorized} uncategorized transactions ({(1-cat_rate)*100:.1f}%)")
-            recommendations.append("Run /agent-smith-categorize to categorize transactions")
+            recommendations.append("Run /smith:categorize to categorize transactions")
 
         # Payee completeness score (0-30 points)
         payee_score = payee_rate * 100 * self.PAYEE_WEIGHT
@@ -1573,7 +1573,7 @@ class BudgetAlignmentScorer(BaseScorer):
                 issues=["No category budgets configured"],
                 recommendations=[
                     "Set up budgets for major spending categories",
-                    "Use /agent-smith-analyze spending to identify budget targets",
+                    "Use /smith:analyze spending to identify budget targets",
                 ],
             )
 
@@ -2452,7 +2452,7 @@ class TestRecommendation:
             category=RecommendationCategory.RULE_ENGINE,
             impact_score=15,
             effort="medium",
-            command="/agent-smith-optimize rules",
+            command="/smith:optimize rules",
         )
 
         assert rec.title == "Improve categorization"
@@ -2604,7 +2604,7 @@ class RecommendationEngine:
             "title": "Categorize uncategorized transactions",
             "category": RecommendationCategory.DATA_QUALITY,
             "effort": "medium",
-            "command": "/agent-smith-categorize",
+            "command": "/smith:categorize",
             "base_impact": 10,
         },
         "auto-categorization": {
@@ -2618,49 +2618,49 @@ class RecommendationEngine:
             "title": "Improve rule coverage",
             "category": RecommendationCategory.RULE_ENGINE,
             "effort": "medium",
-            "command": "/agent-smith-optimize rules",
+            "command": "/smith:optimize rules",
             "base_impact": 15,
         },
         "substantiation": {
             "title": "Add missing receipts/documentation",
             "category": RecommendationCategory.TAX_READINESS,
             "effort": "high",
-            "command": "/agent-smith-tax deductions",
+            "command": "/smith:tax deductions",
             "base_impact": 12,
         },
         "budget": {
             "title": "Set up category budgets",
             "category": RecommendationCategory.BUDGET,
             "effort": "medium",
-            "command": "/agent-smith-analyze spending",
+            "command": "/smith:analyze spending",
             "base_impact": 8,
         },
         "ato": {
             "title": "Map categories to ATO expense types",
             "category": RecommendationCategory.TAX_READINESS,
             "effort": "medium",
-            "command": "/agent-smith-tax",
+            "command": "/smith:tax",
             "base_impact": 10,
         },
         "duplicate": {
             "title": "Review potential duplicate transactions",
             "category": RecommendationCategory.DATA_QUALITY,
             "effort": "low",
-            "command": "/agent-smith-analyze",
+            "command": "/smith:analyze",
             "base_impact": 5,
         },
         "hierarchy": {
             "title": "Organize category hierarchy",
             "category": RecommendationCategory.CATEGORY_STRUCTURE,
             "effort": "high",
-            "command": "/agent-smith-optimize categories",
+            "command": "/smith:optimize categories",
             "base_impact": 8,
         },
         "rule": {
             "title": "Create categorization rules",
             "category": RecommendationCategory.RULE_ENGINE,
             "effort": "medium",
-            "command": "/agent-smith-optimize rules",
+            "command": "/smith:optimize rules",
             "base_impact": 12,
         },
         "alert": {
@@ -2674,21 +2674,21 @@ class RecommendationEngine:
             "title": "Set up scheduled reports",
             "category": RecommendationCategory.AUTOMATION,
             "effort": "low",
-            "command": "/agent-smith-report",
+            "command": "/smith:report",
             "base_impact": 5,
         },
         "cgt": {
             "title": "Complete CGT register entries",
             "category": RecommendationCategory.TAX_READINESS,
             "effort": "high",
-            "command": "/agent-smith-tax cgt",
+            "command": "/smith:tax cgt",
             "base_impact": 10,
         },
         "goal": {
             "title": "Review financial goals progress",
             "category": RecommendationCategory.BUDGET,
             "effort": "low",
-            "command": "/agent-smith-scenario projection",
+            "command": "/smith:scenario projection",
             "base_impact": 5,
         },
     }
@@ -3450,22 +3450,22 @@ The health check system evaluates your PocketSmith setup across 6 dimensions and
 ### 1. Data Quality (20%)
 - **What it measures:** Transaction categorization rate, payee completeness, duplicates
 - **Target:** 90%+ categorization, minimal duplicates
-- **Quick fix:** `/agent-smith-categorize`
+- **Quick fix:** `/smith:categorize`
 
 ### 2. Category Structure (15%)
 - **What it measures:** Hierarchy organization, usage, ATO alignment
 - **Target:** Clear hierarchy, 70%+ categories in use
-- **Quick fix:** `/agent-smith-optimize categories`
+- **Quick fix:** `/smith:optimize categories`
 
 ### 3. Rule Engine (20%)
 - **What it measures:** Auto-categorization coverage, rule accuracy
 - **Target:** 70%+ auto-categorization rate, 90%+ accuracy
-- **Quick fix:** `/agent-smith-optimize rules`
+- **Quick fix:** `/smith:optimize rules`
 
 ### 4. Tax Readiness (20%)
 - **What it measures:** Substantiation, ATO mapping, CGT tracking
 - **Target:** 80%+ substantiation, complete CGT register
-- **Quick fix:** `/agent-smith-tax deductions`
+- **Quick fix:** `/smith:tax deductions`
 
 ### 5. Automation (10%)
 - **What it measures:** Feature utilization, auto-apply rate
@@ -3475,25 +3475,25 @@ The health check system evaluates your PocketSmith setup across 6 dimensions and
 ### 6. Budget Alignment (15%)
 - **What it measures:** Spending vs. budget, goal progress
 - **Target:** On-budget, goals on track
-- **Quick fix:** `/agent-smith-analyze spending`
+- **Quick fix:** `/smith:analyze spending`
 
 ## Running Health Checks
 
 ### Quick Check
 ```
-/agent-smith-health --quick
+/smith:health --quick
 ```
 Essential checks only, fast results.
 
 ### Full Check
 ```
-/agent-smith-health --full
+/smith:health --full
 ```
 Comprehensive analysis of all dimensions.
 
 ### Specific Dimension
 ```
-/agent-smith-health --category=tax
+/smith:health --category=tax
 ```
 Focus on specific area: `categories`, `rules`, `tax`, `data`
 
@@ -3545,13 +3545,13 @@ Individual Scores:
 
 🎯 TOP RECOMMENDATIONS:
 1. [HIGH] Create categorization rules (15 pts)
-   Run: /agent-smith-optimize rules
+   Run: /smith:optimize rules
 
 2. [MEDIUM] Organize category hierarchy (8 pts)
-   Run: /agent-smith-optimize categories
+   Run: /smith:optimize categories
 
 3. [LOW] Enable scheduled reports (5 pts)
-   Run: /agent-smith-report
+   Run: /smith:report
 
 Projected after fixes: 89/100
 ```
@@ -3626,7 +3626,7 @@ recommendations = rec_engine.generate(result.scores)
 
 ## Related
 
-- `/agent-smith-health` - Slash command
+- `/smith:health` - Slash command
 - `docs/guides/health-check-guide.md` - User guide
 ```
 
@@ -4001,10 +4001,10 @@ Evaluate your PocketSmith setup:
 
 ```bash
 # Quick health check
-/agent-smith-health --quick
+/smith:health --quick
 
 # Full comprehensive check
-/agent-smith-health --full
+/smith:health --full
 ```
 
 Scores across 6 dimensions: Data Quality, Category Structure, Rule Engine, Tax Readiness, Automation, Budget Alignment.

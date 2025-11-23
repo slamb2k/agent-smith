@@ -22,7 +22,7 @@ class TestRecommendation:
             category=RecommendationCategory.RULE_ENGINE,
             impact_score=15,
             effort="medium",
-            command="/agent-smith-optimize rules",
+            command="/smith:optimize rules",
         )
 
         assert rec.title == "Improve categorization"
