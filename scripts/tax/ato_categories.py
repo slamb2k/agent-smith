@@ -19,7 +19,15 @@ class ATOCategoryMapper:
         """
         if mappings_file is None:
             project_root = Path(__file__).parent.parent.parent
-            mappings_file = project_root / "assets" / "tax" / "ato_category_mappings.json"
+            mappings_file = (
+                project_root
+                / "agent-smith-plugin"
+                / "skills"
+                / "agent-smith"
+                / "assets"
+                / "tax"
+                / "ato_category_mappings.json"
+            )
 
         self.mappings_file = Path(mappings_file)
         self.mappings: Dict[str, Dict[str, Any]] = {}
