@@ -27,5 +27,5 @@
     "${CLAUDE_PLUGIN_ROOT}/commands/tax.md",
     "${CLAUDE_PLUGIN_ROOT}/commands/health.md"
   ],
-  "hooks": "${CLAUDE_PLUGIN_ROOT}/hooks.json"
+  "hooks": "${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json"
 }
