@@ -102,7 +102,7 @@ def get_plugin_assets_dir() -> Path:
     # Check if running from plugin
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
     if plugin_root:
-        return Path(plugin_root) / "assets"
+        return Path(plugin_root) / "skills/agent-smith/assets"
 
     # Development mode - check if we're in the plugin structure
     script_dir = Path(__file__).parent

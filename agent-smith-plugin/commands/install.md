@@ -581,7 +581,7 @@ run_agent_smith() {
     shift  # Remove first argument, leaving remaining args
 
     if [ -n "${CLAUDE_PLUGIN_ROOT}" ]; then
-        # Plugin mode - run from skill directory with USER_CWD set
+        # Plugin mode - run from skill directory with USER_CWD set and venv isolation
         local skill_dir="${CLAUDE_PLUGIN_ROOT}/skills/agent-smith"
         local user_cwd="$(pwd)"
 
@@ -590,8 +590,14 @@ run_agent_smith() {
             return 1
         fi
 
-        # Run script from skill directory, passing user's working directory via USER_CWD
-        (cd "$skill_dir" && USER_CWD="$user_cwd" uv run python -u "scripts/$script_path" "$@")
+        # Run from skill directory with:
+        # - USER_CWD: preserve user's working directory for .env access
+        # - env -u VIRTUAL_ENV: ignore conflicting virtual environments
+        # uv will automatically use the plugin's .venv
+        (cd "$skill_dir" && \
+         USER_CWD="$user_cwd" \
+         env -u VIRTUAL_ENV -u VIRTUAL_ENV_PROMPT \
+         uv run python -u "scripts/$script_path" "$@")
     elif [ -f "./scripts/$script_path" ]; then
         # Development/repository mode - run from current directory
         uv run python -u "./scripts/$script_path" "$@"
