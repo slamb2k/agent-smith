@@ -368,7 +368,7 @@ run_agent_smith "operations/categorize_batch.py" --mode=apply --period=2025-11
 After categorization, run health check to show improvement:
 
 ```bash
-/agent-smith-health --full
+/smith:health --full
 ```
 
 **Show before/after:**
@@ -382,17 +382,17 @@ After categorization, run health check to show improvement:
 Provide the user with ongoing usage patterns:
 
 **Daily/Weekly:**
-- Categorize new transactions: `/agent-smith-categorize --mode=smart`
+- Categorize new transactions: `/smith:categorize --mode=smart`
 
 **Monthly:**
-- Spending analysis: `/agent-smith-analyze spending --period=YYYY-MM`
-- Quick health check: `/agent-smith-health --quick`
+- Spending analysis: `/smith:analyze spending --period=YYYY-MM`
+- Quick health check: `/smith:health --quick`
 
 **Quarterly:**
-- Tax deduction review: `/agent-smith-tax deductions --period=YYYY-YY`
+- Tax deduction review: `/smith:tax deductions --period=YYYY-YY`
 
 **Annual (EOFY):**
-- Tax preparation: `/agent-smith-tax eofy`
+- Tax preparation: `/smith:tax eofy`
 
 **Mark onboarding as complete:**
 Update `data/onboarding_state.json` with `"onboarding_completed": true`
@@ -469,15 +469,15 @@ Current Status:
 
 Example:
 1. Categorize 47 Recent Transactions (2025-11-01 to 2025-11-23)
-   → Run: /agent-smith-categorize --mode=smart --period=2025-11
+   → Run: /smith:categorize --mode=smart --period=2025-11
    Impact: Bring account up to date, generate new rule suggestions
 
 2. Review Tax Deductions for Q2 (October-December 2025)
-   → Run: /agent-smith-tax deductions --period=2025-Q2
+   → Run: /smith:tax deductions --period=2025-Q2
    Impact: Identify $X in potential deductions before EOFY
 
 3. Optimize 12 Dormant Categories
-   → Run: /agent-smith-optimize categories --prune
+   → Run: /smith:optimize categories --prune
    Impact: Simplify category structure, improve categorization accuracy
 
 ───────────────────────────────────────────────────────────
@@ -488,13 +488,13 @@ Example:
 
 Example:
 • Your "Groceries" spending increased 34% this month ($487 → $653)
-  → Analyze: /agent-smith-analyze spending --category="Groceries" --trend
+  → Analyze: /smith:analyze spending --category="Groceries" --trend
 
 • 23 transactions manually categorized last week
-  → Generate rules: /agent-smith-optimize rules --learn
+  → Generate rules: /smith:optimize rules --learn
 
 • EOFY in 6 months - Start tax planning now
-  → Plan: /agent-smith-scenario eofy-planning
+  → Plan: /smith:scenario eofy-planning
 
 ───────────────────────────────────────────────────────────
 📊 INSIGHTS
@@ -521,7 +521,7 @@ Example:
 
 Example:
 • Run health check (last run: 3 weeks ago)
-  → /agent-smith-health --full
+  → /smith:health --full
 
 • Backup local rules (23 rules defined)
   → Agent Smith auto-backups on mutation, but manual backup available

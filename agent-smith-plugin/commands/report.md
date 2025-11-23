@@ -10,7 +10,7 @@ Generate comprehensive financial reports in various formats.
 ## Usage
 
 ```
-/agent-smith-report <format> [options]
+/smith:report <format> [options]
 ```
 
 ## Report Formats
@@ -31,19 +31,19 @@ Generate comprehensive financial reports in various formats.
 
 ```bash
 # Summary report for Q4 2025
-/agent-smith-report summary --period=2025-Q4
+/smith:report summary --period=2025-Q4
 
 # Detailed transaction report in Excel
-/agent-smith-report detailed --period=2025-11 --output=excel
+/smith:report detailed --period=2025-11 --output=excel
 
 # Tax report for FY 2024-25 (full intelligence)
-/agent-smith-report tax --period=2024-25 --tax-level=full
+/smith:report tax --period=2024-25 --tax-level=full
 
 # Custom report with specific sections
-/agent-smith-report custom --sections=spending,trends,goals
+/smith:report custom --sections=spending,trends,goals
 
 # Generate all formats
-/agent-smith-report summary --output=all
+/smith:report summary --output=all
 ```
 
 ## Report Sections

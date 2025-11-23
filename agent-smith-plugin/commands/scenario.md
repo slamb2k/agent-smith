@@ -10,7 +10,7 @@ Model financial scenarios with what-if analysis, projections, and optimization.
 ## Usage
 
 ```
-/agent-smith-scenario <type> "<description>"
+/smith:scenario <type> "<description>"
 ```
 
 ## Scenario Types
@@ -28,21 +28,21 @@ Describe your scenario in plain English. Agent Smith will interpret and execute.
 
 ```bash
 # Historical what-if scenarios
-/agent-smith-scenario historical "What if I reduced dining by 25% last quarter?"
-/agent-smith-scenario historical "Compare August vs September spending"
+/smith:scenario historical "What if I reduced dining by 25% last quarter?"
+/smith:scenario historical "Compare August vs September spending"
 
 # Future projections
-/agent-smith-scenario projection "Can I afford a $600/month car payment?"
-/agent-smith-scenario projection "Forecast expenses for next 6 months with 3% inflation"
+/smith:scenario projection "Can I afford a $600/month car payment?"
+/smith:scenario projection "Forecast expenses for next 6 months with 3% inflation"
 
 # Optimization scenarios
-/agent-smith-scenario optimization "Find subscription savings opportunities"
-/agent-smith-scenario optimization "Which categories are trending up?"
+/smith:scenario optimization "Find subscription savings opportunities"
+/smith:scenario optimization "Which categories are trending up?"
 
 # Tax scenarios
-/agent-smith-scenario tax "Should I buy $25k equipment before or after EOFY?"
-/agent-smith-scenario tax "Compare super contribution strategies"
-/agent-smith-scenario tax "Optimize CGT timing for shares purchased 11 months ago"
+/smith:scenario tax "Should I buy $25k equipment before or after EOFY?"
+/smith:scenario tax "Compare super contribution strategies"
+/smith:scenario tax "Optimize CGT timing for shares purchased 11 months ago"
 ```
 
 ## Scenario Capabilities

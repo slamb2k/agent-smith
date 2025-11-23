@@ -10,7 +10,7 @@ Tax-focused analysis and compliance for Australian tax requirements.
 ## Usage
 
 ```
-/agent-smith-tax <operation> [options]
+/smith:tax <operation> [options]
 ```
 
 ## Tax Operations
@@ -31,19 +31,19 @@ Tax-focused analysis and compliance for Australian tax requirements.
 
 ```bash
 # Track deductible expenses for FY 2024-25
-/agent-smith-tax deductions --period=2024-25
+/smith:tax deductions --period=2024-25
 
 # CGT analysis with timing recommendations
-/agent-smith-tax cgt --period=2024-25 --level=full
+/smith:tax cgt --period=2024-25 --level=full
 
 # BAS worksheet preparation (GST only)
-/agent-smith-tax bas --period=2024-Q4
+/smith:tax bas --period=2024-Q4
 
 # Complete EOFY tax prep checklist
-/agent-smith-tax eofy
+/smith:tax eofy
 
 # Tax scenario: equipment purchase timing
-/agent-smith-tax scenario "Buy $25k equipment before or after EOFY?"
+/smith:tax scenario "Buy $25k equipment before or after EOFY?"
 ```
 
 ## Tax Intelligence Levels

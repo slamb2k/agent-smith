@@ -10,7 +10,7 @@ AI-assisted optimization for categories, rules, spending, and subscriptions.
 ## Usage
 
 ```
-/agent-smith-optimize <target> [options]
+/smith:optimize <target> [options]
 ```
 
 ## Optimization Targets
@@ -30,19 +30,19 @@ AI-assisted optimization for categories, rules, spending, and subscriptions.
 
 ```bash
 # Optimize category structure
-/agent-smith-optimize categories
+/smith:optimize categories
 
 # Improve rule accuracy and coverage
-/agent-smith-optimize rules
+/smith:optimize rules
 
 # Find spending reduction opportunities
-/agent-smith-optimize spending
+/smith:optimize spending
 
 # Analyze subscriptions and recurring charges
-/agent-smith-optimize subscriptions
+/smith:optimize subscriptions
 
 # Preview aggressive optimizations for dining
-/agent-smith-optimize spending --aggressive --focus=dining --preview
+/smith:optimize spending --aggressive --focus=dining --preview
 ```
 
 ## What Gets Optimized

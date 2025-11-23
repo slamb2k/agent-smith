@@ -10,7 +10,7 @@ Run financial analysis on your PocketSmith data.
 ## Usage
 
 ```
-/agent-smith-analyze <type> [options]
+/smith:analyze <type> [options]
 ```
 
 ## Analysis Types
@@ -32,19 +32,19 @@ Run financial analysis on your PocketSmith data.
 
 ```bash
 # Spending analysis for 2025
-/agent-smith-analyze spending --period=2025
+/smith:analyze spending --period=2025
 
 # Trend analysis comparing 2024 vs 2025
-/agent-smith-analyze trends --period=2025 --compare=2024
+/smith:analyze trends --period=2025 --compare=2024
 
 # Category deep-dive for Dining
-/agent-smith-analyze category --category="Dining"
+/smith:analyze category --category="Dining"
 
 # Tax analysis for FY 2024-25 (full intelligence)
-/agent-smith-analyze tax --period=2024-25 --tax-level=full
+/smith:analyze tax --period=2024-25 --tax-level=full
 
 # AI insights for current month
-/agent-smith-analyze insights
+/smith:analyze insights
 ```
 
 ## What You'll Get

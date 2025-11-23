@@ -10,7 +10,7 @@ Evaluate your PocketSmith setup and get optimization recommendations.
 ## Usage
 
 ```
-/agent-smith-health [options]
+/smith:health [options]
 ```
 
 ## Options
@@ -34,16 +34,16 @@ Evaluate your PocketSmith setup and get optimization recommendations.
 
 ```bash
 # Quick health check (essential checks)
-/agent-smith-health --quick
+/smith:health --quick
 
 # Full comprehensive analysis
-/agent-smith-health --full
+/smith:health --full
 
 # Focus on category structure
-/agent-smith-health --category=categories
+/smith:health --category=categories
 
 # Focus on tax compliance
-/agent-smith-health --category=tax
+/smith:health --category=tax
 ```
 
 ## What You'll Get

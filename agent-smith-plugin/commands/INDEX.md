@@ -4,18 +4,18 @@ Quick-access commands for common financial management operations.
 
 ## All Commands
 
-1. `/agent-smith:install` - Main entry point with onboarding and intelligent suggestions
-2. `/agent-smith:categorize` - Transaction categorization
-3. `/agent-smith:analyze` - Financial analysis
-4. `/agent-smith:scenario` - Scenario modeling
-5. `/agent-smith:report` - Report generation
-6. `/agent-smith:optimize` - Optimization operations
-7. `/agent-smith:tax` - Tax intelligence
-8. `/agent-smith:health` - Health check
+1. `/smith:install` - Main entry point with onboarding and intelligent suggestions
+2. `/smith:categorize` - Transaction categorization
+3. `/smith:analyze` - Financial analysis
+4. `/smith:scenario` - Scenario modeling
+5. `/smith:report` - Report generation
+6. `/smith:optimize` - Optimization operations
+7. `/smith:tax` - Tax intelligence
+8. `/smith:health` - Health check
 
 ## Command Descriptions
 
-### /agent-smith:install
+### /smith:install
 
 Main entry point for Agent Smith with integrated onboarding and intelligent suggestions.
 
@@ -47,12 +47,12 @@ Main entry point for Agent Smith with integrated onboarding and intelligent sugg
 
 **Example:**
 ```bash
-/agent-smith:install
+/smith:install
 ```
 
 **Note:** Your progress is saved in `data/onboarding_state.json`. If onboarding is complete, this command will skip directly to intelligent suggestions.
 
-### /agent-smith:categorize
+### /smith:categorize
 
 Categorize uncategorized transactions with AI assistance.
 
@@ -64,10 +64,10 @@ Categorize uncategorized transactions with AI assistance.
 
 **Example:**
 ```bash
-/agent-smith:categorize --mode=smart --period=2025-11
+/smith:categorize --mode=smart --period=2025-11
 ```
 
-### /agent-smith:analyze
+### /smith:analyze
 
 Run financial analysis on PocketSmith data.
 
@@ -80,10 +80,10 @@ Run financial analysis on PocketSmith data.
 
 **Example:**
 ```bash
-/agent-smith:analyze spending --period=2025
+/smith:analyze spending --period=2025
 ```
 
-### /agent-smith:scenario
+### /smith:scenario
 
 Model financial scenarios with what-if analysis.
 
@@ -95,10 +95,10 @@ Model financial scenarios with what-if analysis.
 
 **Example:**
 ```bash
-/agent-smith:scenario historical "What if I reduced dining by 25%?"
+/smith:scenario historical "What if I reduced dining by 25%?"
 ```
 
-### /agent-smith:report
+### /smith:report
 
 Generate comprehensive reports in multiple formats.
 
@@ -112,10 +112,10 @@ Generate comprehensive reports in multiple formats.
 
 **Example:**
 ```bash
-/agent-smith:report tax --period=2024-25 --output=excel
+/smith:report tax --period=2024-25 --output=excel
 ```
 
-### /agent-smith:optimize
+### /smith:optimize
 
 AI-assisted optimization for various targets.
 
@@ -127,10 +127,10 @@ AI-assisted optimization for various targets.
 
 **Example:**
 ```bash
-/agent-smith:optimize subscriptions
+/smith:optimize subscriptions
 ```
 
-### /agent-smith:tax
+### /smith:tax
 
 Tax-focused analysis and compliance.
 
@@ -143,10 +143,10 @@ Tax-focused analysis and compliance.
 
 **Example:**
 ```bash
-/agent-smith:tax deductions --period=2024-25 --level=full
+/smith:tax deductions --period=2024-25 --level=full
 ```
 
-### /agent-smith:health
+### /smith:health
 
 Evaluate PocketSmith setup health.
 
@@ -165,7 +165,7 @@ Evaluate PocketSmith setup health.
 
 **Example:**
 ```bash
-/agent-smith:health --full
+/smith:health --full
 ```
 
 ## Usage Patterns
@@ -174,16 +174,16 @@ Evaluate PocketSmith setup health.
 
 Use specialized commands for single-purpose operations:
 ```bash
-/agent-smith:categorize
-/agent-smith:analyze spending
-/agent-smith:health --quick
+/smith:categorize
+/smith:analyze spending
+/smith:health --quick
 ```
 
 ### Complex Workflows
 
 Use main command for multi-step guidance:
 ```bash
-/agent-smith:install
+/smith:install
 # Then describe your needs in natural language
 ```
 
@@ -191,9 +191,9 @@ Use main command for multi-step guidance:
 
 Chain commands for regular tasks:
 ```bash
-/agent-smith:categorize --mode=smart
-/agent-smith:analyze trends
-/agent-smith:health --category=rules
+/smith:categorize --mode=smart
+/smith:analyze trends
+/smith:health --category=rules
 ```
 
 ## Integration with Orchestration
@@ -206,6 +206,6 @@ All commands use the subagent conductor for smart delegation:
 ## Future Commands
 
 Planned for Phase 7:
-- `/agent-smith:alert` - Configure alerts and notifications
-- `/agent-smith:merchant` - Merchant intelligence
-- `/agent-smith:goal` - Goal management
+- `/smith:alert` - Configure alerts and notifications
+- `/smith:merchant` - Merchant intelligence
+- `/smith:goal` - Goal management

@@ -117,7 +117,7 @@ print(json.dumps(output))
 **Example interaction:**
 
 ```
-User: /agent-smith-categorizeAssistant: I'll help categorize your transactions. What period would you like to process?
+User: /smith:categorizeAssistant: I'll help categorize your transactions. What period would you like to process?
   - "2025-11" for November 2025
   - "last-30-days" for recent transactions
 
