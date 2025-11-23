@@ -4,6 +4,7 @@ import pytest
 from pathlib import Path
 from scripts.setup.template_merger import TemplateMerger
 from scripts.setup.template_schema import TemplateLoader
+from tests.utils import get_asset_path
 
 
 def test_merge_single_template():
@@ -11,7 +12,7 @@ def test_merge_single_template():
     loader = TemplateLoader()
     merger = TemplateMerger()
 
-    template = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
+    template = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
     result = merger.merge([template])
 
     assert len(result["categories"]) == 7
@@ -25,8 +26,8 @@ def test_merge_multiple_templates():
     loader = TemplateLoader()
     merger = TemplateMerger()
 
-    primary = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
-    living = loader.load_from_file(Path("templates/living/single.yaml"))
+    primary = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
 
     result = merger.merge([primary, living])
 
@@ -83,8 +84,10 @@ def test_merge_respects_priority():
     loader = TemplateLoader()
     merger = TemplateMerger()
 
-    primary = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
-    additional = loader.load_from_file(Path("templates/additional/share-investor.yaml"))
+    primary = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
+    additional = loader.load_from_file(
+        get_asset_path("templates", "additional", "share-investor.yaml")
+    )
 
     # Additional template has higher priority number (3 vs 1)
     # But primary should still be first in merged list
@@ -156,8 +159,8 @@ def test_merge_preserves_all_unique_labels():
     loader = TemplateLoader()
     merger = TemplateMerger()
 
-    primary = loader.load_from_file(Path("templates/primary/payg-employee.yaml"))
-    living = loader.load_from_file(Path("templates/living/shared-hybrid.yaml"))
+    primary = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "shared-hybrid.yaml"))
 
     result = merger.merge([primary, living])
 
@@ -185,7 +188,7 @@ def test_merge_tracks_configuration_labels():
     loader = TemplateLoader()
     merger = TemplateMerger()
 
-    living = loader.load_from_file(Path("templates/living/shared-hybrid.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "shared-hybrid.yaml"))
 
     result = merger.merge([living])
 
@@ -207,9 +210,11 @@ def test_merge_labels_with_real_templates():
     merger = TemplateMerger()
 
     # Load templates from all three layers
-    primary = loader.load_from_file(Path("templates/primary/sole-trader.yaml"))
-    living = loader.load_from_file(Path("templates/living/single.yaml"))
-    additional = loader.load_from_file(Path("templates/additional/property-investor.yaml"))
+    primary = loader.load_from_file(get_asset_path("templates", "primary", "sole-trader.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
+    additional = loader.load_from_file(
+        get_asset_path("templates", "additional", "property-investor.yaml")
+    )
 
     result = merger.merge([primary, living, additional])
 

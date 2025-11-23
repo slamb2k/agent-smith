@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -29,8 +30,22 @@ class DeductionDetector:
             patterns_file: Path to deduction patterns JSON file
         """
         if patterns_file is None:
-            project_root = Path(__file__).parent.parent.parent
-            patterns_file = project_root / "assets" / "tax" / "deduction_patterns.json"
+            # When running as installed plugin, use CLAUDE_PLUGIN_ROOT
+            plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+            if plugin_root:
+                patterns_file = Path(plugin_root) / "assets" / "tax" / "deduction_patterns.json"
+            else:
+                # Development mode: look in plugin directory within repository
+                project_root = Path(__file__).parent.parent.parent
+                patterns_file = (
+                    project_root
+                    / "agent-smith-plugin"
+                    / "skills"
+                    / "agent-smith"
+                    / "assets"
+                    / "tax"
+                    / "deduction_patterns.json"
+                )
 
         self.patterns_file = Path(patterns_file)
         self.patterns: List[Dict[str, Any]] = []

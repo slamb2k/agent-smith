@@ -1,6 +1,7 @@
 """Template selector for composable template system."""
 
 import json
+import os
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any
@@ -13,7 +14,20 @@ class TemplateSelector:
 
     def __init__(self) -> None:
         """Initialize template selector."""
-        self.templates_dir = Path(__file__).parent.parent.parent / "assets" / "templates"
+        # When running as installed plugin, use CLAUDE_PLUGIN_ROOT
+        plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+        if plugin_root:
+            self.templates_dir = Path(plugin_root) / "assets" / "templates"
+        else:
+            # Development mode: look in plugin directory within repository
+            self.templates_dir = (
+                Path(__file__).parent.parent.parent
+                / "agent-smith-plugin"
+                / "skills"
+                / "agent-smith"
+                / "assets"
+                / "templates"
+            )
         self.output_file = Path(__file__).parent.parent.parent / "data" / "config.json"
 
     def list_templates(self) -> Dict[str, List[Dict[str, str]]]:

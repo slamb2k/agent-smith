@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -18,16 +19,22 @@ class ATOCategoryMapper:
             mappings_file: Path to ATO category mappings JSON file
         """
         if mappings_file is None:
-            project_root = Path(__file__).parent.parent.parent
-            mappings_file = (
-                project_root
-                / "agent-smith-plugin"
-                / "skills"
-                / "agent-smith"
-                / "assets"
-                / "tax"
-                / "ato_category_mappings.json"
-            )
+            # When running as installed plugin, use CLAUDE_PLUGIN_ROOT
+            plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+            if plugin_root:
+                mappings_file = Path(plugin_root) / "assets" / "tax" / "ato_category_mappings.json"
+            else:
+                # Development mode: look in plugin directory within repository
+                project_root = Path(__file__).parent.parent.parent
+                mappings_file = (
+                    project_root
+                    / "agent-smith-plugin"
+                    / "skills"
+                    / "agent-smith"
+                    / "assets"
+                    / "tax"
+                    / "ato_category_mappings.json"
+                )
 
         self.mappings_file = Path(mappings_file)
         self.mappings: Dict[str, Dict[str, Any]] = {}
