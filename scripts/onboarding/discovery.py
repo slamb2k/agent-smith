@@ -7,6 +7,15 @@ from typing import Any, Dict, List, Optional
 
 
 @dataclass
+class TemplateRecommendation:
+    """Recommended template combination for composable template system."""
+
+    primary: str  # E.g., "payg-employee" or "sole-trader"
+    living: str  # E.g., "single", "shared-hybrid", "separated-parents"
+    additional: List[str]  # E.g., ["property-investor", "share-investor"]
+
+
+@dataclass
 class AccountSummary:
     """Summary of a PocketSmith account."""
 
@@ -49,7 +58,7 @@ class DiscoveryReport:
     categories: List[CategorySummary]
     transactions: TransactionSummary
     baseline_health_score: Optional[int]
-    recommendation: str
+    recommendation: TemplateRecommendation
 
 
 class DiscoveryAnalyzer:
@@ -190,21 +199,38 @@ class DiscoveryAnalyzer:
         self,
         accounts: List[AccountSummary],
         categories: List[CategorySummary],
-    ) -> str:
-        """Recommend a template based on account and category structure.
+    ) -> TemplateRecommendation:
+        """Recommend templates based on account and category structure.
+
+        Uses the composable template system with three layers:
+        - Primary: Income structure (payg-employee, sole-trader, small-business)
+        - Living: Living arrangement (single, shared-hybrid, separated-parents)
+        - Additional: Extra income sources (property-investor, share-investor)
 
         Args:
             accounts: List of account summaries
             categories: List of category summaries
 
         Returns:
-            Template name: simple, separated-families, shared-household, or advanced
+            TemplateRecommendation with primary, living, and additional templates
         """
         # Extract category titles for pattern matching
         category_titles = {cat.title.lower() for cat in categories}
         account_names = {acc.name.lower() for acc in accounts}
 
-        # Check for separated families indicators
+        # Determine PRIMARY template (income structure)
+        business_indicators = {"business expenses", "abn", "gst", "bas"}
+        has_business = any(
+            indicator in title for title in category_titles for indicator in business_indicators
+        )
+        business_accounts = any("business" in name for name in account_names)
+
+        if has_business or business_accounts:
+            primary = "sole-trader"  # Default to sole trader for business income
+        else:
+            primary = "payg-employee"  # Default to PAYG employee for salary/wages
+
+        # Determine LIVING template (household arrangement)
         separated_indicators = {
             "child support",
             "kids activities",
@@ -214,42 +240,51 @@ class DiscoveryAnalyzer:
             "school fees",
             "custody",
         }
-        if any(
+        has_separated = any(
             indicator in title for title in category_titles for indicator in separated_indicators
-        ):
-            return "separated-families"
-
-        # Check for advanced indicators
-        advanced_indicators = {
-            "investment",
-            "capital gains",
-            "cgt",
-            "business expenses",
-            "dividends",
-            "rental income",
-            "crypto",
-            "shares",
-        }
-        business_accounts = any("business" in name for name in account_names)
-        has_investments = any(
-            indicator in title for title in category_titles for indicator in advanced_indicators
         )
 
-        if has_investments or business_accounts:
-            return "advanced"
-
-        # Check for shared household indicators
         shared_indicators = {"shared", "joint", "household", "split"}
         has_shared = any(
             indicator in title for title in category_titles for indicator in shared_indicators
         )
         joint_accounts = any("joint" in name or "shared" in name for name in account_names)
 
-        if has_shared or (joint_accounts and len(accounts) > 1):
-            return "shared-household"
+        if has_separated:
+            living = "separated-parents"
+        elif has_shared or (joint_accounts and len(accounts) > 1):
+            living = "shared-hybrid"
+        else:
+            living = "single"
 
-        # Default to simple
-        return "simple"
+        # Determine ADDITIONAL templates (extra income sources)
+        additional = []
+
+        # Check for property investment
+        property_indicators = {"rental income", "property expenses", "council rates"}
+        has_property = any(
+            indicator in title for title in category_titles for indicator in property_indicators
+        )
+        if has_property:
+            additional.append("property-investor")
+
+        # Check for share/ETF investment
+        investment_indicators = {
+            "investment",
+            "dividends",
+            "capital gains",
+            "cgt",
+            "shares",
+            "etf",
+            "crypto",
+        }
+        has_investments = any(
+            indicator in title for title in category_titles for indicator in investment_indicators
+        )
+        if has_investments:
+            additional.append("share-investor")
+
+        return TemplateRecommendation(primary=primary, living=living, additional=additional)
 
     def analyze(self, include_health_check: bool = False) -> DiscoveryReport:
         """Run complete discovery analysis.

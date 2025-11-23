@@ -6,6 +6,8 @@ from enum import Enum
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 
+from scripts.utils.plugin_paths import get_data_path
+
 
 class OnboardingStage(Enum):
     """Onboarding workflow stages."""
@@ -39,7 +41,7 @@ class OnboardingState:
     def __post_init__(self) -> None:
         """Initialize state file path if not provided."""
         if self.state_file is None:
-            self.state_file = Path(__file__).parent.parent.parent / "data" / "onboarding_state.json"
+            self.state_file = get_data_path("onboarding_state.json")
 
     def advance_stage(self, next_stage: OnboardingStage) -> None:
         """Advance to next stage.
