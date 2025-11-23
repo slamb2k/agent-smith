@@ -47,12 +47,19 @@ Installation and onboarding wizard with intelligent suggestions.
 
 **Time Required (first time):** 30-60 minutes
 
-**Example:**
+**Arguments:**
+- `--reset` - Delete all onboarding state and data, start fresh (requires confirmation)
+
+**Examples:**
 ```bash
+# Normal use (onboarding or suggestions based on state)
 /smith:install
+
+# Reset and start over (WARNING: deletes all data)
+/smith:install --reset
 ```
 
-**Note:** Your progress is saved in `data/onboarding_state.json`. If onboarding is complete, this command will skip directly to intelligent suggestions.
+**Note:** Your progress is saved in `data/onboarding_state.json`. If onboarding is complete, this command will skip directly to intelligent suggestions. Use `--reset` to start over (this will delete all data in the `data/` directory).
 
 ### /smith:categorize
 
