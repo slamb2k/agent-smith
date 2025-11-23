@@ -8,7 +8,7 @@ Agent Smith provides comprehensive PocketSmith API integration with advanced AI-
 
 ✅ **Implementation Complete** - All 8 phases implemented and tested
 
-📦 **Version:** 1.3.6
+📦 **Version:** 1.3.7
 
 📋 **Design Document:** [docs/design/2025-11-20-agent-smith-design.md](docs/design/2025-11-20-agent-smith-design.md)
 
