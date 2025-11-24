@@ -89,7 +89,7 @@ def test_execute_categorization_production_mode(monkeypatch):
     prompt = "Test prompt"
 
     # Mock the SDK call to avoid actual LLM calls during testing
-    def mock_execute_prompt_sync(self, p):
+    def mock_execute_prompt_sync(self, p, output_schema=None):
         return ""  # Empty response will be parsed by service
 
     monkeypatch.setattr(LLMSubagent, "_execute_prompt_sync", mock_execute_prompt_sync)
