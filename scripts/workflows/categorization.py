@@ -160,17 +160,19 @@ class CategorizationWorkflow:
     def _execute_batch_validation(
         self,
         validations: List[Dict[str, Any]],
+        available_categories: List[Dict[str, Any]],
     ) -> Dict[int, Dict[str, Any]]:
         """Execute batch validation with LLM orchestration.
 
         Args:
             validations: List of validation dicts
+            available_categories: Available categories for alternative suggestions
 
         Returns:
             Dict mapping transaction IDs to validation results
         """
         # Get marker result from service
-        marker_result = self.llm_service.validate_batch(validations)
+        marker_result = self.llm_service.validate_batch(validations, available_categories)
 
         # Orchestrate LLM call
         return self._orchestrate_llm_call(marker_result)
@@ -415,7 +417,9 @@ class CategorizationWorkflow:
                 )
 
                 # Execute batch validation with orchestration
-                validation_results = self._execute_batch_validation(validations=batch)
+                validation_results = self._execute_batch_validation(
+                    validations=batch, available_categories=available_categories
+                )
 
                 # Process validation results
                 for val in batch:
