@@ -1,0 +1,121 @@
+name: Minimal Foundation
+layer: foundation
+description: |
+  Simple, broad category structure for basic expense tracking.
+  Best for people who prefer simplicity and don't need detailed breakdowns.
+
+  20 top-level categories covering essential expense areas.
+
+categories:
+  # Income
+  - name: "Income"
+    parent: null
+    description: "All income sources"
+
+  # Housing & Home
+  - name: "Housing"
+    parent: null
+    description: "Rent, mortgage, rates, home expenses"
+
+  - name: "Utilities"
+    parent: null
+    description: "Electricity, gas, water, internet, phone"
+
+  # Food
+  - name: "Food & Dining"
+    parent: null
+    description: "Groceries, restaurants, takeaway"
+
+  # Transportation
+  - name: "Transportation"
+    parent: null
+    description: "Fuel, public transport, vehicle costs"
+
+  # Health
+  - name: "Healthcare"
+    parent: null
+    description: "Medical, dental, pharmacy, Medicare gap"
+
+  # Personal & Lifestyle
+  - name: "Personal Care"
+    parent: null
+    description: "Haircuts, cosmetics, toiletries"
+
+  - name: "Clothing"
+    parent: null
+    description: "Clothes, shoes, accessories"
+
+  - name: "Entertainment"
+    parent: null
+    description: "Movies, streaming, hobbies, recreation"
+
+  - name: "Education"
+    parent: null
+    description: "School fees, courses, textbooks"
+
+  # Financial
+  - name: "Insurance"
+    parent: null
+    description: "Health, car, home, life insurance"
+
+  - name: "Banking & Fees"
+    parent: null
+    description: "Bank fees, account charges, ATM fees"
+
+  - name: "Debt Payments"
+    parent: null
+    description: "Loan repayments, credit card payments"
+
+  # Discretionary
+  - name: "Shopping"
+    parent: null
+    description: "General retail, online shopping, household items"
+
+  - name: "Gifts & Donations"
+    parent: null
+    description: "Presents, charity donations"
+
+  - name: "Pets"
+    parent: null
+    description: "Pet food, vet, supplies"
+
+  # Special
+  - name: "Travel & Holidays"
+    parent: null
+    description: "Flights, accommodation, holiday expenses"
+
+  - name: "Subscriptions"
+    parent: null
+    description: "Streaming, memberships, recurring services"
+
+  # Other
+  - name: "Government & Fees"
+    parent: null
+    description: "Rates, fines, registration, licences"
+
+  - name: "Uncategorised"
+    parent: null
+    description: "Transactions not yet categorised"
+
+rules: []
+  # No rules in foundation - rules come from primary/living/additional templates
+
+labels: []
+  # No labels in foundation
+
+tax_tracking:
+  basic_expense_tracking: true
+
+alerts: []
+
+dependencies:
+  requires: []
+  conflicts_with: ["standard", "comprehensive"]
+  note: "Foundation templates are mutually exclusive - choose only one"
+
+metadata:
+  created: "2025-11-23"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 0  # Lowest priority - applied first
+  category_count: 20
