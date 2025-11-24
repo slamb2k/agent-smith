@@ -204,6 +204,61 @@ def test_merge_tracks_configuration_labels():
         assert isinstance(label["configuration_prompt"], str)
 
 
+def test_merge_normalizes_rule_field_names():
+    """Test that merger normalizes YAML field names to applier format."""
+    merger = TemplateMerger()
+
+    # Create template with YAML field names ('category' and 'pattern')
+    template = {
+        "name": "Test Template",
+        "layer": "primary",
+        "categories": [],
+        "rules": [
+            {
+                "category": "Groceries",
+                "pattern": "^WOOLWORTHS",
+                "confidence": 95,
+                "type": "simple",
+            },
+            {
+                "category": "Transport",
+                "pattern": "^UBER",
+                "confidence": 90,
+                "type": "simple",
+            },
+        ],
+        "tax_tracking": {},
+        "alerts": [],
+        "labels": [],
+        "metadata": {"priority": 1},
+    }
+
+    result = merger.merge([template])
+
+    # Verify rules were normalized
+    assert len(result["rules"]) == 2
+
+    # Check first rule
+    rule1 = result["rules"][0]
+    assert "target_category" in rule1
+    assert rule1["target_category"] == "Groceries"
+    assert "payee_pattern" in rule1
+    assert rule1["payee_pattern"] == "^WOOLWORTHS"
+    assert "category" not in rule1  # Old field name removed
+    assert "pattern" not in rule1  # Old field name removed
+    assert rule1["confidence"] == 95  # Other fields preserved
+    assert rule1["type"] == "simple"
+
+    # Check second rule
+    rule2 = result["rules"][1]
+    assert "target_category" in rule2
+    assert rule2["target_category"] == "Transport"
+    assert "payee_pattern" in rule2
+    assert rule2["payee_pattern"] == "^UBER"
+    assert "category" not in rule2
+    assert "pattern" not in rule2
+
+
 def test_merge_labels_with_real_templates():
     """Test label merging with actual template files."""
     loader = TemplateLoader()

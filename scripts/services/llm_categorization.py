@@ -102,33 +102,29 @@ class LLMCategorizationService:
 
         guidance = mode_guidance.get(mode, mode_guidance[IntelligenceMode.SMART])
 
-        prompt = f"""Categorize these transactions using the category hierarchy below.
+        prompt = f"""Categorize these financial transactions.
 
 INTELLIGENCE MODE: {mode.value}
 GUIDANCE: {guidance}
 
-For each transaction, provide:
-1. Category name (exact match from hierarchy below)
-2. Confidence score (0-100%)
-3. Brief reasoning
-
 Available Categories:
 {categories_text}
+
+IMPORTANT: Always use the MOST SPECIFIC subcategory available.
+- For "Parent > Child" hierarchies, use the full "Parent > Child" format
+- Example: Use "Food & Dining > Groceries" for supermarkets, NOT just "Food & Dining"
+- Example: Use "Food & Dining > Restaurants" for dining out, NOT just "Food & Dining"
+- Only use parent categories when no specific subcategory fits
 
 Transactions to Categorize:
 {transactions_text}
 
-Format your response as:
-Transaction N: [payee]
-Category: [category name]
-Confidence: [score]%
-Reasoning: [brief explanation]
-
-Alternatively, you can use JSON format:
-[
-    {{"transaction_id": N, "category": "...", "confidence": 95, "reasoning": "..."}},
-    ...
-]
+For each transaction provide:
+- transaction_id: The transaction number (1, 2, 3, etc.)
+- category: The MOST SPECIFIC category from the list above
+  (use "Parent > Child" format when available)
+- confidence: Integer 0-100 indicating certainty
+- reasoning: Brief explanation for your choice
 """
 
         return prompt
@@ -156,24 +152,91 @@ Alternatively, you can use JSON format:
                 }
             }
         """
+        logger.debug(f"Parsing categorization response (length: {len(llm_response)})")
+        logger.debug(f"Full response: {llm_response}")
+
         # Try JSON format first
         try:
+            # Try array format first (legacy): [...]
+            # Check for array BEFORE object to avoid matching first object in array
             json_match = re.search(r"\[[\s\S]*\]", llm_response)
             if json_match:
                 parsed_json = json.loads(json_match.group(0))
                 if isinstance(parsed_json, list):
                     results = {}
                     for item in parsed_json:
-                        txn_id = item.get("transaction_id")
-                        if txn_id is not None:
-                            results[txn_id] = {
-                                "transaction_id": txn_id,
+                        # Legacy array format uses sequential IDs (1, 2, 3...)
+                        sequential_id = item.get("transaction_id")
+                        if sequential_id is not None and 1 <= sequential_id <= len(transaction_ids):
+                            # Map sequential ID to actual transaction ID
+                            actual_txn_id = transaction_ids[sequential_id - 1]
+                            results[actual_txn_id] = {
+                                "transaction_id": actual_txn_id,
                                 "category": item.get("category"),
                                 "confidence": item.get("confidence", 50),
                                 "reasoning": item.get("reasoning", ""),
                                 "source": "llm",
                             }
                     return results
+
+            # Try object format (structured output): {"transactions": [...]}
+            json_match = re.search(r"\{[\s\S]*\}", llm_response)
+            if json_match:
+                parsed_json = json.loads(json_match.group(0))
+
+                # Check for structured output format with "transactions" key (current schema)
+                if isinstance(parsed_json, dict) and "transactions" in parsed_json:
+                    transactions_list = parsed_json.get("transactions", [])
+                    if isinstance(transactions_list, list):
+                        results = {}
+                        for item in transactions_list:
+                            # LLM uses sequential IDs (1, 2, 3...), map to actual transaction IDs
+                            sequential_id = item.get("transaction_id")
+                            if sequential_id is not None and 1 <= sequential_id <= len(
+                                transaction_ids
+                            ):
+                                # Map sequential ID to actual transaction ID
+                                actual_txn_id = transaction_ids[sequential_id - 1]
+                                results[actual_txn_id] = {
+                                    "transaction_id": actual_txn_id,
+                                    "category": item.get("category"),
+                                    "confidence": item.get("confidence", 50),
+                                    "reasoning": item.get("reasoning", ""),
+                                    "source": "llm",
+                                }
+                        return results
+
+                # Legacy: Check for "categorizations" key (old schema)
+                if isinstance(parsed_json, dict) and "categorizations" in parsed_json:
+                    categorizations = parsed_json.get("categorizations", [])
+                    if isinstance(categorizations, list):
+                        results = {}
+                        for item in categorizations:
+                            txn_id = item.get("transaction_id")
+                            if txn_id is not None:
+                                results[txn_id] = {
+                                    "transaction_id": txn_id,
+                                    "category": item.get("category"),
+                                    "confidence": item.get("confidence", 50),
+                                    "reasoning": item.get("reasoning", ""),
+                                    "source": "llm",
+                                }
+                        return results
+
+                # Check for single transaction object (legacy format)
+                if isinstance(parsed_json, dict) and "transaction_id" in parsed_json:
+                    txn_id = parsed_json.get("transaction_id")
+                    results = {
+                        txn_id: {
+                            "transaction_id": txn_id,
+                            "category": parsed_json.get("category"),
+                            "confidence": parsed_json.get("confidence", 50),
+                            "reasoning": parsed_json.get("reasoning", ""),
+                            "source": "llm",
+                        }
+                    }
+                    return results
+
         except (json.JSONDecodeError, ValueError):
             # Fall back to text parsing
             pass
@@ -256,6 +319,7 @@ Alternatively, you can use JSON format:
     def validate_batch(
         self,
         validations: List[Dict[str, Any]],
+        categories: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Validate a batch of rule-based categorizations using LLM.
 
@@ -264,6 +328,7 @@ Alternatively, you can use JSON format:
                 - transaction: Transaction dict
                 - suggested_category: Category from rule
                 - confidence: Rule confidence score
+            categories: Available categories for alternative suggestions
 
         Returns:
             Dict mapping transaction IDs to validation results:
@@ -275,8 +340,30 @@ Alternatively, you can use JSON format:
         if not validations:
             return {}
 
+        # Build category hierarchy section (same as categorization prompt)
+        category_lines = []
+        for cat in categories:
+            parent = cat.get("parent", "")
+            if parent:
+                category_lines.append(f"- {parent} > {cat['title']}")
+            else:
+                category_lines.append(f"- {cat['title']}")
+
+        categories_text = "\n".join(category_lines)
+
         # Build combined validation prompt
-        prompt_parts = ["Validate the following transaction categorizations:\n"]
+        prompt_parts = [
+            "Validate the following transaction categorizations.\n",
+            "\nAvailable Categories:",
+            categories_text,
+            "\nIMPORTANT: If you REJECT a suggestion, provide the MOST",
+            "SPECIFIC alternative category.",
+            '- For "Parent > Child" hierarchies, use the full',
+            '  "Parent > Child" format',
+            '- Example: Use "Food & Dining > Groceries" for supermarkets,',
+            '  NOT just "Food & Dining"',
+            "- Only use parent categories when no specific subcategory fits\n",
+        ]
 
         for i, val in enumerate(validations, 1):
             txn = val["transaction"]
@@ -359,7 +446,7 @@ Does this categorization look correct? Provide:
 2. Adjusted Confidence: 0-100%
 3. Reasoning: Brief explanation
 
-If you REJECT, suggest a better category.
+If you REJECT, suggest the MOST SPECIFIC better category from the available categories list.
 """
 
         return prompt

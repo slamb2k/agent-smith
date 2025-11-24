@@ -1,0 +1,832 @@
+name: Comprehensive Foundation
+layer: foundation
+description: |
+  Detailed category structure with deep hierarchies for granular tracking.
+  Best for detail-oriented people, business owners, or those optimizing tax deductions.
+
+  80+ categories with 2-3 levels of hierarchy for precise expense tracking.
+
+categories:
+  # ============================================================
+  # INCOME
+  # ============================================================
+  - name: "Income"
+    parent: null
+    description: "All income sources"
+
+  - name: "Income:Employment"
+    parent: "Income"
+    description: "Employment income"
+
+  - name: "Income:Employment:Salary & Wages"
+    parent: "Income:Employment"
+    description: "Regular salary and wage payments"
+
+  - name: "Income:Employment:Bonuses & Commissions"
+    parent: "Income:Employment"
+    description: "Performance bonuses, sales commissions"
+
+  - name: "Income:Employment:Allowances"
+    parent: "Income:Employment"
+    description: "Travel allowance, car allowance, other"
+
+  - name: "Income:Government Benefits"
+    parent: "Income"
+    description: "Centrelink and government payments"
+
+  - name: "Income:Government Benefits:Family Benefits"
+    parent: "Income:Government Benefits"
+    description: "Family Tax Benefit, Child Care Subsidy"
+
+  - name: "Income:Government Benefits:Income Support"
+    parent: "Income:Government Benefits"
+    description: "JobSeeker, Disability Support, Age Pension"
+
+  - name: "Income:Government Benefits:Child Support"
+    parent: "Income:Government Benefits"
+    description: "Child support received"
+
+  - name: "Income:Other Income"
+    parent: "Income"
+    description: "Miscellaneous income"
+
+  - name: "Income:Other Income:Tax Refunds"
+    parent: "Income:Other Income"
+    description: "ATO tax refunds, GST refunds"
+
+  - name: "Income:Other Income:Gifts & Winnings"
+    parent: "Income:Other Income"
+    description: "Cash gifts, competition winnings, lottery"
+
+  - name: "Income:Other Income:Reimbursements"
+    parent: "Income:Other Income"
+    description: "Work reimbursements, refunds"
+
+  # ============================================================
+  # HOUSING
+  # ============================================================
+  - name: "Housing"
+    parent: null
+    description: "Home-related expenses"
+
+  - name: "Housing:Rent or Mortgage"
+    parent: "Housing"
+    description: "Rent or mortgage payments"
+
+  - name: "Housing:Rent or Mortgage:Rent"
+    parent: "Housing:Rent or Mortgage"
+    description: "Rental payments"
+
+  - name: "Housing:Rent or Mortgage:Mortgage Repayments"
+    parent: "Housing:Rent or Mortgage"
+    description: "Principal and interest payments"
+
+  - name: "Housing:Rates & Levies"
+    parent: "Housing"
+    description: "Government and strata charges"
+
+  - name: "Housing:Rates & Levies:Council Rates"
+    parent: "Housing:Rates & Levies"
+    description: "Municipal council rates"
+
+  - name: "Housing:Rates & Levies:Water Rates"
+    parent: "Housing:Rates & Levies"
+    description: "Water service charges"
+
+  - name: "Housing:Rates & Levies:Strata Levies"
+    parent: "Housing:Rates & Levies"
+    description: "Body corporate, strata fees"
+
+  - name: "Housing:Maintenance & Repairs"
+    parent: "Housing"
+    description: "Home maintenance costs"
+
+  - name: "Housing:Maintenance & Repairs:Repairs"
+    parent: "Housing:Maintenance & Repairs"
+    description: "Plumbing, electrical, emergency repairs"
+
+  - name: "Housing:Maintenance & Repairs:Improvements"
+    parent: "Housing:Maintenance & Repairs"
+    description: "Renovations, upgrades, capital improvements"
+
+  - name: "Housing:Maintenance & Repairs:Garden & Lawn"
+    parent: "Housing:Maintenance & Repairs"
+    description: "Gardening, lawn care, landscaping"
+
+  - name: "Housing:Home Insurance"
+    parent: "Housing"
+    description: "Home and contents insurance"
+
+  - name: "Housing:Furnishings"
+    parent: "Housing"
+    description: "Furniture, appliances, home setup"
+
+  # ============================================================
+  # UTILITIES
+  # ============================================================
+  - name: "Utilities"
+    parent: null
+    description: "Essential household services"
+
+  - name: "Utilities:Electricity"
+    parent: "Utilities"
+    description: "Electricity bills and charges"
+
+  - name: "Utilities:Gas"
+    parent: "Utilities"
+    description: "Natural gas, LPG"
+
+  - name: "Utilities:Water"
+    parent: "Utilities"
+    description: "Water usage charges"
+
+  - name: "Utilities:Internet"
+    parent: "Utilities"
+    description: "Home internet, NBN"
+
+  - name: "Utilities:Phone"
+    parent: "Utilities"
+    description: "Mobile and landline"
+
+  - name: "Utilities:Phone:Mobile"
+    parent: "Utilities:Phone"
+    description: "Mobile phone plans, prepaid"
+
+  - name: "Utilities:Phone:Landline"
+    parent: "Utilities:Phone"
+    description: "Home phone service"
+
+  # ============================================================
+  # FOOD & DINING
+  # ============================================================
+  - name: "Food & Dining"
+    parent: null
+    description: "Food and beverage expenses"
+
+  - name: "Food & Dining:Groceries"
+    parent: "Food & Dining"
+    description: "Food shopping"
+
+  - name: "Food & Dining:Groceries:Supermarket"
+    parent: "Food & Dining:Groceries"
+    description: "Woolworths, Coles, Aldi, IGA"
+
+  - name: "Food & Dining:Groceries:Specialty Stores"
+    parent: "Food & Dining:Groceries"
+    description: "Butcher, baker, deli, fruit shop"
+
+  - name: "Food & Dining:Groceries:Online Delivery"
+    parent: "Food & Dining:Groceries"
+    description: "Online grocery delivery services"
+
+  - name: "Food & Dining:Restaurants"
+    parent: "Food & Dining"
+    description: "Dining out"
+
+  - name: "Food & Dining:Takeaway & Delivery"
+    parent: "Food & Dining"
+    description: "Takeaway food"
+
+  - name: "Food & Dining:Takeaway & Delivery:Fast Food"
+    parent: "Food & Dining:Takeaway & Delivery"
+    description: "McDonald's, KFC, etc."
+
+  - name: "Food & Dining:Takeaway & Delivery:Food Delivery"
+    parent: "Food & Dining:Takeaway & Delivery"
+    description: "Uber Eats, Menulog, DoorDash"
+
+  - name: "Food & Dining:Coffee & Cafes"
+    parent: "Food & Dining"
+    description: "Coffee shops, cafe visits"
+
+  - name: "Food & Dining:Alcohol & Beverages"
+    parent: "Food & Dining"
+    description: "Bottleshops, liquor, soft drinks"
+
+  # ============================================================
+  # TRANSPORTATION
+  # ============================================================
+  - name: "Transportation"
+    parent: null
+    description: "Transport and vehicle expenses"
+
+  - name: "Transportation:Vehicle Ownership"
+    parent: "Transportation"
+    description: "Owning and running a vehicle"
+
+  - name: "Transportation:Vehicle Ownership:Fuel"
+    parent: "Transportation:Vehicle Ownership"
+    description: "Petrol, diesel, LPG"
+
+  - name: "Transportation:Vehicle Ownership:Maintenance & Servicing"
+    parent: "Transportation:Vehicle Ownership"
+    description: "Regular servicing, oil changes"
+
+  - name: "Transportation:Vehicle Ownership:Repairs"
+    parent: "Transportation:Vehicle Ownership"
+    description: "Breakdowns, accident repairs, tyres"
+
+  - name: "Transportation:Vehicle Ownership:Registration & Insurance"
+    parent: "Transportation:Vehicle Ownership"
+    description: "Rego, CTP, comprehensive insurance"
+
+  - name: "Transportation:Vehicle Ownership:Car Wash & Detailing"
+    parent: "Transportation:Vehicle Ownership"
+    description: "Cleaning, detailing, car care"
+
+  - name: "Transportation:Parking & Tolls"
+    parent: "Transportation"
+    description: "Parking and road tolls"
+
+  - name: "Transportation:Parking & Tolls:Parking"
+    parent: "Transportation:Parking & Tolls"
+    description: "Street parking, parking meters, car parks"
+
+  - name: "Transportation:Parking & Tolls:Tolls"
+    parent: "Transportation:Parking & Tolls"
+    description: "E-tag, toll roads, M1, M2, etc."
+
+  - name: "Transportation:Public Transport"
+    parent: "Transportation"
+    description: "Buses, trains, trams, ferries"
+
+  - name: "Transportation:Public Transport:Opal/Myki Card"
+    parent: "Transportation:Public Transport"
+    description: "Prepaid transport cards"
+
+  - name: "Transportation:Public Transport:Tickets"
+    parent: "Transportation:Public Transport"
+    description: "Single tickets, day passes"
+
+  - name: "Transportation:Rideshare & Taxis"
+    parent: "Transportation"
+    description: "Uber, Didi, taxis"
+
+  # ============================================================
+  # HEALTHCARE
+  # ============================================================
+  - name: "Healthcare"
+    parent: null
+    description: "Medical and health expenses"
+
+  - name: "Healthcare:Medical Services"
+    parent: "Healthcare"
+    description: "Doctor visits and medical care"
+
+  - name: "Healthcare:Medical Services:GP & Specialists"
+    parent: "Healthcare:Medical Services"
+    description: "General practitioner, specialist doctors"
+
+  - name: "Healthcare:Medical Services:Tests & Pathology"
+    parent: "Healthcare:Medical Services"
+    description: "Blood tests, x-rays, scans, pathology"
+
+  - name: "Healthcare:Medical Services:Hospital & Emergency"
+    parent: "Healthcare:Medical Services"
+    description: "Hospital visits, emergency care, ambulance"
+
+  - name: "Healthcare:Dental"
+    parent: "Healthcare"
+    description: "Dental care"
+
+  - name: "Healthcare:Dental:General Dental"
+    parent: "Healthcare:Dental"
+    description: "Check-ups, cleaning, fillings"
+
+  - name: "Healthcare:Dental:Orthodontics"
+    parent: "Healthcare:Dental"
+    description: "Braces, Invisalign, orthodontic treatment"
+
+  - name: "Healthcare:Pharmacy"
+    parent: "Healthcare"
+    description: "Pharmacy and medications"
+
+  - name: "Healthcare:Pharmacy:Prescriptions"
+    parent: "Healthcare:Pharmacy"
+    description: "PBS prescriptions, scripts"
+
+  - name: "Healthcare:Pharmacy:Over the Counter"
+    parent: "Healthcare:Pharmacy"
+    description: "Non-prescription medicines, first aid"
+
+  - name: "Healthcare:Allied Health"
+    parent: "Healthcare"
+    description: "Other health services"
+
+  - name: "Healthcare:Allied Health:Physiotherapy"
+    parent: "Healthcare:Allied Health"
+    description: "Physio, exercise physiology"
+
+  - name: "Healthcare:Allied Health:Psychology & Counselling"
+    parent: "Healthcare:Allied Health"
+    description: "Psychologist, counsellor, mental health"
+
+  - name: "Healthcare:Allied Health:Other Therapies"
+    parent: "Healthcare:Allied Health"
+    description: "Chiro, osteo, massage, acupuncture"
+
+  - name: "Healthcare:Optical"
+    parent: "Healthcare"
+    description: "Eye care, glasses, contacts"
+
+  - name: "Healthcare:Health Insurance"
+    parent: "Healthcare"
+    description: "Private health insurance premiums"
+
+  # ============================================================
+  # PERSONAL CARE & APPEARANCE
+  # ============================================================
+  - name: "Personal Care"
+    parent: null
+    description: "Personal grooming and care"
+
+  - name: "Personal Care:Hair & Beauty"
+    parent: "Personal Care"
+    description: "Hair and beauty services"
+
+  - name: "Personal Care:Hair & Beauty:Haircuts & Styling"
+    parent: "Personal Care:Hair & Beauty"
+    description: "Barber, hairdresser, hair treatments"
+
+  - name: "Personal Care:Hair & Beauty:Beauty Services"
+    parent: "Personal Care:Hair & Beauty"
+    description: "Nails, waxing, facials, beauty treatments"
+
+  - name: "Personal Care:Toiletries & Cosmetics"
+    parent: "Personal Care"
+    description: "Personal hygiene products"
+
+  - name: "Personal Care:Toiletries & Cosmetics:Skincare & Cosmetics"
+    parent: "Personal Care:Toiletries & Cosmetics"
+    description: "Makeup, skincare, fragrances"
+
+  - name: "Personal Care:Toiletries & Cosmetics:Personal Hygiene"
+    parent: "Personal Care:Toiletries & Cosmetics"
+    description: "Shampoo, soap, deodorant, dental care"
+
+  - name: "Clothing & Footwear"
+    parent: null
+    description: "Clothes and shoes"
+
+  - name: "Clothing & Footwear:Adults"
+    parent: "Clothing & Footwear"
+    description: "Adult clothing and shoes"
+
+  - name: "Clothing & Footwear:Kids"
+    parent: "Clothing & Footwear"
+    description: "Children's clothing and shoes"
+
+  - name: "Clothing & Footwear:Accessories"
+    parent: "Clothing & Footwear"
+    description: "Bags, wallets, jewellery, watches"
+
+  # ============================================================
+  # ENTERTAINMENT & RECREATION
+  # ============================================================
+  - name: "Entertainment & Recreation"
+    parent: null
+    description: "Entertainment and leisure"
+
+  - name: "Entertainment & Recreation:Subscriptions"
+    parent: "Entertainment & Recreation"
+    description: "Streaming and digital services"
+
+  - name: "Entertainment & Recreation:Subscriptions:Streaming Video"
+    parent: "Entertainment & Recreation:Subscriptions"
+    description: "Netflix, Stan, Disney+, Binge"
+
+  - name: "Entertainment & Recreation:Subscriptions:Streaming Music"
+    parent: "Entertainment & Recreation:Subscriptions"
+    description: "Spotify, Apple Music, YouTube Music"
+
+  - name: "Entertainment & Recreation:Subscriptions:Gaming"
+    parent: "Entertainment & Recreation:Subscriptions"
+    description: "PlayStation Plus, Xbox Game Pass, etc."
+
+  - name: "Entertainment & Recreation:Subscriptions:News & Publications"
+    parent: "Entertainment & Recreation:Subscriptions"
+    description: "Newspapers, magazines, digital subscriptions"
+
+  - name: "Entertainment & Recreation:Fitness & Sport"
+    parent: "Entertainment & Recreation"
+    description: "Fitness and sports activities"
+
+  - name: "Entertainment & Recreation:Fitness & Sport:Gym Membership"
+    parent: "Entertainment & Recreation:Fitness & Sport"
+    description: "Gym, fitness classes, personal training"
+
+  - name: "Entertainment & Recreation:Fitness & Sport:Sports & Activities"
+    parent: "Entertainment & Recreation:Fitness & Sport"
+    description: "Sports clubs, equipment, registration fees"
+
+  - name: "Entertainment & Recreation:Events & Outings"
+    parent: "Entertainment & Recreation"
+    description: "Events and activities"
+
+  - name: "Entertainment & Recreation:Events & Outings:Movies & Cinema"
+    parent: "Entertainment & Recreation:Events & Outings"
+    description: "Movie tickets, cinema"
+
+  - name: "Entertainment & Recreation:Events & Outings:Concerts & Theatre"
+    parent: "Entertainment & Recreation:Events & Outings"
+    description: "Live music, theatre, performances"
+
+  - name: "Entertainment & Recreation:Events & Outings:Sports Events"
+    parent: "Entertainment & Recreation:Events & Outings"
+    description: "AFL, NRL, cricket, sports tickets"
+
+  - name: "Entertainment & Recreation:Hobbies"
+    parent: "Entertainment & Recreation"
+    description: "Hobby-related expenses"
+
+  - name: "Entertainment & Recreation:Books & Media"
+    parent: "Entertainment & Recreation"
+    description: "Books, audiobooks, magazines, DVDs"
+
+  - name: "Entertainment & Recreation:Gaming"
+    parent: "Entertainment & Recreation"
+    description: "Video games, board games, gaming gear"
+
+  # ============================================================
+  # EDUCATION & DEVELOPMENT
+  # ============================================================
+  - name: "Education"
+    parent: null
+    description: "Education and learning"
+
+  - name: "Education:School"
+    parent: "Education"
+    description: "Primary and secondary school"
+
+  - name: "Education:School:School Fees"
+    parent: "Education:School"
+    description: "Tuition fees, private school fees"
+
+  - name: "Education:School:School Uniforms"
+    parent: "Education:School"
+    description: "Uniforms, sports gear"
+
+  - name: "Education:School:Excursions & Activities"
+    parent: "Education:School"
+    description: "School camps, excursions, activities"
+
+  - name: "Education:Tertiary Education"
+    parent: "Education"
+    description: "University, TAFE, higher education"
+
+  - name: "Education:Tertiary Education:Tuition Fees"
+    parent: "Education:Tertiary Education"
+    description: "HECS, course fees, semester fees"
+
+  - name: "Education:Tertiary Education:Textbooks & Materials"
+    parent: "Education:Tertiary Education"
+    description: "Textbooks, course materials, stationery"
+
+  - name: "Education:Courses & Training"
+    parent: "Education"
+    description: "Professional development, short courses"
+
+  - name: "Education:Tutoring"
+    parent: "Education"
+    description: "Private tutoring, coaching"
+
+  # ============================================================
+  # KIDS & FAMILY
+  # ============================================================
+  - name: "Kids & Family"
+    parent: null
+    description: "Child-related expenses"
+
+  - name: "Kids & Family:Childcare & Education"
+    parent: "Kids & Family"
+    description: "Childcare services"
+
+  - name: "Kids & Family:Childcare & Education:Daycare"
+    parent: "Kids & Family:Childcare & Education"
+    description: "Long day care, family day care"
+
+  - name: "Kids & Family:Childcare & Education:Before/After School Care"
+    parent: "Kids & Family:Childcare & Education"
+    description: "OOSH, vacation care"
+
+  - name: "Kids & Family:Activities"
+    parent: "Kids & Family"
+    description: "Kids activities and sports"
+
+  - name: "Kids & Family:Activities:Sports"
+    parent: "Kids & Family:Activities"
+    description: "Kids sports, swimming lessons, team fees"
+
+  - name: "Kids & Family:Activities:Music & Arts"
+    parent: "Kids & Family:Activities"
+    description: "Music lessons, art classes, dance"
+
+  - name: "Kids & Family:Toys & Entertainment"
+    parent: "Kids & Family"
+    description: "Toys, games, kid entertainment"
+
+  - name: "Kids & Family:Baby Supplies"
+    parent: "Kids & Family"
+    description: "Nappies, formula, baby products"
+
+  - name: "Kids & Family:Pocket Money & Allowances"
+    parent: "Kids & Family"
+    description: "Kids pocket money, allowances"
+
+  # ============================================================
+  # FINANCIAL SERVICES
+  # ============================================================
+  - name: "Financial Services"
+    parent: null
+    description: "Banking and financial costs"
+
+  - name: "Financial Services:Bank Fees"
+    parent: "Financial Services"
+    description: "Banking fees and charges"
+
+  - name: "Financial Services:Bank Fees:Account Fees"
+    parent: "Financial Services:Bank Fees"
+    description: "Monthly account fees, transaction fees"
+
+  - name: "Financial Services:Bank Fees:ATM Fees"
+    parent: "Financial Services:Bank Fees"
+    description: "ATM withdrawal fees, foreign ATM fees"
+
+  - name: "Financial Services:Interest & Finance Charges"
+    parent: "Financial Services"
+    description: "Interest and finance costs"
+
+  - name: "Financial Services:Interest & Finance Charges:Credit Card Interest"
+    parent: "Financial Services:Interest & Finance Charges"
+    description: "Credit card interest charges"
+
+  - name: "Financial Services:Interest & Finance Charges:Loan Interest"
+    parent: "Financial Services:Interest & Finance Charges"
+    description: "Personal loan interest, other loan costs"
+
+  - name: "Financial Services:Accounting & Tax"
+    parent: "Financial Services"
+    description: "Accountant, tax agent, bookkeeping"
+
+  # ============================================================
+  # INSURANCE
+  # ============================================================
+  - name: "Insurance"
+    parent: null
+    description: "Insurance premiums (non-health, non-vehicle)"
+
+  - name: "Insurance:Life & Income Protection"
+    parent: "Insurance"
+    description: "Life insurance and income protection"
+
+  - name: "Insurance:Life & Income Protection:Life Insurance"
+    parent: "Insurance:Life & Income Protection"
+    description: "Life insurance premiums"
+
+  - name: "Insurance:Life & Income Protection:Income Protection"
+    parent: "Insurance:Life & Income Protection"
+    description: "Income protection, TPD, trauma insurance"
+
+  - name: "Insurance:Pet Insurance"
+    parent: "Insurance"
+    description: "Pet insurance premiums"
+
+  - name: "Insurance:Travel Insurance"
+    parent: "Insurance"
+    description: "Travel insurance, overseas coverage"
+
+  - name: "Insurance:Other Insurance"
+    parent: "Insurance"
+    description: "Other insurance policies"
+
+  # ============================================================
+  # SHOPPING & HOUSEHOLD
+  # ============================================================
+  - name: "Shopping"
+    parent: null
+    description: "General retail and household"
+
+  - name: "Shopping:Household Items"
+    parent: "Shopping"
+    description: "Household goods and supplies"
+
+  - name: "Shopping:Household Items:Furniture"
+    parent: "Shopping:Household Items"
+    description: "Furniture, beds, sofas, tables"
+
+  - name: "Shopping:Household Items:Appliances"
+    parent: "Shopping:Household Items"
+    description: "Fridges, washing machines, electronics"
+
+  - name: "Shopping:Household Items:Homewares"
+    parent: "Shopping:Household Items"
+    description: "Kitchen items, bedding, décor, storage"
+
+  - name: "Shopping:Household Items:Cleaning Supplies"
+    parent: "Shopping:Household Items"
+    description: "Cleaning products, laundry detergent"
+
+  - name: "Shopping:General Retail"
+    parent: "Shopping"
+    description: "Department stores and misc purchases"
+
+  - name: "Shopping:Electronics"
+    parent: "Shopping"
+    description: "Computers, phones, tablets, tech"
+
+  - name: "Shopping:Hardware & DIY"
+    parent: "Shopping"
+    description: "Bunnings, hardware, DIY supplies"
+
+  # ============================================================
+  # GIFTS & DONATIONS
+  # ============================================================
+  - name: "Gifts & Donations"
+    parent: null
+    description: "Gifts and charitable giving"
+
+  - name: "Gifts & Donations:Gifts"
+    parent: "Gifts & Donations"
+    description: "Birthday, Christmas, special occasion gifts"
+
+  - name: "Gifts & Donations:Charitable Donations"
+    parent: "Gifts & Donations"
+    description: "Charity donations, sponsorships"
+
+  # ============================================================
+  # PETS
+  # ============================================================
+  - name: "Pets"
+    parent: null
+    description: "Pet-related expenses"
+
+  - name: "Pets:Food & Supplies"
+    parent: "Pets"
+    description: "Pet food, litter, supplies"
+
+  - name: "Pets:Veterinary"
+    parent: "Pets"
+    description: "Vet visits, medications, surgery"
+
+  - name: "Pets:Grooming & Boarding"
+    parent: "Pets"
+    description: "Grooming, pet sitting, boarding kennels"
+
+  # ============================================================
+  # TRAVEL & HOLIDAYS
+  # ============================================================
+  - name: "Travel & Holidays"
+    parent: null
+    description: "Travel and holiday expenses"
+
+  - name: "Travel & Holidays:Accommodation"
+    parent: "Travel & Holidays"
+    description: "Hotels, Airbnb, holiday rentals"
+
+  - name: "Travel & Holidays:Flights & Transport"
+    parent: "Travel & Holidays"
+    description: "Airfares and transport"
+
+  - name: "Travel & Holidays:Flights & Transport:Airfares"
+    parent: "Travel & Holidays:Flights & Transport"
+    description: "Domestic and international flights"
+
+  - name: "Travel & Holidays:Flights & Transport:Car Hire"
+    parent: "Travel & Holidays:Flights & Transport"
+    description: "Rental cars, car hire"
+
+  - name: "Travel & Holidays:Activities & Tours"
+    parent: "Travel & Holidays"
+    description: "Tours, attractions, activities"
+
+  - name: "Travel & Holidays:Holiday Spending"
+    parent: "Travel & Holidays"
+    description: "Meals, shopping, misc while on holiday"
+
+  # ============================================================
+  # GOVERNMENT & ADMIN
+  # ============================================================
+  - name: "Government & Fees"
+    parent: null
+    description: "Government charges and official fees"
+
+  - name: "Government & Fees:Fines & Penalties"
+    parent: "Government & Fees"
+    description: "Fines and late fees"
+
+  - name: "Government & Fees:Fines & Penalties:Traffic Fines"
+    parent: "Government & Fees:Fines & Penalties"
+    description: "Speeding, parking, traffic infringements"
+
+  - name: "Government & Fees:Fines & Penalties:Other Fines"
+    parent: "Government & Fees:Fines & Penalties"
+    description: "Library fines, other penalties"
+
+  - name: "Government & Fees:Licences & Registration"
+    parent: "Government & Fees"
+    description: "Licences and registrations"
+
+  - name: "Government & Fees:Licences & Registration:Driver Licence"
+    parent: "Government & Fees:Licences & Registration"
+    description: "Licence renewal, learner's permit"
+
+  - name: "Government & Fees:Licences & Registration:Professional Registration"
+    parent: "Government & Fees:Licences & Registration"
+    description: "Trade licences, professional registrations"
+
+  - name: "Government & Fees:Legal & Professional"
+    parent: "Government & Fees"
+    description: "Legal fees, solicitors, conveyancing"
+
+  # ============================================================
+  # DEBT & SAVINGS
+  # ============================================================
+  - name: "Debt Payments"
+    parent: null
+    description: "Loan and debt repayments"
+
+  - name: "Debt Payments:Personal Loans"
+    parent: "Debt Payments"
+    description: "Personal loan repayments"
+
+  - name: "Debt Payments:Credit Cards"
+    parent: "Debt Payments"
+    description: "Credit card payments"
+
+  - name: "Debt Payments:BNPL"
+    parent: "Debt Payments"
+    description: "Afterpay, Zip Pay, buy now pay later"
+
+  - name: "Debt Payments:Other Debt"
+    parent: "Debt Payments"
+    description: "Other debt repayments"
+
+  # ============================================================
+  # TRANSFERS & OTHER
+  # ============================================================
+  - name: "Transfers & Adjustments"
+    parent: null
+    description: "Account transfers and movements"
+
+  - name: "Transfers & Adjustments:Savings Transfers"
+    parent: "Transfers & Adjustments"
+    description: "Transfers to savings accounts"
+
+  - name: "Transfers & Adjustments:Investment Contributions"
+    parent: "Transfers & Adjustments"
+    description: "Super contributions, shares, investments"
+
+  - name: "Transfers & Adjustments:Internal Transfers"
+    parent: "Transfers & Adjustments"
+    description: "Transfers between own accounts"
+
+  - name: "Uncategorised"
+    parent: null
+    description: "Transactions not yet categorised"
+
+rules:
+  # ============================================================
+  # COMMON GROCERY STORES (Australia)
+  # ============================================================
+  - type: category
+    name: Woolworths → Groceries
+    patterns: [Woolworths, WOOLWORTHS]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Coles → Groceries
+    patterns: [Coles, COLES]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Aldi → Groceries
+    patterns: [Aldi, ALDI]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: IGA → Groceries
+    patterns: [IGA]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+labels: []
+
+tax_tracking:
+  detailed_expense_tracking: true
+  receipt_tracking_enabled: true
+
+alerts: []
+
+dependencies:
+  requires: []
+  conflicts_with: ["minimal", "standard"]
+
+metadata:
+  created: "2025-11-23"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 0
+  category_count: 186

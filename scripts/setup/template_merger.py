@@ -68,7 +68,20 @@ class TemplateMerger:
                     seen_labels.add(label_name)
 
             # Append all rules (no deduplication)
-            merged["rules"].extend(template.get("rules", []))
+            # Normalize field names: YAML uses 'category' and 'pattern',
+            # applier expects 'target_category' and 'payee_pattern'
+            for rule in template.get("rules", []):
+                normalized_rule = rule.copy()
+
+                # Normalize 'category' -> 'target_category'
+                if "category" in normalized_rule:
+                    normalized_rule["target_category"] = normalized_rule.pop("category")
+
+                # Normalize 'pattern' -> 'payee_pattern'
+                if "pattern" in normalized_rule:
+                    normalized_rule["payee_pattern"] = normalized_rule.pop("pattern")
+
+                merged["rules"].append(normalized_rule)
 
             # Merge tax tracking (later templates override)
             merged["tax_tracking"].update(template.get("tax_tracking", {}))
@@ -121,8 +134,12 @@ def main() -> None:
         description="Merge Agent Smith templates into a single configuration"
     )
     parser.add_argument(
+        "--foundation",
+        choices=["minimal", "standard", "comprehensive"],
+        help="Foundation category template (minimal/standard/comprehensive)",
+    )
+    parser.add_argument(
         "--primary",
-        required=True,
         help="Primary income template (e.g., payg-employee, sole-trader)",
     )
     parser.add_argument(
@@ -142,6 +159,10 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Validate: at least one of foundation or primary must be specified
+    if not args.foundation and not args.primary:
+        parser.error("At least one of --foundation or --primary must be specified")
+
     # Get templates directory
     templates_dir = get_plugin_assets_dir() / "templates"
 
@@ -152,14 +173,24 @@ def main() -> None:
     # Load templates
     templates = []
 
-    # Load primary template
-    primary_file = templates_dir / "primary" / f"{args.primary}.yaml"
-    if not primary_file.exists():
-        print(f"Error: Primary template not found: {primary_file}", file=sys.stderr)
-        sys.exit(1)
+    # Load foundation template first (if specified)
+    # Foundation has lowest priority (loaded first, highest priority number)
+    if args.foundation:
+        foundation_file = templates_dir / "foundation" / f"{args.foundation}.yaml"
+        if not foundation_file.exists():
+            print(f"Error: Foundation template not found: {foundation_file}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Loading foundation: {args.foundation}")
+        templates.append(load_template(foundation_file))
 
-    print(f"Loading primary: {args.primary}")
-    templates.append(load_template(primary_file))
+    # Load primary template
+    if args.primary:
+        primary_file = templates_dir / "primary" / f"{args.primary}.yaml"
+        if not primary_file.exists():
+            print(f"Error: Primary template not found: {primary_file}", file=sys.stderr)
+            sys.exit(1)
+        print(f"Loading primary: {args.primary}")
+        templates.append(load_template(primary_file))
 
     # Load living templates
     if args.living:

@@ -1,0 +1,361 @@
+name: Standard Foundation
+layer: foundation
+description: |
+  Balanced category structure with 1-2 levels of hierarchy.
+  Best for most people - detailed enough for insights, simple enough to maintain.
+
+  45 categories with logical groupings for common Australian expenses.
+
+categories:
+  # ============================================================
+  # INCOME
+  # ============================================================
+  - name: "Income"
+    parent: null
+    description: "All income sources"
+
+  - name: "Income:Employment"
+    parent: "Income"
+    description: "Salary, wages, bonuses"
+
+  - name: "Income:Government Benefits"
+    parent: "Income"
+    description: "Centrelink, Family Tax Benefit, Child Support"
+
+  - name: "Income:Other"
+    parent: "Income"
+    description: "Gifts, refunds, miscellaneous income"
+
+  # ============================================================
+  # HOUSING
+  # ============================================================
+  - name: "Housing"
+    parent: null
+    description: "Home-related expenses"
+
+  - name: "Housing:Rent or Mortgage"
+    parent: "Housing"
+    description: "Rent payments or mortgage repayments"
+
+  - name: "Housing:Rates & Levies"
+    parent: "Housing"
+    description: "Council rates, water rates, strata levies"
+
+  - name: "Housing:Maintenance & Repairs"
+    parent: "Housing"
+    description: "Home repairs, maintenance, improvements"
+
+  - name: "Housing:Home Insurance"
+    parent: "Housing"
+    description: "Home and contents insurance"
+
+  # ============================================================
+  # UTILITIES
+  # ============================================================
+  - name: "Utilities"
+    parent: null
+    description: "Essential household services"
+
+  - name: "Utilities:Electricity"
+    parent: "Utilities"
+    description: "Electricity bills"
+
+  - name: "Utilities:Gas"
+    parent: "Utilities"
+    description: "Gas bills"
+
+  - name: "Utilities:Water"
+    parent: "Utilities"
+    description: "Water bills"
+
+  - name: "Utilities:Internet & Phone"
+    parent: "Utilities"
+    description: "Internet, mobile, landline"
+
+  # ============================================================
+  # FOOD & DINING
+  # ============================================================
+  - name: "Food & Dining"
+    parent: null
+    description: "Food and beverage expenses"
+
+  - name: "Food & Dining:Groceries"
+    parent: "Food & Dining"
+    description: "Supermarket, grocery shopping"
+
+  - name: "Food & Dining:Restaurants"
+    parent: "Food & Dining"
+    description: "Dining out, cafes"
+
+  - name: "Food & Dining:Takeaway & Delivery"
+    parent: "Food & Dining"
+    description: "Takeaway, food delivery services"
+
+  # ============================================================
+  # TRANSPORTATION
+  # ============================================================
+  - name: "Transportation"
+    parent: null
+    description: "Transport and vehicle expenses"
+
+  - name: "Transportation:Fuel"
+    parent: "Transportation"
+    description: "Petrol, diesel"
+
+  - name: "Transportation:Public Transport"
+    parent: "Transportation"
+    description: "Trains, buses, trams, ferries, Opal/Myki"
+
+  - name: "Transportation:Vehicle Maintenance"
+    parent: "Transportation"
+    description: "Repairs, servicing, tyres"
+
+  - name: "Transportation:Registration & Insurance"
+    parent: "Transportation"
+    description: "Rego, CTP, car insurance"
+
+  - name: "Transportation:Parking & Tolls"
+    parent: "Transportation"
+    description: "Parking fees, tolls, e-tags"
+
+  - name: "Transportation:Rideshare & Taxis"
+    parent: "Transportation"
+    description: "Uber, taxis, rideshare"
+
+  # ============================================================
+  # HEALTHCARE
+  # ============================================================
+  - name: "Healthcare"
+    parent: null
+    description: "Medical and health expenses"
+
+  - name: "Healthcare:Medical"
+    parent: "Healthcare"
+    description: "GP visits, specialists, Medicare gap"
+
+  - name: "Healthcare:Dental"
+    parent: "Healthcare"
+    description: "Dentist, orthodontist"
+
+  - name: "Healthcare:Pharmacy & Prescriptions"
+    parent: "Healthcare"
+    description: "Medications, pharmacy items, PBS"
+
+  - name: "Healthcare:Health Insurance"
+    parent: "Healthcare"
+    description: "Private health insurance premiums"
+
+  - name: "Healthcare:Other Health"
+    parent: "Healthcare"
+    description: "Physio, chiro, optical, allied health"
+
+  # ============================================================
+  # PERSONAL & LIFESTYLE
+  # ============================================================
+  - name: "Personal Care"
+    parent: null
+    description: "Personal grooming and care"
+
+  - name: "Personal Care:Hair & Beauty"
+    parent: "Personal Care"
+    description: "Haircuts, salons, beauty treatments"
+
+  - name: "Personal Care:Toiletries & Cosmetics"
+    parent: "Personal Care"
+    description: "Personal hygiene products, cosmetics"
+
+  - name: "Clothing & Footwear"
+    parent: null
+    description: "Clothes, shoes, accessories"
+
+  - name: "Entertainment & Recreation"
+    parent: null
+    description: "Entertainment, hobbies, recreation"
+
+  - name: "Entertainment & Recreation:Streaming & Subscriptions"
+    parent: "Entertainment & Recreation"
+    description: "Netflix, Spotify, Stan, gaming subscriptions"
+
+  - name: "Entertainment & Recreation:Hobbies & Activities"
+    parent: "Entertainment & Recreation"
+    description: "Sports, gym, clubs, hobbies"
+
+  - name: "Entertainment & Recreation:Events & Outings"
+    parent: "Entertainment & Recreation"
+    description: "Movies, concerts, sports events, activities"
+
+  # ============================================================
+  # EDUCATION & DEVELOPMENT
+  # ============================================================
+  - name: "Education"
+    parent: null
+    description: "Education expenses"
+
+  - name: "Education:School Fees & Costs"
+    parent: "Education"
+    description: "School fees, uniforms, excursions"
+
+  - name: "Education:Courses & Training"
+    parent: "Education"
+    description: "TAFE, uni, online courses, professional development"
+
+  - name: "Education:Books & Supplies"
+    parent: "Education"
+    description: "Textbooks, stationery, learning materials"
+
+  # ============================================================
+  # FINANCIAL
+  # ============================================================
+  - name: "Financial Services"
+    parent: null
+    description: "Banking, fees, and financial costs"
+
+  - name: "Financial Services:Bank Fees"
+    parent: "Financial Services"
+    description: "Account fees, ATM fees, transaction charges"
+
+  - name: "Financial Services:Interest & Charges"
+    parent: "Financial Services"
+    description: "Credit card interest, loan fees"
+
+  - name: "Insurance"
+    parent: null
+    description: "Insurance premiums (non-health, non-vehicle)"
+
+  - name: "Insurance:Life Insurance"
+    parent: "Insurance"
+    description: "Life, income protection, TPD"
+
+  - name: "Insurance:Other Insurance"
+    parent: "Insurance"
+    description: "Pet insurance, travel insurance, other"
+
+  # ============================================================
+  # DISCRETIONARY
+  # ============================================================
+  - name: "Shopping"
+    parent: null
+    description: "General retail and household items"
+
+  - name: "Shopping:Household Items"
+    parent: "Shopping"
+    description: "Furniture, appliances, homewares"
+
+  - name: "Shopping:General Retail"
+    parent: "Shopping"
+    description: "Department stores, online shopping, misc purchases"
+
+  - name: "Gifts & Donations"
+    parent: null
+    description: "Gifts and charitable giving"
+
+  - name: "Pets"
+    parent: null
+    description: "Pet food, vet, grooming, supplies"
+
+  # ============================================================
+  # TRAVEL
+  # ============================================================
+  - name: "Travel & Holidays"
+    parent: null
+    description: "Travel and holiday expenses"
+
+  - name: "Travel & Holidays:Accommodation"
+    parent: "Travel & Holidays"
+    description: "Hotels, Airbnb, holiday rentals"
+
+  - name: "Travel & Holidays:Flights & Transport"
+    parent: "Travel & Holidays"
+    description: "Airfares, car hire, transfers"
+
+  # ============================================================
+  # KIDS (if applicable)
+  # ============================================================
+  - name: "Kids & Family"
+    parent: null
+    description: "Child-related expenses"
+
+  - name: "Kids & Family:Childcare"
+    parent: "Kids & Family"
+    description: "Daycare, before/after school care, vacation care"
+
+  - name: "Kids & Family:Activities & Sports"
+    parent: "Kids & Family"
+    description: "Kids sports, music lessons, activities"
+
+  - name: "Kids & Family:Other Kid Expenses"
+    parent: "Kids & Family"
+    description: "Toys, birthday parties, kid-specific costs"
+
+  # ============================================================
+  # GOVERNMENT & ADMIN
+  # ============================================================
+  - name: "Government & Fees"
+    parent: null
+    description: "Government charges and official fees"
+
+  - name: "Government & Fees:Fines & Penalties"
+    parent: "Government & Fees"
+    description: "Traffic fines, parking fines, late fees"
+
+  - name: "Government & Fees:Licences & Registration"
+    parent: "Government & Fees"
+    description: "Driver licence, professional registrations"
+
+  # ============================================================
+  # OTHER
+  # ============================================================
+  - name: "Transfers & Adjustments"
+    parent: null
+    description: "Account transfers, savings, investments"
+
+  - name: "Uncategorised"
+    parent: null
+    description: "Transactions not yet categorised"
+
+rules:
+  # ============================================================
+  # COMMON GROCERY STORES (Australia)
+  # ============================================================
+  - type: category
+    name: Woolworths → Groceries
+    patterns: [Woolworths, WOOLWORTHS]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Coles → Groceries
+    patterns: [Coles, COLES]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: Aldi → Groceries
+    patterns: [Aldi, ALDI]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+  - type: category
+    name: IGA → Groceries
+    patterns: [IGA]
+    category: Food & Dining > Groceries
+    confidence: 95
+
+labels: []
+
+tax_tracking:
+  basic_expense_tracking: true
+
+alerts: []
+
+dependencies:
+  requires: []
+  conflicts_with: ["minimal", "comprehensive"]
+
+metadata:
+  created: "2025-11-23"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 0
+  category_count: 65
+  recommended: true
