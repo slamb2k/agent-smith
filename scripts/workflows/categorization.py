@@ -202,6 +202,95 @@ class CategorizationWorkflow:
 """
         return summary
 
+    def categorize_single_transaction(
+        self,
+        transaction: Dict[str, Any],
+        available_categories: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Categorize a single transaction with smart platform coexistence (Option 4).
+
+        This handles already-categorized transactions intelligently:
+        - Uncategorized: Apply category + labels from rules
+        - Already categorized + matching rule: Apply labels only
+        - Already categorized + conflicting rule: Flag for review
+        - Label-only rule: Apply labels regardless
+
+        Args:
+            transaction: Transaction dict with id, payee, amount, date, category
+            available_categories: Available categories
+
+        Returns:
+            Result dict with:
+            - category: str - Category (existing or from rule)
+            - labels: List[str] - Matched labels (sorted)
+            - confidence: int - Confidence score
+            - source: str - "rule", "conflict", or "none"
+            - needs_review: bool - Whether transaction needs manual review
+            - suggested_category: str - What rule suggested (if conflict)
+        """
+        # Apply rule engine
+        rule_result = self.rule_engine.categorize_and_label(transaction)
+
+        # Get existing category if any
+        existing_category = None
+        if transaction.get("category"):
+            if isinstance(transaction["category"], dict):
+                existing_category = transaction["category"].get("title")
+            else:
+                existing_category = transaction["category"]
+
+        # Case 1: Uncategorized transaction
+        if existing_category is None:
+            if rule_result["category"] is not None:
+                # Rule matched - apply category + labels
+                return {
+                    "category": rule_result["category"],
+                    "labels": rule_result["labels"],
+                    "confidence": rule_result["confidence"],
+                    "source": "rule",
+                    "llm_used": False,
+                }
+            else:
+                # No rule match, no existing category
+                return {
+                    "category": None,
+                    "labels": rule_result["labels"],  # May have label-only rules
+                    "confidence": 0,
+                    "source": "none",
+                    "llm_used": False,
+                }
+
+        # Case 2: Already categorized
+        if rule_result["category"] is None:
+            # Label-only rule - apply labels, keep existing category
+            return {
+                "category": existing_category,
+                "labels": rule_result["labels"],
+                "confidence": rule_result["confidence"],
+                "source": "rule",
+                "llm_used": False,
+            }
+        elif rule_result["category"] == existing_category:
+            # Category matches - apply labels only
+            return {
+                "category": existing_category,
+                "labels": rule_result["labels"],
+                "confidence": rule_result["confidence"],
+                "source": "rule",
+                "llm_used": False,
+            }
+        else:
+            # Category conflict - flag for review
+            return {
+                "category": existing_category,
+                "labels": [],
+                "confidence": rule_result["confidence"],
+                "source": "conflict",
+                "needs_review": True,
+                "suggested_category": rule_result["category"],
+                "llm_used": False,
+            }
+
     def categorize_transaction(
         self,
         transaction: Dict[str, Any],
@@ -320,39 +409,41 @@ class CategorizationWorkflow:
             "llm_categorized": 0,
             "llm_validated": 0,
             "skipped": 0,
+            "conflicts": 0,
         }
 
-        # Phase 1: Apply rules to all transactions
+        # Phase 1: Apply rules to all transactions (Option 4: smart coexistence)
         logger.info(f"Applying rules to {len(transactions)} transactions...")
         uncategorized = []
         needs_validation = []
 
         for txn in transactions:
-            rule_result = self.rule_engine.categorize_and_label(txn)
+            # Use new smart categorization that handles already-categorized transactions
+            result = self.categorize_single_transaction(txn, available_categories)
 
-            if rule_result["category"] is not None:
-                # Rule matched
-                results[txn["id"]] = {
-                    "category": rule_result["category"],
-                    "labels": rule_result["labels"],
-                    "confidence": rule_result["confidence"],
-                    "source": "rule",
-                    "llm_used": False,
-                }
+            # Store result
+            results[txn["id"]] = result
+
+            # Update stats
+            if result["source"] == "conflict":
+                stats["conflicts"] += 1
+            elif result["source"] == "rule":
                 stats["rule_matches"] += 1
+            elif result["source"] == "none" and result["category"] is None:
+                # Truly uncategorized - needs LLM
+                uncategorized.append(txn)
+                continue  # Don't count as rule match
 
-                # Check if medium confidence (needs validation)
-                if self._should_validate_with_llm(rule_result["confidence"], mode):
+            # Check if medium confidence (needs validation)
+            if result.get("category") and result["source"] == "rule":
+                if self._should_validate_with_llm(result["confidence"], mode):
                     needs_validation.append(
                         {
                             "transaction": txn,
-                            "suggested_category": rule_result["category"],
-                            "confidence": rule_result["confidence"],
+                            "suggested_category": result["category"],
+                            "confidence": result["confidence"],
                         }
                     )
-            else:
-                # No rule match
-                uncategorized.append(txn)
 
         # Phase 2: Batch uncategorized transactions (Case 1)
         if uncategorized:

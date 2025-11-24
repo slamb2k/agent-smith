@@ -234,7 +234,11 @@ class PocketSmithClient:
         return cast(List[Any], self.get(f"/users/{user_id}/categories"))
 
     def update_transaction(
-        self, transaction_id: int, category_id: Optional[int] = None, note: Optional[str] = None
+        self,
+        transaction_id: int,
+        category_id: Optional[int] = None,
+        note: Optional[str] = None,
+        labels: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Update a transaction.
 
@@ -242,6 +246,7 @@ class PocketSmithClient:
             transaction_id: Transaction ID to update
             category_id: New category ID
             note: Transaction note/memo
+            labels: List of labels to apply
 
         Returns:
             Updated transaction object
@@ -251,6 +256,8 @@ class PocketSmithClient:
             data["category_id"] = category_id
         if note is not None:
             data["note"] = note
+        if labels is not None:
+            data["labels"] = ",".join(labels)
 
         logger.info(f"Updating transaction {transaction_id}")
         return cast(Dict[str, Any], self.put(f"/transactions/{transaction_id}", data=data))

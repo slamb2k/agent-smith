@@ -100,12 +100,13 @@ def get_transactions(
     if account_filter:
         transactions = [t for t in transactions if t.get("_account_name") == account_filter]
 
-    # Filter to uncategorized or needs review
-    needs_categorization = [
-        t for t in transactions if not t.get("category") or t.get("needs_review")
-    ]
-
-    return needs_categorization
+    # Option 4: Process ALL transactions (smart platform coexistence)
+    # The workflow will intelligently handle:
+    # - Uncategorized: apply category + labels
+    # - Already categorized + matching: apply labels only
+    # - Already categorized + conflict: flag for review
+    # - Label-only rules: apply labels regardless
+    return transactions
 
 
 def main() -> int:
@@ -126,10 +127,10 @@ def main() -> int:
         transactions = get_transactions(client, args.period, args.account)
 
         if not transactions:
-            print("No transactions need categorization.")
+            print("No transactions found for the specified period.")
             return 0
 
-        print(f"Found {len(transactions)} transactions needing categorization.\n")
+        print(f"Processing {len(transactions)} transactions...\n")
 
         # Get available categories
         user = client.get_user()
@@ -160,6 +161,7 @@ def main() -> int:
         print(f"Rule matches: {stats['rule_matches']}")
         print(f"LLM categorized: {stats['llm_categorized']}")
         print(f"LLM validated: {stats['llm_validated']}")
+        print(f"Conflicts (needs review): {stats.get('conflicts', 0)}")
         print(f"Skipped (low confidence): {stats['skipped']}")
         print("=" * 60)
 
@@ -167,20 +169,44 @@ def main() -> int:
         if not args.dry_run:
             print("\nApplying categorizations...")
             applied = 0
+            conflicts_marked = 0
 
             for txn_id, result in results["results"].items():
-                if result.get("category"):
-                    # Find category ID
-                    cat = next((c for c in categories if c["title"] == result["category"]), None)
+                # Handle conflicts specially
+                if result.get("needs_review"):
+                    # Mark conflict with special label for easy filtering in PocketSmith
+                    conflict_labels = result.get("labels", []) + ["⚠️ Review: Category Conflict"]
+                    client.update_transaction(
+                        txn_id,
+                        labels=conflict_labels,
+                        note=f"Local rule suggests: {result.get('suggested_category')}",
+                    )
+                    conflicts_marked += 1
+                elif result.get("category") or result.get("labels"):
+                    # Apply if we have category and/or labels
+                    update_kwargs = {}
 
-                    if cat:
-                        client.update_transaction(
-                            txn_id,
-                            category_id=cat["id"],
+                    if result.get("category"):
+                        # Find category ID
+                        cat = next(
+                            (c for c in categories if c["title"] == result["category"]), None
                         )
+                        if cat:
+                            update_kwargs["category_id"] = cat["id"]
+
+                    if result.get("labels"):
+                        update_kwargs["labels"] = result["labels"]
+
+                    if update_kwargs:
+                        client.update_transaction(txn_id, **update_kwargs)
                         applied += 1
 
             print(f"✓ Applied {applied} categorizations")
+            if conflicts_marked > 0:
+                print(
+                    f"⚠️  Marked {conflicts_marked} conflicts for review "
+                    f"(label: '⚠️ Review: Category Conflict')"
+                )
         else:
             print("\n(Dry run - no changes applied)")
 

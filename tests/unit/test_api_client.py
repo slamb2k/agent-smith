@@ -207,3 +207,28 @@ def test_get_categories(mock_get):
 
     assert len(categories) == 2
     assert categories[0]["title"] == "Income"
+
+
+@patch("scripts.core.api_client.requests.put")
+def test_update_transaction_with_labels(mock_put):
+    """Test update_transaction sends labels as comma-separated string."""
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "id": 12345,
+        "category_id": 100,
+        "labels": ["Tax Deductible", "Work Expense"],
+    }
+    mock_put.return_value = mock_response
+
+    client = PocketSmithClient(api_key="test_key")
+    result = client.update_transaction(
+        transaction_id=12345, category_id=100, labels=["Tax Deductible", "Work Expense"]
+    )
+
+    assert result["id"] == 12345
+    assert result["labels"] == ["Tax Deductible", "Work Expense"]
+
+    # Verify labels sent as comma-separated string
+    args, kwargs = mock_put.call_args
+    assert kwargs["json"]["labels"] == "Tax Deductible,Work Expense"

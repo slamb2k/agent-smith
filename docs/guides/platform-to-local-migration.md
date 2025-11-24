@@ -21,6 +21,74 @@
 - ✓ Amount ranges and account filters
 - ✓ Priority-based matching
 
+## Template Applier Now Uses Local Rules
+
+**Important Change (2025-11-24):** The template applier (`scripts/setup/template_applier.py`) has been updated to write rules directly to `data/rules.yaml` instead of creating deprecated platform rules.
+
+**What This Means:**
+- ✓ Template rules are now stored locally in YAML format
+- ✓ Full access to advanced features (regex, exclusions, labels, confidence)
+- ✓ No more platform rule creation via API
+- ✓ Existing templates automatically converted during application
+
+**Automatic Conversion:**
+When you apply a template using the template applier:
+
+```bash
+uv run python scripts/setup/template_applier.py --template=data/merged_template.json --strategy=add_new
+```
+
+The applier automatically:
+1. Creates categories in PocketSmith (for UI visibility)
+2. Converts template rules to YAML format
+3. Writes rules to `data/rules.yaml`
+4. **Does NOT create platform rules** (deprecated)
+
+**Template Rule Format:**
+Templates use this format:
+```json
+{
+  "id": "woolworths-groceries",
+  "pattern": "woolworths|WOOLWORTHS",
+  "category": "Groceries",
+  "confidence": "high",
+  "labels": ["Personal", "Essential"],
+  "description": "Woolworths grocery purchases"
+}
+```
+
+**Converted to YAML:**
+```yaml
+- type: category
+  name: woolworths-groceries → Groceries
+  patterns: [woolworths|WOOLWORTHS]
+  category: Groceries
+  confidence: 95
+  labels: [Personal, Essential]
+```
+
+**Label-Only Rules:**
+Templates can also include label-only rules (no category):
+```json
+{
+  "id": "large-purchase",
+  "confidence": "high",
+  "amount_operator": ">",
+  "amount_value": 1000,
+  "labels": ["Large Purchase", "Review Required"]
+}
+```
+
+**Converted to YAML:**
+```yaml
+- type: label
+  name: large-purchase
+  when:
+    amount_operator: ">"
+    amount_value: 1000
+  labels: [Large Purchase, Review Required]
+```
+
 ## Migration Strategy
 
 ### Option 1: Automated Migration (Recommended)

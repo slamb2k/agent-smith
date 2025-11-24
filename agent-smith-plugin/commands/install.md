@@ -19,6 +19,14 @@ You are guiding a user through Agent Smith. This command provides both initial o
 
 ## Execution Logic
 
+**FIRST: Immediately notify the user that the workflow is loading:**
+
+Display this message before doing anything else:
+```
+Loading Agent Smith installation workflow...
+This may take a moment as I analyze your setup. Please wait...
+```
+
 **Check for --reset argument:**
 
 If the user provides `--reset` argument:

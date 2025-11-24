@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import sys
+import yaml
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from scripts.utils.backup import BackupManager
@@ -30,19 +31,24 @@ class TemplateApplier:
     STRATEGY_REPLACE = "replace"
 
     def __init__(
-        self, api_client: PocketSmithClient, backup_manager: Optional[BackupManager] = None
+        self,
+        api_client: PocketSmithClient,
+        backup_manager: Optional[BackupManager] = None,
+        rules_file: Optional[Path] = None,
     ):
         """Initialize with API client and backup manager.
 
         Args:
             api_client: PocketSmith API client
             backup_manager: Backup manager (creates default if None)
+            rules_file: Path to rules.yaml file (default: data/rules.yaml)
         """
         self.api_client = api_client
         self.backup_manager = backup_manager or BackupManager()
+        self.rules_file = rules_file or Path("data/rules.yaml")
         self.user_id: Optional[int] = None
 
-        logger.info("TemplateApplier initialized")
+        logger.info(f"TemplateApplier initialized (rules_file={self.rules_file})")
 
     def apply_template(
         self, merged_template: Dict[str, Any], strategy: str, dry_run: bool = False
@@ -214,25 +220,11 @@ class TemplateApplier:
                     stats["categories_created"] += 1
                     logger.debug(f"Creating new category: {cat_name}")
 
-        # Second pass: Create rules
-        # Track label-only rules separately (not created via PocketSmith API)
-        for rule in merged_template.get("rules", []):
-            target_category = rule.get("target_category")
-
-            # Label-only rules (no category) are stored locally, not in PocketSmith
-            if not target_category:
-                stats["label_only_rules"] += 1
-                logger.debug(f"Label-only rule (local engine): {rule.get('id', 'unknown')}")
-                continue
-
-            if target_category not in category_id_map:
-                stats["rules_skipped"] += 1
-                logger.warning(f"Skipping rule - category not found: {target_category}")
-                continue
-
-            if not dry_run:
-                self._create_rule(rule, category_id_map[target_category])
-            stats["rules_created"] += 1
+        # Second pass: Write rules to rules.yaml (local rule engine)
+        # NOTE: Platform rules (PocketSmith API rules) are deprecated
+        # All rules are now stored locally in rules.yaml
+        rules_written = self._write_rules_to_yaml(merged_template, category_id_map, dry_run)
+        stats["rules_written_to_yaml"] = rules_written
 
         return stats
 
@@ -298,37 +290,11 @@ class TemplateApplier:
                 stats["categories_created"] += 1
                 logger.debug(f"Creating new category: {cat_name}")
 
-        # Fetch existing rules to check for duplicates
-        existing_rules_map = self._build_rules_map(existing_categories)
-
-        # Create rules with deduplication
-        # Track label-only rules separately (not created via PocketSmith API)
-        for rule in merged_template.get("rules", []):
-            target_category = rule.get("target_category")
-
-            # Label-only rules (no category) are stored locally, not in PocketSmith
-            if not target_category:
-                stats["label_only_rules"] += 1
-                logger.debug(f"Label-only rule (local engine): {rule.get('id', 'unknown')}")
-                continue
-
-            if target_category not in category_id_map:
-                stats["rules_skipped"] += 1
-                logger.warning(f"Skipping rule - category not found: {target_category}")
-                continue
-
-            category_id = category_id_map[target_category]
-            payee_pattern = rule.get("payee_pattern", "")
-
-            # Check if similar rule already exists
-            if self._rule_exists(category_id, payee_pattern, existing_rules_map):
-                stats["rules_skipped"] += 1
-                logger.debug(f"Skipping duplicate rule: {payee_pattern}")
-                continue
-
-            if not dry_run:
-                self._create_rule(rule, category_id)
-            stats["rules_created"] += 1
+        # Write all rules to rules.yaml (platform rules are deprecated)
+        # NOTE: Smart merge previously deduplicated platform rules, but with YAML
+        # rules we write all template rules and let the rule engine handle priority
+        rules_written = self._write_rules_to_yaml(merged_template, category_id_map, dry_run)
+        stats["rules_written_to_yaml"] = rules_written
 
         return stats
 
@@ -369,17 +335,9 @@ class TemplateApplier:
                 category_id_map[template_cat["name"]] = created_cat["id"]
             stats["categories_created"] += 1
 
-        # Create all template rules
-        for rule in merged_template.get("rules", []):
-            target_category = rule.get("target_category")
-
-            if not target_category or target_category not in category_id_map:
-                logger.warning(f"Skipping rule - category not found: {target_category}")
-                continue
-
-            if not dry_run:
-                self._create_rule(rule, category_id_map[target_category])
-            stats["rules_created"] += 1
+        # Write all rules to rules.yaml (platform rules are deprecated)
+        rules_written = self._write_rules_to_yaml(merged_template, category_id_map, dry_run)
+        stats["rules_written_to_yaml"] = rules_written
 
         return stats
 
@@ -533,9 +491,12 @@ class TemplateApplier:
     def _create_rule(self, rule: Dict[str, Any], category_id: int) -> Dict[str, Any]:
         """Create a category rule via API.
 
+        DEPRECATED: Platform rules are deprecated. Use local rules.yaml instead.
+
         PocketSmith API only supports simple keyword matching via payee_matches.
         Complex rules should be stored in local rule engine.
         """
+        logger.warning("_create_rule() is deprecated. Platform rules are no longer supported.")
         payee_pattern = rule.get("payee_pattern", "")
 
         if not payee_pattern:
@@ -548,6 +509,136 @@ class TemplateApplier:
             category_id=category_id, payee_matches=payee_pattern
         )
         return created_rule
+
+    def _convert_confidence(self, confidence_str: str) -> int:
+        """Convert confidence string to numeric value.
+
+        Args:
+            confidence_str: "high", "medium", or "low"
+
+        Returns:
+            Numeric confidence: 95 (high), 90 (medium), 80 (low)
+        """
+        mapping = {"high": 95, "medium": 90, "low": 80}
+        return mapping.get(confidence_str.lower(), 90)
+
+    def _convert_template_rule_to_yaml(
+        self, rule: Dict[str, Any], category_id_map: Dict[str, int]
+    ) -> Optional[Dict[str, Any]]:
+        """Convert a template rule to YAML format.
+
+        Args:
+            rule: Rule dict from merged_template.json
+            category_id_map: Mapping of category names to IDs
+
+        Returns:
+            Rule dict in YAML format, or None if rule should be skipped
+        """
+        rule_id = rule.get("id", "unknown")
+        pattern = rule.get("pattern", "")
+        category = rule.get("category")
+        labels = rule.get("labels", [])
+        confidence_str = rule.get("confidence", "medium")
+        confidence = self._convert_confidence(confidence_str)
+
+        # Determine rule type
+        if category and labels:
+            # Combined category + label rule
+            # For now, create as category rule with labels attached
+            # TODO: Decide if we want to split into separate rules
+            return {
+                "type": "category",
+                "name": f"{rule_id} → {category}",
+                "patterns": [pattern],  # Keep as regex pattern
+                "category": category,
+                "confidence": confidence,
+                "labels": labels,
+            }
+        elif category:
+            # Category-only rule
+            return {
+                "type": "category",
+                "name": f"{rule_id} → {category}",
+                "patterns": [pattern],
+                "category": category,
+                "confidence": confidence,
+            }
+        elif labels:
+            # Label-only rule
+            when_conditions: Dict[str, Any] = {}
+
+            # Add amount conditions if present
+            if "amount_operator" in rule:
+                when_conditions["amount_operator"] = rule["amount_operator"]
+            if "amount_value" in rule:
+                when_conditions["amount_value"] = rule["amount_value"]
+
+            # If no conditions, this rule applies to all transactions
+            # We can skip the when clause entirely for "always" rules
+            # Or add a pattern match condition
+            if not when_conditions and pattern != ".*":
+                # Has a pattern, but no category
+                # This is unusual - skip for now
+                logger.warning(f"Skipping label-only rule with pattern but no category: {rule_id}")
+                return None
+
+            result = {
+                "type": "label",
+                "name": rule.get("description", rule_id),
+                "labels": labels,
+            }
+
+            if when_conditions:
+                result["when"] = when_conditions
+
+            return result
+        else:
+            logger.warning(f"Skipping rule with no category and no labels: {rule_id}")
+            return None
+
+    def _write_rules_to_yaml(
+        self,
+        merged_template: Dict[str, Any],
+        category_id_map: Dict[str, int],
+        dry_run: bool = False,
+    ) -> int:
+        """Write rules from merged template to rules.yaml.
+
+        Args:
+            merged_template: Merged template with rules
+            category_id_map: Mapping of category names to IDs
+            dry_run: If True, don't actually write file
+
+        Returns:
+            Number of rules written
+        """
+        rules_to_write = []
+
+        for rule in merged_template.get("rules", []):
+            yaml_rule = self._convert_template_rule_to_yaml(rule, category_id_map)
+            if yaml_rule:
+                rules_to_write.append(yaml_rule)
+
+        if not dry_run:
+            # Ensure parent directory exists
+            self.rules_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Write YAML file
+            yaml_content = {"rules": rules_to_write}
+            with open(self.rules_file, "w") as f:
+                yaml.dump(
+                    yaml_content,
+                    f,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
+
+            logger.info(f"Wrote {len(rules_to_write)} rules to {self.rules_file}")
+        else:
+            logger.info(f"DRY RUN: Would write {len(rules_to_write)} rules to {self.rules_file}")
+
+        return len(rules_to_write)
 
 
 def main() -> None:
