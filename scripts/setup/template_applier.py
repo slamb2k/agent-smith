@@ -186,10 +186,29 @@ class TemplateApplier:
             else:
                 # Create new category
                 if not dry_run:
-                    created_cat = self._create_category(template_cat, category_id_map)
-                    category_id_map[cat_name] = created_cat["id"]
-                stats["categories_created"] += 1
-                logger.debug(f"Creating new category: {cat_name}")
+                    try:
+                        created_cat = self._create_category(template_cat, category_id_map)
+                        category_id_map[cat_name] = created_cat["id"]
+                        stats["categories_created"] += 1
+                        logger.debug(f"Creating new category: {cat_name}")
+                    except Exception as e:
+                        # Handle title conflicts gracefully
+                        # HTTPError has 'response' attribute with .text property
+                        response_text = getattr(e, "response", None)
+                        response_text = response_text.text if response_text else ""
+                        if "Title has already been taken" in response_text:
+                            logger.warning(
+                                f"Category '{cat_name}' title conflicts "
+                                f"with existing category - skipping"
+                            )
+                            stats["categories_skipped"] = stats.get("categories_skipped", 0) + 1
+                        else:
+                            raise
+                else:
+                    # In dry run, use placeholder ID so rules can be validated
+                    category_id_map[cat_name] = 9999999 + len(category_id_map)
+                    stats["categories_created"] += 1
+                    logger.debug(f"Creating new category: {cat_name}")
 
         # Second pass: Create rules
         for rule in merged_template.get("rules", []):
@@ -261,6 +280,9 @@ class TemplateApplier:
                 if not dry_run:
                     created_cat = self._create_category(template_cat, category_id_map)
                     category_id_map[cat_name] = created_cat["id"]
+                else:
+                    # In dry run, use placeholder ID so rules can be validated
+                    category_id_map[cat_name] = 9999999 + len(category_id_map)
                 stats["categories_created"] += 1
                 logger.debug(f"Creating new category: {cat_name}")
 
@@ -347,18 +369,35 @@ class TemplateApplier:
 
         Handles hierarchical categories by creating full path names.
         """
-        category_map = {}
+        # First, flatten the hierarchy (categories can have nested children)
+        flat_categories = []
 
-        for cat in categories:
+        def flatten_cats(
+            cat_list: List[Dict[str, Any]], parent_id_map: Dict[int, str] | None = None
+        ) -> Dict[int, str]:
+            if parent_id_map is None:
+                parent_id_map = {}
+            for cat in cat_list:
+                flat_categories.append(cat)
+                # Build a map of id -> title for parent lookup
+                parent_id_map[cat["id"]] = cat.get("title", cat.get("name", ""))
+                if cat.get("children"):
+                    flatten_cats(cat["children"], parent_id_map)
+            return parent_id_map
+
+        parent_id_map = flatten_cats(categories)
+
+        # Now build the category map with full paths
+        category_map = {}
+        for cat in flat_categories:
             # Use 'title' from API response (not 'name')
             name = cat.get("title", cat.get("name", ""))
 
             # Handle parent hierarchy
             if cat.get("parent_id"):
-                # Find parent name
-                parent = next((c for c in categories if c["id"] == cat["parent_id"]), None)
-                if parent:
-                    parent_name = parent.get("title", parent.get("name", ""))
+                # Look up parent name from our map
+                parent_name = parent_id_map.get(cat["parent_id"])
+                if parent_name:
                     name = f"{parent_name}:{name}"
 
             category_map[name] = cat
@@ -369,7 +408,18 @@ class TemplateApplier:
         """Build map of category_id to list of payee patterns."""
         rules_map: Dict[int, List[str]] = {}
 
-        for category in categories:
+        # Flatten categories to include children
+        def flatten_cats(cat_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+            result: List[Dict[str, Any]] = []
+            for cat in cat_list:
+                result.append(cat)
+                if cat.get("children"):
+                    result.extend(flatten_cats(cat["children"]))
+            return result
+
+        flat_categories = flatten_cats(categories)
+
+        for category in flat_categories:
             try:
                 rules = self.api_client.get_category_rules(category["id"])
                 rules_map[category["id"]] = [r.get("payee_matches", "") for r in rules]

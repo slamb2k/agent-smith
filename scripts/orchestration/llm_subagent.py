@@ -54,12 +54,39 @@ class LLMSubagent:
             )
             return self._mock_categorization_response(transaction_ids)
 
-        # Production mode: Use Claude Agent SDK
+        # Production mode: Use Claude Agent SDK with structured outputs
         logger.info(
             f"Executing categorization for {len(transaction_ids)} transactions via Claude Agent SDK"
         )
 
-        llm_response = self._execute_prompt_sync(prompt)
+        # Define JSON schema for structured output
+        # IMPORTANT: Correct format for Claude Agent SDK structured outputs:
+        # - Root must be {"type": "json_schema", "schema": {...}}
+        # - Inner schema root MUST be "object" (arrays must be wrapped)
+        categorization_schema = {
+            "type": "json_schema",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "transactions": {  # Wrap array in object property
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "transaction_id": {"type": "integer"},
+                                "category": {"type": "string"},
+                                "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+                                "reasoning": {"type": "string"},
+                            },
+                            "required": ["transaction_id", "category", "confidence", "reasoning"],
+                        },
+                    }
+                },
+                "required": ["transactions"],
+            },
+        }
+
+        llm_response = self._execute_prompt_sync(prompt, output_schema=categorization_schema)
 
         # Parse response using service parsing method
         return cast(
@@ -104,35 +131,65 @@ class LLMSubagent:
             service.parse_validation_batch_response(llm_response, validations),
         )
 
-    def _execute_prompt_sync(self, prompt: str) -> str:
+    def _execute_prompt_sync(self, prompt: str, output_schema: dict | None = None) -> str:
         """Execute a prompt synchronously using Claude Agent SDK.
 
         Args:
             prompt: The prompt to execute
+            output_schema: Optional JSON schema for structured output
 
         Returns:
             Complete LLM response as string
         """
         # Run async SDK call in sync context
-        return asyncio.run(self._execute_prompt_async(prompt))
+        return asyncio.run(self._execute_prompt_async(prompt, output_schema))
 
-    async def _execute_prompt_async(self, prompt: str) -> str:
+    async def _execute_prompt_async(self, prompt: str, output_schema: dict | None = None) -> str:
         """Execute a prompt asynchronously using Claude Agent SDK.
 
         Args:
             prompt: The prompt to execute
+            output_schema: Optional JSON schema for structured output
 
         Returns:
-            Complete LLM response as string
+            Complete LLM response as string (JSON for structured outputs)
         """
+        # Import ResultMessage for type checking
+        from claude_agent_sdk import ResultMessage
+        import json
+
         # Configure SDK options for financial categorization
         options = ClaudeAgentOptions(
             system_prompt="You are a financial analysis expert helping categorize transactions.",
             allowed_tools=[],  # No tools needed for simple categorization
             permission_mode="default",
+            output_format=output_schema,  # Enable structured outputs
         )
 
-        # Collect response chunks - only text content
+        # When using structured outputs, look for ResultMessage
+        # Note: We consume all messages to avoid async generator cleanup errors
+        if output_schema:
+            structured_result = None
+            async for message in query(prompt=prompt, options=options):
+                if isinstance(message, ResultMessage):
+                    # Structured output is already parsed in structured_output field
+                    if (
+                        hasattr(message, "structured_output")
+                        and message.structured_output is not None
+                    ):
+                        structured_result = json.dumps(message.structured_output)
+                    # Fall back to result field if structured_output not available
+                    elif hasattr(message, "result") and message.result:
+                        structured_result = message.result
+
+            if structured_result:
+                return structured_result
+
+            # If we get here, no structured output was received
+            logger.warning("No structured output received from Claude Agent SDK")
+            return "{}"
+
+        # Non-structured output path: collect text chunks (legacy)
         response_chunks = []
         async for message in query(prompt=prompt, options=options):
             # Extract text content from message objects
@@ -150,6 +207,7 @@ class LLMSubagent:
                             response_chunks.append(item.text)
                 elif isinstance(message.content, str):
                     response_chunks.append(message.content)
+
         # Join all chunks into complete response
         return "".join(response_chunks)
 

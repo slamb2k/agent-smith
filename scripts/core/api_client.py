@@ -107,7 +107,18 @@ class PocketSmithClient:
         logger.debug(f"POST {url}")
 
         response = requests.post(url, headers=self.headers, json=data)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError:
+            import sys
+
+            print(f"\n{'='*70}", file=sys.stderr)
+            print(f"API ERROR: POST {url} failed: {response.status_code}", file=sys.stderr)
+            print(f"Request payload: {data}", file=sys.stderr)
+            print(f"Response body: {response.text}", file=sys.stderr)
+            print(f"{'='*70}\n", file=sys.stderr)
+            # HTTPError already has 'response' attribute with .text property
+            raise
 
         logger.debug(f"POST {url} - {response.status_code}")
         return response.json()

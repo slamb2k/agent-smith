@@ -68,7 +68,20 @@ class TemplateMerger:
                     seen_labels.add(label_name)
 
             # Append all rules (no deduplication)
-            merged["rules"].extend(template.get("rules", []))
+            # Normalize field names: YAML uses 'category' and 'pattern',
+            # applier expects 'target_category' and 'payee_pattern'
+            for rule in template.get("rules", []):
+                normalized_rule = rule.copy()
+
+                # Normalize 'category' -> 'target_category'
+                if "category" in normalized_rule:
+                    normalized_rule["target_category"] = normalized_rule.pop("category")
+
+                # Normalize 'pattern' -> 'payee_pattern'
+                if "pattern" in normalized_rule:
+                    normalized_rule["payee_pattern"] = normalized_rule.pop("pattern")
+
+                merged["rules"].append(normalized_rule)
 
             # Merge tax tracking (later templates override)
             merged["tax_tracking"].update(template.get("tax_tracking", {}))
