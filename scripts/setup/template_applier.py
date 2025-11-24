@@ -613,6 +613,8 @@ def main() -> None:
         print(f"  • {result.get('categories_created', 0)} categories created")
         print(f"  • {result.get('categories_reused', 0)} categories reused")
         print(f"  • {result.get('rules_created', 0)} rules created")
+        if result.get("label_only_rules", 0) > 0:
+            print(f"  • {result['label_only_rules']} label-only rules (local engine)")
         print(f"  • {result.get('rules_skipped', 0)} rules skipped")
 
         if not dry_run and result.get("backup_path"):
