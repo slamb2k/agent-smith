@@ -283,7 +283,12 @@ def test_validate_batch_returns_marker():
         }
     ]
 
-    result = service.validate_batch(validations)
+    categories = [
+        {"title": "Groceries", "parent": "Food & Dining"},
+        {"title": "Food & Dining", "parent": ""},
+    ]
+
+    result = service.validate_batch(validations, categories)
 
     # Should return marker dict
     assert result["_needs_llm"] is True

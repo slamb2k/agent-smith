@@ -58,7 +58,13 @@ def test_validate_batch_builds_combined_prompt():
         },
     ]
 
-    result = service.validate_batch(validations)
+    categories = [
+        {"title": "Transport", "parent": ""},
+        {"title": "Health & Medical", "parent": ""},
+        {"title": "Groceries", "parent": "Food & Dining"},
+    ]
+
+    result = service.validate_batch(validations, categories)
 
     # Should return marker dict
     assert isinstance(result, dict)
@@ -84,7 +90,9 @@ def test_validate_batch_empty_validations():
     """Test validate_batch with empty validation list."""
     service = LLMCategorizationService()
 
-    result = service.validate_batch([])
+    categories = [{"title": "Test", "parent": ""}]
+
+    result = service.validate_batch([], categories)
 
     # Should return empty dict for empty input
     assert result == {}
@@ -102,7 +110,9 @@ def test_validate_batch_prompt_structure():
         },
     ]
 
-    result = service.validate_batch(validations)
+    categories = [{"title": "Transport", "parent": ""}]
+
+    result = service.validate_batch(validations, categories)
     prompt = result["_prompt"]
 
     # Should have numbering
