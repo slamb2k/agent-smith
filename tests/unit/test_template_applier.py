@@ -37,8 +37,20 @@ def sample_merged_template():
             {"name": "Expenses:Groceries", "parent": "Expenses", "description": "Grocery spending"},
         ],
         "rules": [
-            {"target_category": "Expenses:Groceries", "payee_pattern": "woolworths"},
-            {"target_category": "Expenses:Groceries", "payee_pattern": "coles"},
+            {
+                "id": "woolworths-groceries",
+                "pattern": "woolworths",
+                "category": "Expenses:Groceries",
+                "confidence": "high",
+                "description": "Woolworths grocery purchases",
+            },
+            {
+                "id": "coles-groceries",
+                "pattern": "coles",
+                "category": "Expenses:Groceries",
+                "confidence": "high",
+                "description": "Coles grocery purchases",
+            },
         ],
         "tax_tracking": {},
         "alerts": [],
@@ -109,8 +121,8 @@ def test_apply_additive_reuses_existing_categories(
     assert result["categories_reused"] == 2
     # Should create 1 new category (Expenses:Groceries)
     assert result["categories_created"] == 1
-    # Should create 2 rules
-    assert result["rules_created"] == 2
+    # Should write 2 rules to YAML (platform rules are deprecated)
+    assert result["rules_written_to_yaml"] == 2
 
 
 def test_apply_additive_creates_all_new_categories(
@@ -136,7 +148,8 @@ def test_apply_additive_creates_all_new_categories(
 
     assert result["categories_reused"] == 0
     assert result["categories_created"] == 3
-    assert result["rules_created"] == 2
+    # Should write 2 rules to YAML (platform rules are deprecated)
+    assert result["rules_written_to_yaml"] == 2
 
 
 def test_apply_smart_merge_matches_categories(
@@ -164,35 +177,49 @@ def test_apply_smart_merge_matches_categories(
     assert result["categories_created"] >= 1
 
 
-def test_apply_smart_merge_deduplicates_rules(mock_api_client, mock_backup_manager):
-    """Test smart merge skips duplicate rules."""
+def test_apply_smart_merge_writes_rules_to_yaml(mock_api_client, mock_backup_manager):
+    """Test smart merge writes all rules to YAML (no deduplication with platform rules).
+
+    NOTE: With local YAML rules, we write all template rules regardless of
+    existing platform rules. The rule engine handles priority/deduplication.
+    """
     template = {
         "categories": [
             {"name": "Groceries", "parent": None, "description": "Grocery spending"},
         ],
         "rules": [
-            {"target_category": "Groceries", "payee_pattern": "woolworths"},
-            {"target_category": "Groceries", "payee_pattern": "coles"},
+            {
+                "id": "woolworths-rule",
+                "pattern": "woolworths",
+                "category": "Groceries",
+                "confidence": "high",
+                "description": "Woolworths purchases",
+            },
+            {
+                "id": "coles-rule",
+                "pattern": "coles",
+                "category": "Groceries",
+                "confidence": "high",
+                "description": "Coles purchases",
+            },
         ],
         "metadata": {},
     }
 
-    # Setup existing category with one rule already
+    # Setup existing category with one platform rule already
     mock_api_client.get_categories.return_value = [
         {"id": 100, "title": "Groceries", "parent_id": None},
     ]
     mock_api_client.get_category_rules.return_value = [
-        {"id": 1, "payee_matches": "woolworths"},
+        {"id": 1, "payee_matches": "woolworths"},  # Existing platform rule
     ]
 
     applier = TemplateApplier(mock_api_client, mock_backup_manager)
 
     result = applier.apply_template(template, TemplateApplier.STRATEGY_SMART_MERGE, dry_run=False)
 
-    # Should skip woolworths (already exists)
-    # Should create coles
-    assert result["rules_created"] == 1
-    assert result["rules_skipped"] == 1
+    # Should write both rules to YAML (platform rules are separate)
+    assert result["rules_written_to_yaml"] == 2
 
 
 def test_apply_replace_creates_fresh_categories(
@@ -222,8 +249,8 @@ def test_apply_replace_creates_fresh_categories(
     assert result["categories_created"] == 3
     # Should archive existing
     assert result["categories_archived"] == 1
-    # Should create all rules
-    assert result["rules_created"] == 2
+    # Should write all rules to YAML (platform rules are deprecated)
+    assert result["rules_written_to_yaml"] == 2
 
 
 def test_backup_created_before_modifications(
@@ -269,13 +296,23 @@ def test_statistics_returned_correctly(
 
 
 def test_rules_skipped_when_category_not_found(mock_api_client, mock_backup_manager):
-    """Test that rules are skipped when target category doesn't exist."""
+    """Test that rules are written to YAML even if category doesn't exist yet.
+
+    NOTE: With local rules, we write rules to YAML regardless of whether
+    categories exist in PocketSmith. The category field is just a reference.
+    """
     template = {
         "categories": [
             {"name": "Income", "parent": None, "description": "Income"},
         ],
         "rules": [
-            {"target_category": "NonExistent", "payee_pattern": "test"},
+            {
+                "id": "test-rule",
+                "pattern": "test",
+                "category": "NonExistent",  # Category not in template
+                "confidence": "high",
+                "description": "Test rule for non-existent category",
+            },
         ],
         "metadata": {},
     }
@@ -287,8 +324,8 @@ def test_rules_skipped_when_category_not_found(mock_api_client, mock_backup_mana
 
     result = applier.apply_template(template, TemplateApplier.STRATEGY_ADD_NEW, dry_run=False)
 
-    assert result["rules_skipped"] == 1
-    assert result["rules_created"] == 0
+    # Rule should still be written to YAML (category is just a reference)
+    assert result["rules_written_to_yaml"] == 1
 
 
 def test_hierarchical_categories_handled_correctly(mock_api_client, mock_backup_manager):
