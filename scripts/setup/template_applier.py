@@ -12,6 +12,9 @@ from scripts.core.api_client import PocketSmithClient
 
 logger = logging.getLogger(__name__)
 
+# Magic number for dry-run category IDs (offset to avoid conflicts with real IDs)
+DRY_RUN_ID_OFFSET = 9999999
+
 
 class TemplateApplier:
     """Apply merged templates to PocketSmith with user choice.
