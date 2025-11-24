@@ -1,7 +1,7 @@
 {
   "name": "agent-smith-plugin",
   "description": "Intelligent financial management plugin containing an intelligent skill for Claude Code with PocketSmith API integration. Features AI-powered categorization, tax intelligence, scenario planning, and health checks.",
-  "version": "1.3.9",
+  "version": "1.4.0",
   "author": {
     "name": "slamb2k",
     "email": "slamb2k@users.noreply.github.com"
