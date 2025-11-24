@@ -172,6 +172,7 @@ class TemplateApplier:
             "categories_reused": 0,
             "rules_created": 0,
             "rules_skipped": 0,
+            "label_only_rules": 0,
         }
 
         # Track category name to ID mapping (for both existing and newly created)
@@ -214,10 +215,17 @@ class TemplateApplier:
                     logger.debug(f"Creating new category: {cat_name}")
 
         # Second pass: Create rules
+        # Track label-only rules separately (not created via PocketSmith API)
         for rule in merged_template.get("rules", []):
             target_category = rule.get("target_category")
 
-            if not target_category or target_category not in category_id_map:
+            # Label-only rules (no category) are stored locally, not in PocketSmith
+            if not target_category:
+                stats["label_only_rules"] += 1
+                logger.debug(f"Label-only rule (local engine): {rule.get('id', 'unknown')}")
+                continue
+
+            if target_category not in category_id_map:
                 stats["rules_skipped"] += 1
                 logger.warning(f"Skipping rule - category not found: {target_category}")
                 continue
@@ -257,6 +265,7 @@ class TemplateApplier:
             "categories_matched": 0,
             "rules_created": 0,
             "rules_skipped": 0,
+            "label_only_rules": 0,
         }
 
         category_id_map: Dict[str, int] = {}
@@ -293,10 +302,17 @@ class TemplateApplier:
         existing_rules_map = self._build_rules_map(existing_categories)
 
         # Create rules with deduplication
+        # Track label-only rules separately (not created via PocketSmith API)
         for rule in merged_template.get("rules", []):
             target_category = rule.get("target_category")
 
-            if not target_category or target_category not in category_id_map:
+            # Label-only rules (no category) are stored locally, not in PocketSmith
+            if not target_category:
+                stats["label_only_rules"] += 1
+                logger.debug(f"Label-only rule (local engine): {rule.get('id', 'unknown')}")
+                continue
+
+            if target_category not in category_id_map:
                 stats["rules_skipped"] += 1
                 logger.warning(f"Skipping rule - category not found: {target_category}")
                 continue
