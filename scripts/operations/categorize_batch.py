@@ -94,6 +94,7 @@ def get_transactions(
         raise ValueError(f"Invalid period format: {period}")
 
     # Fetch ALL transactions with pagination
+    print(f"Fetching transactions for {period}...", end="", flush=True)
     all_transactions = []
     page = 1
     while True:
@@ -107,9 +108,11 @@ def get_transactions(
         if not batch:
             break
         all_transactions.extend(batch)
+        print(f" {len(all_transactions)}", end="", flush=True)
         if len(batch) < 100:  # Last page
             break
         page += 1
+    print(" transactions fetched.")
 
     # Filter by account if specified
     if account_filter:
@@ -182,14 +185,20 @@ def main() -> int:
 
         # Apply results (if not dry run)
         if not args.dry_run:
-            print("\nApplying categorizations...")
+            total_updates = len(results["results"])
+            print(f"\nApplying categorizations to {total_updates} transactions...")
             applied = 0
             conflicts_marked = 0
 
             # Create transaction lookup for conflict handling
             txn_lookup = {t["id"]: t for t in transactions}
 
-            for txn_id, result in results["results"].items():
+            for idx, (txn_id, result) in enumerate(results["results"].items(), 1):
+                # Show progress every 10 transactions or at milestones
+                if idx % 10 == 0 or idx == total_updates:
+                    pct = int(idx / total_updates * 100)
+                    print(f"  Progress: {idx}/{total_updates} ({pct}%)", end="\r", flush=True)
+
                 # Handle conflicts specially
                 if result.get("needs_review"):
                     # Get existing labels from original transaction to preserve them
@@ -219,6 +228,8 @@ def main() -> int:
                     if update_kwargs:
                         client.update_transaction(txn_id, **update_kwargs)
                         applied += 1
+
+            print()  # New line after progress
 
             print(f"✓ Applied {applied} categorizations")
             if conflicts_marked > 0:
