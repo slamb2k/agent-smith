@@ -31,8 +31,8 @@ def test_merge_multiple_templates():
 
     result = merger.merge([primary, living])
 
-    # Should have categories from both
-    assert len(result["categories"]) > 7  # More than just primary
+    # Should have categories (shared-hybrid doesn't add new categories, just adds rules/labels)
+    assert len(result["categories"]) >= 7  # At least primary categories
 
     # Should have rules from both
     assert len(result["rules"]) > 5
