@@ -423,14 +423,48 @@ agent-smith/
 └── reports/                    # Generated reports (90-day retention)
 ```
 
+## Critical Operating Rules
+
+**NEVER create custom one-off scripts for core Agent Smith operations.**
+
+Agent Smith has a complete architecture with:
+- Slash commands (`/smith:categorize`, `/smith:analyze`, etc.)
+- Python workflows in `scripts/workflows/`
+- Core operations in `scripts/operations/`
+- Proper API client with correct endpoints in `scripts/core/api_client.py`
+
+**If you find yourself writing a new Python script to:**
+- Categorize transactions
+- Analyze spending
+- Generate reports
+- Update PocketSmith data
+- Run health checks
+
+**STOP. You are reinventing the wheel.**
+
+**Instead:**
+1. Check if a slash command exists (`/smith:*`)
+2. Check if a workflow exists in `scripts/workflows/`
+3. Check if a core operation exists in `scripts/operations/`
+4. Use the existing code that has been tested and uses correct API endpoints
+
+**Why this matters:**
+- Custom scripts may use wrong API endpoints (e.g., `/users/{id}/transactions/{id}` instead of `/transactions/{id}`)
+- Custom scripts bypass rule engine, validation, backup, and audit systems
+- Custom scripts duplicate functionality that already exists
+- Custom scripts won't benefit from future improvements
+
+**Exception:** Only create new scripts when building NEW features not yet in the design, and always place them in the correct `scripts/` subdirectory.
+
 ## Best Practices
 
 ### Transaction Categorization
-1. Start with a rule template matching your household type
-2. Use dry-run mode to preview categorization
-3. Review and adjust rules based on results
-4. Monitor rule performance metrics
-5. Let AI handle edge cases (LLM fallback)
+1. **Always use `/smith:categorize`** - Never create custom categorization scripts
+2. Start with a rule template matching your household type
+3. Use dry-run mode to preview categorization
+4. Review and adjust rules based on results
+5. Monitor rule performance metrics
+6. Let AI handle edge cases (LLM fallback)
 
 ### Tax Compliance
 1. Configure appropriate tax level for your needs
