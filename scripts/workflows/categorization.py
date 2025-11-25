@@ -602,11 +602,11 @@ class CategorizationWorkflow:
         # Ask if between ask_threshold and auto_threshold
         return ask_threshold <= confidence < auto_threshold
 
-    def _should_validate_with_llm(self, confidence: int, mode: IntelligenceMode) -> bool:
+    def _should_validate_with_llm(self, confidence: Optional[int], mode: IntelligenceMode) -> bool:
         """Determine if rule-based categorization should be validated with LLM.
 
         Args:
-            confidence: Confidence score from rule (0-100)
+            confidence: Confidence score from rule (0-100), may be None
             mode: Intelligence mode
 
         Returns:
@@ -614,6 +614,10 @@ class CategorizationWorkflow:
         """
         # Conservative mode: never validate with LLM (user reviews all)
         if mode == IntelligenceMode.CONSERVATIVE:
+            return False
+
+        # Handle None confidence (e.g., label-only rules)
+        if confidence is None:
             return False
 
         # Medium confidence ranges by mode

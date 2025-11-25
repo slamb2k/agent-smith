@@ -12,9 +12,13 @@ import logging
 import argparse
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 from scripts.core.api_client import PocketSmithClient
 from scripts.workflows.categorization import CategorizationWorkflow
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -171,11 +175,15 @@ def main() -> int:
             applied = 0
             conflicts_marked = 0
 
+            # Create transaction lookup for conflict handling
+            txn_lookup = {t["id"]: t for t in transactions}
+
             for txn_id, result in results["results"].items():
                 # Handle conflicts specially
                 if result.get("needs_review"):
-                    # Mark conflict with special label for easy filtering in PocketSmith
-                    conflict_labels = result.get("labels", []) + ["⚠️ Review: Category Conflict"]
+                    # Get existing labels from original transaction to preserve them
+                    existing_labels = txn_lookup.get(txn_id, {}).get("labels", [])
+                    conflict_labels = existing_labels + ["⚠️ Review: Category Conflict"]
                     client.update_transaction(
                         txn_id,
                         labels=conflict_labels,
