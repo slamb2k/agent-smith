@@ -177,6 +177,16 @@
       "ato_section": "D9"
     },
     {
+      "name": "Shopping",
+      "parent": null,
+      "description": "Online shopping and retail purchases"
+    },
+    {
+      "name": "Online Services",
+      "parent": "Shopping",
+      "description": "Online payment services and digital purchases"
+    },
+    {
       "name": "Banking & Fees",
       "parent": null,
       "description": "Banking fees and charges"
@@ -197,7 +207,135 @@
       "description": "Transfers between accounts"
     }
   ],
-  "rules": [],
+  "rules": [
+    {
+      "name": "groceries-supermarkets",
+      "payee_pattern": "woolworths|coles|aldi|iga|foodland|costco|harris farm|fruit market|drakes|supa.*iga|ritchies|foodworks|friendly grocer",
+      "category": "Groceries",
+      "confidence": 0.95
+    },
+    {
+      "name": "restaurants-dining",
+      "payee_pattern": "restaurant|bistro|steakhouse|italian|chinese|thai|indian|japanese|korean|vietnamese|cafe.*restaurant",
+      "category": "Restaurants",
+      "confidence": 0.90
+    },
+    {
+      "name": "cafes-coffee",
+      "payee_pattern": "cafe|coffee|starbucks|gloria jeans|mccafe|donut king|boost juice",
+      "category": "Cafes & Takeaway",
+      "confidence": 0.90
+    },
+    {
+      "name": "fast-food-takeaway",
+      "payee_pattern": "mcdonald|kfc|hungry jack|domino|pizza hut|subway|nando|red rooster|grill'd|guzman|schnitz",
+      "category": "Cafes & Takeaway",
+      "confidence": 0.95
+    },
+    {
+      "name": "fuel-petrol",
+      "payee_pattern": "shell|bp|caltex|ampol|7-eleven|united.*petrol|metro.*petrol|mobil|esso",
+      "category": "Fuel",
+      "confidence": 0.95
+    },
+    {
+      "name": "electricity-providers",
+      "payee_pattern": "agl|origin|energy australia|red energy|alinta|simply energy|powershop|momentum energy|click energy|sumo|dodo.*power|lumo|people.*energy|diamond.*energy",
+      "category": "Electricity",
+      "confidence": 0.95
+    },
+    {
+      "name": "gas-providers",
+      "payee_pattern": "agl.*gas|origin.*gas|energy australia.*gas|simply energy.*gas|sumo.*gas",
+      "category": "Gas",
+      "confidence": 0.90
+    },
+    {
+      "name": "water-providers",
+      "payee_pattern": "water.*corporation|sydney.*water|yarra.*valley.*water|sa.*water|icon.*water|unitywater|hunter.*water|city west.*water",
+      "category": "Water",
+      "confidence": 0.95
+    },
+    {
+      "name": "internet-telco",
+      "payee_pattern": "telstra|optus|vodafone|tpg|iinet|aussie.*broadband|dodo|belong|internode|southern.*phone|exetel|spintel|tangerine|superloop|mate.*communicate",
+      "category": "Internet & Phone",
+      "confidence": 0.95
+    },
+    {
+      "name": "public-transport",
+      "payee_pattern": "opal|myki|go card|translink|metro.*trains|bus.*service|citylink",
+      "category": "Public Transport",
+      "confidence": 0.95
+    },
+    {
+      "name": "parking-tolls",
+      "payee_pattern": "secure.*parking|wilson.*parking|toll|e-tag|linkt|citylink|eastlink|go via",
+      "category": "Parking & Tolls",
+      "confidence": 0.95
+    },
+    {
+      "name": "pharmacy-chemist",
+      "payee_pattern": "chemist|pharmacy|priceline|terry white|amcal|blooms|soul pattinson|discount.*drug",
+      "category": "Pharmacy",
+      "confidence": 0.95
+    },
+    {
+      "name": "health-insurance",
+      "payee_pattern": "bupa|medibank|hcf|nib|ahm|health.*fund|health.*insurance",
+      "category": "Health Insurance",
+      "confidence": 0.95
+    },
+    {
+      "name": "gym-fitness",
+      "payee_pattern": "gym|fitness|anytime.*fitness|goodlife|f45|jetts|snap.*fitness|crossfit|yoga|pilates",
+      "category": "Fitness & Wellness",
+      "confidence": 0.90
+    },
+    {
+      "name": "entertainment-streaming",
+      "payee_pattern": "netflix|spotify|disney|stan|amazon.*prime|apple.*music|youtube.*premium|paramount|binge",
+      "category": "Entertainment & Recreation",
+      "confidence": 0.95
+    },
+    {
+      "name": "entertainment-cinema",
+      "payee_pattern": "hoyts|event.*cinema|village.*cinema|reading.*cinema|movie.*ticket",
+      "category": "Entertainment & Recreation",
+      "confidence": 0.95
+    },
+    {
+      "name": "clothing-retail",
+      "payee_pattern": "myer|david jones|target|kmart|big w|uniqlo|h&m|zara|cotton on|rebel.*sport|nike|adidas",
+      "category": "Clothing & Footwear",
+      "confidence": 0.85
+    },
+    {
+      "name": "personal-care-services",
+      "payee_pattern": "hair.*salon|barber|hairdresser|beauty|nail.*salon|spa|massage",
+      "category": "Personal Care",
+      "confidence": 0.90
+    },
+    {
+      "name": "bank-fees",
+      "payee_pattern": "account.*fee|monthly.*fee|transaction.*fee|atm.*fee|overdraft.*fee|international.*transaction.*fee",
+      "category": "Bank Fees",
+      "confidence": 0.95
+    },
+    {
+      "name": "transfers-generic",
+      "payee_pattern": "transfer|bpay|osko",
+      "category": "Transfers",
+      "confidence": 0.80
+    },
+    {
+      "name": "paypal-generic",
+      "payee_pattern": "PAYPAL",
+      "category": "Online Services",
+      "confidence": 0.60,
+      "labels": ["$LABEL_GENERIC_PAYPAL"]
+    }
+  ],
   "labels": [],
   "name": "Foundation: Personal Living",
   "layer": "foundation",
