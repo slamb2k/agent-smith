@@ -8,9 +8,10 @@ from scripts.onboarding.discovery import DiscoveryAnalyzer
 def test_baseline_health_checker_creation():
     """Test BaselineHealthChecker initialization."""
     mock_client = Mock()
-    checker = BaselineHealthChecker(client=mock_client)
+    checker = BaselineHealthChecker(client=mock_client, user_id=123)
 
     assert checker.client == mock_client
+    assert checker.user_id == 123
 
 
 def test_run_baseline_check():
@@ -39,7 +40,7 @@ def test_run_baseline_check():
     # Mock budgets (optional method)
     mock_client.get_budgets = Mock(return_value=[])
 
-    checker = BaselineHealthChecker(client=mock_client)
+    checker = BaselineHealthChecker(client=mock_client, user_id=12345)
     score = checker.run_baseline_check()
 
     assert isinstance(score, int)

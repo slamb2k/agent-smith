@@ -50,6 +50,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Workflow
 
+### **CRITICAL: Source Code Location**
+
+**Agent Smith uses a dual-location architecture for scripts:**
+
+```
+agent-smith/
+├── scripts/                    ← ✅ SOURCE (edit here, tracked in git)
+│   ├── core/
+│   ├── health/
+│   └── ...
+│
+└── agent-smith-plugin/skills/agent-smith/
+    └── scripts/                ← ❌ COPY (gitignored, synced from source)
+```
+
+**THE GOLDEN RULE: Always edit `/scripts/`, NEVER `agent-smith-plugin/.../scripts/`**
+
+Files in `agent-smith-plugin/skills/agent-smith/scripts/` are:
+- Gitignored (changes won't be committed)
+- Overwritten by sync (changes will be lost)
+- Build artifacts (not source code)
+
+**When editing code:**
+1. ✅ Edit files in `/scripts/` (source, tracked in git)
+2. ✅ Run `./scripts/dev-sync.sh` to sync to plugin
+3. ✅ Test using plugin copy
+4. ✅ Commit source changes from `/scripts/`
+
+**See DEVELOPMENT.md for complete dual-location architecture documentation.**
+
 ### Initial Setup
 
 ```bash
@@ -207,8 +237,15 @@ financial conversations and ad-hoc analysis.
 ## Important Notes
 
 - **Never commit `.env`** - Contains sensitive API keys (protected by .gitignore)
+- **Always edit `/scripts/`, never `agent-smith-plugin/.../scripts/`** - Plugin scripts are gitignored copies
 - **Always backup before mutations** - Use timestamped backup directories
 - **Tax advice disclaimer required** - All Level 3 tax outputs must include professional advice disclaimer
 - **INDEX.md must be current** - Update whenever files are created/modified/deleted
 - Complete design specification is the source of truth: `docs/design/2025-11-20-agent-smith-design.md`
 - Always create a feature branch and use a PR to merge changes to main.
+
+## Additional Documentation
+
+- **DEVELOPMENT.md** - Complete development workflow guide, explains dual-location architecture for scripts
+- **CONTRIBUTING.md** - Development setup and contribution guidelines
+- **README.md** - Project overview, quick start, and repository structure

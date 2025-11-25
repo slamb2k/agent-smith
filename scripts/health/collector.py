@@ -10,14 +10,16 @@ from pathlib import Path
 class HealthDataCollector:
     """Collects data for health check scoring from various sources."""
 
-    def __init__(self, api_client: Any, data_dir: Optional[Path] = None) -> None:
+    def __init__(self, api_client: Any, user_id: int, data_dir: Optional[Path] = None) -> None:
         """Initialize collector.
 
         Args:
             api_client: PocketSmith API client instance
+            user_id: PocketSmith user ID
             data_dir: Path to data directory (default: data/)
         """
         self.api_client = api_client
+        self.user_id = user_id
         self.data_dir = data_dir or Path("data")
 
     def collect_all(self) -> Dict[str, Dict[str, Any]]:
@@ -41,7 +43,7 @@ class HealthDataCollector:
         Returns:
             Dict with data quality metrics
         """
-        transactions = self.api_client.get_transactions()
+        transactions = self.api_client.get_transactions(self.user_id)
 
         total = len(transactions)
         categorized = sum(1 for t in transactions if t.get("category"))
@@ -69,7 +71,7 @@ class HealthDataCollector:
         Returns:
             Dict with category structure metrics
         """
-        categories = self.api_client.get_categories()
+        categories = self.api_client.get_categories(self.user_id)
 
         total = len(categories)
         with_transactions = sum(1 for c in categories if c.get("transaction_count", 0) > 0)
@@ -97,22 +99,23 @@ class HealthDataCollector:
         Returns:
             Dict with rule engine metrics
         """
-        # Load local rules
-        local_rules = self._load_json("local_rules.json", [])
-        platform_rules = self._load_json("platform_rules.json", [])
+        # Load local category and label rules (we only use local rules now)
+        category_rules = self._load_json("category_rules.json", [])
+        label_rules = self._load_json("label_rules.json", [])
 
-        total_rules = len(local_rules) + len(platform_rules)
-        active_rules = sum(1 for r in local_rules if r.get("active", True))
-        active_rules += len(platform_rules)  # Platform rules always active
+        total_rules = len(category_rules) + len(label_rules)
+        active_cat_rules = sum(1 for r in category_rules if r.get("active", True))
+        active_label_rules = sum(1 for r in label_rules if r.get("active", True))
+        active_rules = active_cat_rules + active_label_rules
 
         # Calculate metrics from rule metadata
         rule_metadata = self._load_json("rule_metadata.json", {})
 
-        total_applied = sum(r.get("applied", 0) for r in local_rules)
-        total_overrides = sum(r.get("user_overrides", 0) for r in local_rules)
+        total_applied = sum(r.get("applied", 0) for r in category_rules + label_rules)
+        total_overrides = sum(r.get("user_overrides", 0) for r in category_rules + label_rules)
 
         # Get transactions for coverage calculation
-        transactions = self.api_client.get_transactions()
+        transactions = self.api_client.get_transactions(self.user_id)
         total_txn = len(transactions)
         auto_categorized = sum(1 for t in transactions if t.get("auto_categorized", False))
 
@@ -126,7 +129,8 @@ class HealthDataCollector:
         # Count conflicts and stale rules
         conflicts = rule_metadata.get("conflicts", 0)
         stale_days = 90
-        stale = sum(1 for r in local_rules if self._days_since(r.get("last_used")) > stale_days)
+        all_rules = category_rules + label_rules
+        stale = sum(1 for r in all_rules if self._days_since(r.get("last_used")) > stale_days)
 
         return {
             "total_rules": total_rules,
@@ -149,12 +153,12 @@ class HealthDataCollector:
         ato_mappings = self._load_json("tax/ato_category_mappings.json", {})
 
         # Count deductible transactions (simplified)
-        transactions = self.api_client.get_transactions()
+        transactions = self.api_client.get_transactions(self.user_id)
         deductible = sum(1 for t in transactions if self._is_deductible(t))
         substantiated = substantiation.get("substantiated_count", 0)
 
         # ATO coverage
-        categories = self.api_client.get_categories()
+        categories = self.api_client.get_categories(self.user_id)
         cats_used = sum(1 for c in categories if c.get("transaction_count", 0) > 0)
         cats_mapped = len(ato_mappings.get("mappings", {}))
         ato_coverage = cats_mapped / cats_used if cats_used > 0 else 0
@@ -196,10 +200,12 @@ class HealthDataCollector:
         scheduled_reports = len(config.get("scheduled_reports", []))
         active_alerts = len(config.get("active_alerts", []))
 
-        # Rule auto-apply rate
-        local_rules = self._load_json("local_rules.json", [])
-        auto_apply_rules = sum(1 for r in local_rules if not r.get("requires_approval", True))
-        total_rules = len(local_rules)
+        # Rule auto-apply rate (category and label rules)
+        category_rules = self._load_json("category_rules.json", [])
+        label_rules = self._load_json("label_rules.json", [])
+        all_rules = category_rules + label_rules
+        auto_apply_rules = sum(1 for r in all_rules if not r.get("requires_approval", True))
+        total_rules = len(all_rules)
         auto_apply_rate = auto_apply_rules / total_rules if total_rules > 0 else 0
 
         # Operation metrics (from audit log)
