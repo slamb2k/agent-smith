@@ -339,7 +339,7 @@ def main() -> None:
         print(f"Connected as: {user.get('login', 'Unknown')} (ID: {user_id})\n")
 
         # Get data directory
-        data_dir = Path(__file__).parent.parent.parent.parent / "data"
+        data_dir = Path(__file__).parent.parent.parent / "data"
         if not data_dir.exists():
             data_dir.mkdir(parents=True)
 
