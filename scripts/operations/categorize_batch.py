@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 
 from scripts.core.api_client import PocketSmithClient
 from scripts.workflows.categorization import CategorizationWorkflow
+from scripts.core.labels import LABEL_CATEGORY_CONFLICT, add_review_label
 
 # Load environment variables
 load_dotenv()
@@ -203,7 +204,7 @@ def main() -> int:
                 if result.get("needs_review"):
                     # Get existing labels from original transaction to preserve them
                     existing_labels = txn_lookup.get(txn_id, {}).get("labels", [])
-                    conflict_labels = existing_labels + ["⚠️ Review: Category Conflict"]
+                    conflict_labels = add_review_label(existing_labels, LABEL_CATEGORY_CONFLICT)
                     client.update_transaction(
                         txn_id,
                         labels=conflict_labels,
@@ -235,7 +236,7 @@ def main() -> int:
             if conflicts_marked > 0:
                 print(
                     f"⚠️  Marked {conflicts_marked} conflicts for review "
-                    f"(label: '⚠️ Review: Category Conflict')"
+                    f"(label: '{LABEL_CATEGORY_CONFLICT}')"
                 )
         else:
             print("\n(Dry run - no changes applied)")
