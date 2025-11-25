@@ -1,0 +1,175 @@
+name: Crypto Investor
+layer: additional
+description: |
+  Cryptocurrency investment tracking with ATO-compliant CGT and income reporting.
+  Covers exchanges, staking, DeFi yields, and NFT transactions.
+
+categories:
+  - name: "Crypto:Purchases"
+    parent: null
+    description: "Cryptocurrency purchases (establishes cost base)"
+
+  - name: "Crypto:Sales"
+    parent: null
+    description: "Cryptocurrency sales (CGT events)"
+
+  - name: "Crypto:Staking Income"
+    parent: null
+    description: "Staking rewards and interest (ordinary income)"
+
+  - name: "Crypto:DeFi Yields"
+    parent: null
+    description: "DeFi protocol yields and liquidity rewards (ordinary income)"
+
+  - name: "Crypto:Airdrops & Forks"
+    parent: null
+    description: "Airdropped tokens and fork distributions (ordinary income at receipt)"
+
+  - name: "Crypto:NFT Purchases"
+    parent: null
+    description: "NFT purchases (establishes cost base)"
+
+  - name: "Crypto:NFT Sales"
+    parent: null
+    description: "NFT sales (CGT events)"
+
+  - name: "Crypto:Gas Fees"
+    parent: null
+    description: "Network gas fees (adds to cost base)"
+
+  - name: "Crypto:Exchange Fees"
+    parent: null
+    description: "Trading and platform fees"
+
+rules:
+  - id: crypto-purchase
+    pattern: "CoinSpot|Binance|Coinbase|Kraken|Independent.*Reserve|Swyftx|BTC.*Markets|crypto.*buy|BTC.*purchase|ETH.*purchase"
+    category: "Crypto:Purchases"
+    confidence: medium
+    labels: ["Crypto", "Cost Base"]
+    description: "Detect cryptocurrency purchases on Australian exchanges"
+
+  - id: crypto-sale
+    pattern: "crypto.*sell|BTC.*sale|ETH.*sale|sold.*crypto"
+    category: "Crypto:Sales"
+    confidence: medium
+    labels: ["Crypto", "CGT Event"]
+    description: "Detect cryptocurrency sales (CGT event)"
+
+  - id: staking-rewards
+    pattern: "staking.*reward|staked.*income|validator.*reward|POS.*reward"
+    category: "Crypto:Staking Income"
+    confidence: high
+    labels: ["Crypto", "Ordinary Income"]
+    description: "Detect staking rewards (ordinary income)"
+
+  - id: defi-yields
+    pattern: "DeFi|yield.*farming|liquidity.*pool|lending.*interest|Aave|Compound|Uniswap.*reward"
+    category: "Crypto:DeFi Yields"
+    confidence: medium
+    labels: ["Crypto", "Ordinary Income"]
+    description: "Detect DeFi protocol yields"
+
+  - id: airdrops
+    pattern: "airdrop|token.*distribution|fork.*distribution"
+    category: "Crypto:Airdrops & Forks"
+    confidence: high
+    labels: ["Crypto", "Ordinary Income"]
+    description: "Detect airdrops and fork distributions"
+
+  - id: nft-purchase
+    pattern: "NFT.*purchase|OpenSea.*buy|Rarible.*buy|digital.*art.*purchase"
+    category: "Crypto:NFT Purchases"
+    confidence: medium
+    labels: ["Crypto", "NFT", "Cost Base"]
+    description: "Detect NFT purchases"
+
+  - id: nft-sale
+    pattern: "NFT.*sale|OpenSea.*sale|sold.*NFT"
+    category: "Crypto:NFT Sales"
+    confidence: medium
+    labels: ["Crypto", "NFT", "CGT Event"]
+    description: "Detect NFT sales"
+
+  - id: gas-fees
+    pattern: "gas.*fee|network.*fee|ETH.*fee|transaction.*fee.*crypto"
+    category: "Crypto:Gas Fees"
+    confidence: high
+    labels: ["Crypto", "Cost Base Addition"]
+    description: "Detect blockchain gas fees"
+
+  - id: exchange-fees
+    pattern: "trading.*fee.*crypto|exchange.*fee|platform.*fee.*crypto"
+    category: "Crypto:Exchange Fees"
+    confidence: high
+    labels: ["Crypto"]
+    description: "Detect exchange and trading fees"
+
+tax_tracking:
+  cgt_tracking: true
+  cgt_discount_eligible: true
+  cgt_discount_holding_period: 365
+  cost_base_tracking: true
+  cost_base_includes_fees: true
+  income_tracking: true
+  separate_income_vs_capital: true
+
+alerts:
+  - type: crypto_cgt_event
+    trigger: sale_detected
+    message: "Crypto sale detected - calculate CGT (12-month holding = 50% discount)"
+
+  - type: crypto_income_reminder
+    schedule: quarterly
+    message: "Report crypto staking/DeFi income on quarterly basis"
+
+  - type: eofy_crypto_reminder
+    schedule: annual
+    before_date: "06-15"
+    message: "EOFY - compile all crypto CGT events and income. ATO requires detailed records."
+
+  - type: cost_base_reminder
+    trigger: purchase_detected
+    message: "Record AUD value at time of purchase for accurate cost base"
+
+labels:
+  - name: "Crypto"
+    description: "Cryptocurrency transaction"
+    color: "bitcoin-orange"
+    auto_apply: false
+
+  - name: "CGT Event"
+    description: "Capital gains tax event (crypto disposal)"
+    color: "gold"
+    auto_apply: true
+
+  - name: "Cost Base"
+    description: "Establishes or adds to CGT cost base"
+    color: "lightblue"
+    auto_apply: false
+
+  - name: "Cost Base Addition"
+    description: "Expense that adds to CGT cost base"
+    color: "skyblue"
+    auto_apply: false
+
+  - name: "Ordinary Income"
+    description: "Taxed as ordinary income (not CGT)"
+    color: "green"
+    auto_apply: true
+
+  - name: "NFT"
+    description: "Non-fungible token transaction"
+    color: "purple"
+    auto_apply: false
+
+dependencies:
+  requires: []
+  conflicts_with: []
+
+metadata:
+  created: "2025-11-25"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 3
+  ato_guidance: "ATO treats cryptocurrency as CGT asset. Staking/interest = ordinary income. Keep records of all transactions in AUD."

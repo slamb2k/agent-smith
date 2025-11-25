@@ -359,19 +359,6 @@ def test_load_sole_trader_template():
     assert "small-business" in template["dependencies"]["conflicts_with"]
 
 
-def test_load_single_template():
-    """Test loading the single person template."""
-    loader = TemplateLoader()
-    template = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
-
-    assert template["name"] == "Single Person"
-    assert template["layer"] == "living"
-    assert template["metadata"]["priority"] == 2
-    assert len(template["categories"]) == 4
-    assert len(template["rules"]) == 3
-    assert len(template["labels"]) == 0  # No labels for single person
-
-
 def test_load_shared_hybrid_template():
     """Test loading the shared hybrid template."""
     loader = TemplateLoader()

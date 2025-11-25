@@ -1,0 +1,175 @@
+name: Airbnb Host
+layer: additional
+description: |
+  Short-term rental income tracking for Airbnb, Stayz, and similar platforms.
+  Includes expense apportionment for owner-occupied properties and CGT considerations.
+
+categories:
+  - name: "Airbnb:Income"
+    parent: null
+    description: "Short-term rental income from Airbnb, Stayz, etc."
+
+  - name: "Airbnb:Cleaning & Laundry"
+    parent: null
+    description: "Cleaning services and laundry for guests"
+
+  - name: "Airbnb:Guest Amenities"
+    parent: null
+    description: "Toiletries, coffee, tea, snacks for guests"
+
+  - name: "Airbnb:Linen & Towels"
+    parent: null
+    description: "Linen, towels, bedding for guest accommodation"
+
+  - name: "Airbnb:Platform Fees"
+    parent: null
+    description: "Airbnb/Stayz service fees and commissions"
+
+  - name: "Airbnb:Repairs & Maintenance"
+    parent: null
+    description: "Repairs and maintenance related to rental use"
+
+  - name: "Airbnb:Utilities"
+    parent: null
+    description: "Utilities attributable to rental use (apportioned)"
+
+  - name: "Airbnb:Insurance"
+    parent: null
+    description: "Host insurance and additional coverage"
+
+  - name: "Airbnb:Marketing & Listings"
+    parent: null
+    description: "Photography, listing fees, advertising"
+
+rules:
+  - id: airbnb-income
+    pattern: "Airbnb.*payout|Airbnb.*income|Stayz.*payout|booking.com.*payout|short.*term.*rental.*income"
+    category: "Airbnb:Income"
+    confidence: high
+    labels: ["Assessable Income", "Rental Income"]
+    description: "Detect short-term rental income"
+
+  - id: airbnb-cleaning
+    pattern: "cleaning.*Airbnb|laundry.*guest|linen.*service|professional.*clean.*rental"
+    category: "Airbnb:Cleaning & Laundry"
+    confidence: high
+    labels: ["Tax Deductible", "Apportioned"]
+    description: "Detect cleaning and laundry expenses"
+
+  - id: guest-amenities
+    pattern: "toiletries.*guest|coffee.*Airbnb|tea.*guest|snacks.*guest|welcome.*pack"
+    category: "Airbnb:Guest Amenities"
+    confidence: medium
+    labels: ["Tax Deductible", "Apportioned"]
+    description: "Detect guest amenity purchases"
+
+  - id: linen-towels
+    pattern: "linen.*rental|towels.*guest|bedding.*Airbnb|sheets.*accommodation"
+    category: "Airbnb:Linen & Towels"
+    confidence: high
+    labels: ["Tax Deductible", "Apportioned"]
+    description: "Detect linen and towel purchases"
+
+  - id: platform-fees
+    pattern: "Airbnb.*service.*fee|Airbnb.*commission|Stayz.*fee|booking.*commission"
+    category: "Airbnb:Platform Fees"
+    confidence: high
+    labels: ["Tax Deductible"]
+    description: "Detect platform service fees"
+
+  - id: rental-repairs
+    pattern: "repair.*rental|maintenance.*Airbnb|fix.*guest.*room|handyman.*rental"
+    category: "Airbnb:Repairs & Maintenance"
+    confidence: medium
+    labels: ["Tax Deductible", "Apportioned", "Repairs vs Improvements"]
+    description: "Detect repairs related to rental use"
+
+  - id: rental-utilities
+    pattern: "electricity.*rental|gas.*rental|water.*rental|internet.*rental"
+    category: "Airbnb:Utilities"
+    confidence: low
+    labels: ["Tax Deductible", "Apportioned"]
+    description: "Detect utilities for apportionment (requires manual review)"
+
+  - id: host-insurance
+    pattern: "Airbnb.*insurance|host.*insurance|short.*term.*rental.*insurance"
+    category: "Airbnb:Insurance"
+    confidence: high
+    labels: ["Tax Deductible", "Apportioned"]
+    description: "Detect host insurance premiums"
+
+  - id: listing-marketing
+    pattern: "photography.*listing|Airbnb.*listing|property.*photos.*rental"
+    category: "Airbnb:Marketing & Listings"
+    confidence: medium
+    labels: ["Tax Deductible"]
+    description: "Detect marketing and listing expenses"
+
+tax_tracking:
+  income_tracking: true
+  expense_apportionment_required: true
+  apportionment_basis: "days_rented"
+  cgt_main_residence_exemption_impact: true
+  record_keeping_days_rented: true
+  record_keeping_days_personal: true
+
+alerts:
+  - type: apportionment_reminder
+    schedule: quarterly
+    message: "Calculate expense apportionment: days rented vs personal use"
+
+  - type: days_rented_tracker
+    schedule: monthly
+    message: "Record days rented this month for expense apportionment"
+
+  - type: eofy_airbnb_reminder
+    schedule: annual
+    before_date: "06-15"
+    message: "EOFY - compile Airbnb income, calculate apportioned expenses, document days rented vs personal use"
+
+  - type: cgt_exemption_warning
+    trigger: annual
+    message: "Using main residence for income may affect CGT main residence exemption. Keep detailed records."
+
+  - type: gst_threshold_warning
+    trigger: annual_income_exceeds
+    threshold: 75000
+    message: "Airbnb income + other business income exceeds $75k - GST registration may be required"
+
+labels:
+  - name: "Assessable Income"
+    description: "Income assessable for tax purposes"
+    color: "green"
+    auto_apply: true
+
+  - name: "Rental Income"
+    description: "Short-term rental income"
+    color: "lightgreen"
+    auto_apply: false
+
+  - name: "Tax Deductible"
+    description: "Deductible expense (may require apportionment)"
+    color: "green"
+    auto_apply: false
+
+  - name: "Apportioned"
+    description: "Expense requiring apportionment by rental vs personal use"
+    color: "orange"
+    auto_apply: true
+
+  - name: "Repairs vs Improvements"
+    description: "Requires classification: repairs (deductible) vs improvements (capital)"
+    color: "orange"
+    auto_apply: false
+
+dependencies:
+  requires: []
+  conflicts_with: ["property-investor"]
+  notes: "Use property-investor for long-term rentals. Use airbnb-host for short-term/part-time hosting."
+
+metadata:
+  created: "2025-11-25"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 3
+  ato_guidance: "Airbnb income is assessable. Expenses must be apportioned if property is also used privately. Keep records of days rented vs personal use."
