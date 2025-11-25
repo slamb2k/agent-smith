@@ -102,11 +102,15 @@ class TemplateMerger:
 
 
 def load_template(template_path: Path) -> Dict[str, Any]:
-    """Load a YAML template file."""
+    """Load a YAML or JSON template file."""
     with open(template_path, "r") as f:
-        data = yaml.safe_load(f)
+        if template_path.suffix == ".json":
+            data = json.load(f)
+        else:
+            data = yaml.safe_load(f)
+
         if not isinstance(data, dict):
-            raise ValueError(f"Template file {template_path} must contain a YAML dictionary")
+            raise ValueError(f"Template file {template_path} must contain a dictionary")
         return data
 
 
@@ -135,8 +139,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--foundation",
-        choices=["minimal", "standard", "comprehensive"],
-        help="Foundation category template (minimal/standard/comprehensive)",
+        default="personal-living",
+        help=(
+            "Foundation category template. Defaults to 'personal-living': "
+            "45 ATO-aligned categories for everyday expenses. "
+            "Use --foundation=none to skip Foundation layer."
+        ),
     )
     parser.add_argument(
         "--primary",
@@ -159,9 +167,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    # Validate: at least one of foundation or primary must be specified
-    if not args.foundation and not args.primary:
-        parser.error("At least one of --foundation or --primary must be specified")
+    # Validate: primary is required
+    if not args.primary:
+        parser.error("--primary is required (e.g., --primary=payg-employee)")
 
     # Get templates directory
     templates_dir = get_plugin_assets_dir() / "templates"
@@ -173,15 +181,29 @@ def main() -> None:
     # Load templates
     templates = []
 
-    # Load foundation template first (if specified)
+    # Load foundation template first (unless "none" specified)
     # Foundation has lowest priority (loaded first, highest priority number)
-    if args.foundation:
-        foundation_file = templates_dir / "foundation" / f"{args.foundation}.yaml"
-        if not foundation_file.exists():
-            print(f"Error: Foundation template not found: {foundation_file}", file=sys.stderr)
+    if args.foundation and args.foundation != "none":
+        # Try both .json and .yaml extensions
+        foundation_file = None
+        for ext in [".json", ".yaml"]:
+            candidate = templates_dir / "foundation" / f"{args.foundation}{ext}"
+            if candidate.exists():
+                foundation_file = candidate
+                break
+
+        if not foundation_file:
+            print(
+                f"Error: Foundation template not found: "
+                f"{args.foundation}.json or {args.foundation}.yaml",
+                file=sys.stderr,
+            )
             sys.exit(1)
+
         print(f"Loading foundation: {args.foundation}")
         templates.append(load_template(foundation_file))
+    elif args.foundation == "none":
+        print("Skipping foundation template (--foundation=none)")
 
     # Load primary template
     if args.primary:

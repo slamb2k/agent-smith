@@ -1,0 +1,65 @@
+name: Single Person
+layer: living
+description: |
+  Managing finances independently without shared household expenses.
+  Adds simple rules for common single-person expense patterns.
+
+  Note: Categories are provided by Foundation template. This template adds
+  only rules to help categorize common single-person expenses.
+
+categories: []
+  # No special categories needed - Foundation provides Housing, Utilities, Groceries, etc.
+  # Living templates add labels and rules, not categories.
+
+rules:
+  - id: rent-payment
+    pattern: "rent|rental.*payment|real.*estate"
+    category: "Rent/Mortgage"
+    confidence: high
+    description: "Detect rent payments"
+
+  - id: electricity-bill
+    pattern: "electricity|power.*bill|energy.*australia"
+    category: "Electricity"
+    confidence: high
+    description: "Detect electricity bills"
+
+  - id: gas-bill
+    pattern: "gas.*bill|natural.*gas"
+    category: "Gas"
+    confidence: high
+    description: "Detect gas bills"
+
+  - id: water-bill
+    pattern: "water.*bill|water.*rates"
+    category: "Water"
+    confidence: high
+    description: "Detect water bills"
+
+  - id: internet-phone
+    pattern: "internet|telstra|optus|vodafone|phone.*bill|mobile"
+    category: "Internet & Phone"
+    confidence: high
+    description: "Detect internet and phone bills"
+
+  - id: groceries
+    pattern: "woolworths|coles|aldi|iga|grocery"
+    category: "Groceries"
+    confidence: high
+    description: "Detect grocery shopping"
+
+tax_tracking: {}
+
+alerts: []
+
+labels: []
+
+dependencies:
+  requires: []
+  conflicts_with: ["shared-joint", "shared-hybrid", "separated-parents", "sharehouse"]
+
+metadata:
+  created: "2025-11-22"
+  version: "1.0.0"
+  author: "Agent Smith"
+  priority: 2

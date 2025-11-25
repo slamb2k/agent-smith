@@ -171,45 +171,20 @@ existing_category_count = len(discovery_report.categories)
 ```
 I detected {existing_category_count} existing categories in your PocketSmith account.
 
-Agent Smith includes a Foundation template with ATO-aligned categories for
+Agent Smith's Foundation template provides 45 ATO-aligned categories for
 everyday expenses (Food, Housing, Transport, Healthcare, Personal, etc.).
 
-Applying Foundation would add approximately {estimated_new_categories} categories:
+The Foundation will be applied automatically to provide structure and
+tax compliance. This adds approximately {estimated_new_categories} categories:
   • {breakdown of what would be added}
 
-Choose your approach:
+Since you already have {existing_category_count} categories, you can choose
+to skip the Foundation if you prefer to keep only your existing structure.
 
-1. Keep My Categories (RECOMMENDED for established users)
-   → Only add template-specific categories (e.g., Work Expenses)
-   → Your current structure stays intact
-   → Best for users happy with their existing setup
-
-2. Merge with Foundation Template
-   → Add granular ATO-aligned subcategories
-   → Better for detailed tracking and tax reporting
-   → Creates ~{estimated_new_categories} additional categories
-
-3. Preview Foundation Template
-   → Show me exactly what would be added
-   → Then decide whether to apply it
-
-Which approach do you prefer? (1/2/3):
+Apply Agent Smith Foundation? (Y/n):
 ```
 
-**If user selects "3. Preview":**
-
-Run a dry-run merge simulation to show what would be created:
-
-```bash
-run_agent_smith "setup/template_applier.py" \
-    --template=assets/templates/foundation/personal-living.json \
-    --strategy=smart_merge \
-    --dry-run
-```
-
-Show the preview output, then re-ask the question (options 1 or 2).
-
-**If user selects "2. Merge with Foundation":**
+**If user selects "Y" or just presses Enter (default):**
 
 Save this decision to `data/template_config.json`:
 
@@ -221,7 +196,7 @@ Save this decision to `data/template_config.json`:
 
 The Foundation template will be merged in Stage 4 with priority 0 (applied first).
 
-**If user selects "1. Keep My Categories":**
+**If user selects "n":**
 
 Save this decision:
 
@@ -231,33 +206,21 @@ Save this decision:
 }
 ```
 
-Skip Foundation, only apply template-specific additions.
+Foundation will be skipped (--foundation=none in Stage 4).
 
 **For users with 6-19 categories:**
 
-Present similar choice but with recommendation to apply Foundation:
+Present similar choice with recommendation to apply:
 
 ```
 I detected {existing_category_count} categories in your PocketSmith account.
 
-This is a good foundation, but Agent Smith's Foundation template can add
-more structure and ATO alignment for better tax tracking.
+Agent Smith's Foundation template adds ATO-aligned structure and better
+tax tracking with 45 categories for everyday expenses.
 
-Choose your approach:
+This would add approximately {estimated_new_categories} categories.
 
-1. Merge with Foundation Template (RECOMMENDED)
-   → Add granular ATO-aligned subcategories
-   → Better tax reporting and expense tracking
-   → Creates ~{estimated_new_categories} additional categories
-
-2. Keep My Categories
-   → Only add template-specific categories
-   → Your current structure stays intact
-
-3. Preview Foundation Template
-   → Show me exactly what would be added
-
-Which approach do you prefer? (1/2/3):
+Apply Agent Smith Foundation? (Y/n): [default: Y]
 ```
 
 **For users with 0-5 categories:**
@@ -267,8 +230,7 @@ Auto-apply Foundation without asking (they need the structure):
 ```
 I detected only {existing_category_count} categories in your PocketSmith account.
 
-Applying Agent Smith's Foundation template to provide ATO-aligned structure...
-This will create approximately {estimated_new_categories} categories for everyday expenses.
+Applying Agent Smith's Foundation template (45 ATO-aligned categories)...
 ```
 
 Save to config:
@@ -445,10 +407,10 @@ Skip this stage and continue to template selection.
 
 ### Stage 3: Template Selection
 
-Agent Smith uses a **composable template system** with three layers. Users select:
-1. **Primary Income** (ONE choice) - How you earn most of your income
-2. **Living Arrangement** (ONE OR MORE choices) - How you manage household finances
-3. **Additional Income** (MULTIPLE choices) - Extra income sources beyond your primary
+Agent Smith uses a **composable template system** with up to three layers. Users select:
+1. **Primary Income** (ONE choice, REQUIRED) - How you earn most of your income
+2. **Living Arrangement** (ONE OR MORE choices, OPTIONAL) - Special tracking for shared finances or child support
+3. **Additional Income** (MULTIPLE choices, OPTIONAL) - Extra income sources beyond your primary
 
 **Step 3a: Select Primary Income Template**
 
@@ -463,22 +425,33 @@ run_agent_smith "setup/template_selector.py" --layer=primary --interactive
 - `payg-employee` - Salary/wage earner, PAYG tax withheld
 - `sole-trader` - ABN holder, contractor, quarterly BAS
 
-**Step 3b: Select Living Arrangement Template(s)**
+**Step 3b: Select Living Arrangement Template(s) (OPTIONAL)**
 
-Present discovery recommendation, then let user select ONE OR MORE:
+**IMPORTANT:** Living templates are for special tracking needs only:
+- Shared household finances with expense splitting
+- Child support and custody expense tracking
+
+**If none of these apply, SKIP this step.**
+
+Present discovery recommendation, then let user select ONE OR MORE (or skip):
 
 ```bash
-echo "Select your LIVING arrangement (select all that apply):"
-run_agent_smith "setup/template_selector.py" --layer=living --multiple --interactive
+echo "Select your LIVING arrangement (select all that apply, or skip if none apply):"
+run_agent_smith "setup/template_selector.py" --layer=living --multiple --interactive --optional
 ```
 
 **Available living templates:**
-- `single` - Managing finances alone
-- `shared-hybrid` - Some joint accounts, some separate (partners/couples)
-- `separated-parents` - Child support, shared custody expenses
+- `shared-hybrid` - Shared household with mixed accounts (partners/couples)
+  - Adds labels: "Shared Expense", "Contributor: {name}", "Personal: {name}"
+  - Enables expense splitting and contribution tracking
 
-**Note:** You can select MULTIPLE living arrangements if your situation requires both. For example:
-- Divorced with kids + now living with new partner = select BOTH `separated-parents` AND `shared-hybrid`
+- `separated-parents` - Child support and custody expense tracking
+  - Adds labels: "Child Support", "Kids Expense", "Custody Period"
+  - Tracks child-related spending for tax and legal documentation
+
+**Note:**
+- You can select MULTIPLE living arrangements if needed (e.g., separated-parents + shared-hybrid if you're divorced with kids AND now living with a new partner)
+- If you're managing finances independently without shared expenses or child support, **skip this step entirely**
 
 **Step 3c: Select Additional Income Templates**
 
@@ -526,14 +499,15 @@ Combine the selected templates using priority-based merging.
 
 **Check if Foundation should be applied:**
 
-Read `data/template_config.json` and check for `"apply_foundation": true`.
+Read `data/template_config.json` and check for `"apply_foundation": true|false`.
 
-**If Foundation is enabled:**
+**If Foundation is enabled (default):**
+
+Foundation (personal-living) is automatically applied. Simply merge with primary and optional layers:
 
 ```bash
-echo "Merging selected templates (including Foundation)..."
+echo "Merging templates (Foundation + Primary + optional layers)..."
 run_agent_smith "setup/template_merger.py" \
-    --foundation \
     --primary="$PRIMARY_TEMPLATE" \
     --living="$LIVING_TEMPLATE" \
     --additional="$ADDITIONAL_TEMPLATES" \
@@ -543,9 +517,12 @@ run_agent_smith "setup/template_merger.py" \
 
 **If Foundation is disabled:**
 
+Use `--foundation=none` to skip the Foundation layer:
+
 ```bash
-echo "Merging selected templates..."
+echo "Merging templates (Primary only, skipping Foundation)..."
 run_agent_smith "setup/template_merger.py" \
+    --foundation=none \
     --primary="$PRIMARY_TEMPLATE" \
     --living="$LIVING_TEMPLATE" \
     --additional="$ADDITIONAL_TEMPLATES" \
@@ -553,11 +530,23 @@ run_agent_smith "setup/template_merger.py" \
     --output=data/merged_template.json
 ```
 
-**Template merge order (when Foundation enabled):**
-1. Foundation (priority 0) - Base ATO-aligned categories
-2. Primary Income (priority 1) - Income-specific categories
-3. Living Arrangement (priority 2) - Lifestyle and tracking labels
-4. Additional Income (priority 3) - Investment categories
+**Note:** The `--living` and `--additional` parameters are optional. Omit them if no templates were selected for those layers.
+
+**Example - Most common case (Foundation + Primary only):**
+
+```bash
+run_agent_smith "setup/template_merger.py" \
+    --primary=payg-employee \
+    --output=data/merged_template.json
+```
+
+Foundation (personal-living) is automatically included.
+
+**Template merge order:**
+1. Foundation (priority 0) - 45 ATO-aligned base categories (automatic unless --foundation=none)
+2. Primary Income (priority 1) - Income-specific categories (REQUIRED)
+3. Living Arrangement (priority 2) - Tracking labels for shared finances/child support (OPTIONAL)
+4. Additional Income (priority 3) - Investment categories (OPTIONAL)
 
 Later priorities can override/extend earlier ones.
 

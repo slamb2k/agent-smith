@@ -9,6 +9,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 from scripts.utils.backup import BackupManager
 from scripts.core.api_client import PocketSmithClient
+from scripts.utils.category_visualizer import CategoryVisualizer
 
 
 logger = logging.getLogger(__name__)
@@ -693,6 +694,33 @@ def main() -> None:
     print(f"Strategy: {args.strategy}")
     print()
 
+    # Fetch existing categories for visualization
+    user = api_client.get_user()
+    existing_categories_api = api_client.get_categories(user["id"])
+
+    # Flatten existing categories for visualization
+    def flatten_categories(
+        cats: List[Dict[str, Any]], parent_name: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Flatten API category structure to template format."""
+        result = []
+        for cat in cats:
+            cat_name = cat.get("title", "")
+            flat_cat = {
+                "name": cat_name,
+                "parent": parent_name,
+                "description": cat.get("description", ""),
+            }
+            result.append(flat_cat)
+
+            # Process children
+            if cat.get("children"):
+                result.extend(flatten_categories(cat["children"], cat_name))
+
+        return result
+
+    existing_categories_flat = flatten_categories(existing_categories_api)
+
     # Apply template
     try:
         result = applier.apply_template(
@@ -717,6 +745,32 @@ def main() -> None:
             print("Templates Applied:")
             for t in templates_applied:
                 print(f"  ✓ {t['name']} ({t['layer']}, priority {t['priority']})")
+
+        # Visualize category structure
+        if dry_run:
+            visualizer = CategoryVisualizer(use_colors=True)
+
+            # Get template categories
+            template_categories = merged_template.get("categories", [])
+
+            # Detect changes
+            changes = visualizer.detect_changes(
+                existing_categories_flat, template_categories, strategy=args.strategy
+            )
+
+            # Show visualization based on strategy
+            if args.strategy == "smart_merge" and existing_categories_flat:
+                # Side-by-side comparison for smart merge
+                visualization = visualizer.render_side_by_side(
+                    existing_categories_flat, template_categories, changes
+                )
+            else:
+                # Simple tree for add_new or replace
+                visualization = visualizer.render_tree(
+                    template_categories, changes, title="Category Structure After Applying Template"
+                )
+
+            print(visualization)
 
         if dry_run:
             print("\nTo apply these changes, run with --apply flag")
