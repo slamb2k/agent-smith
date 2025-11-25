@@ -73,7 +73,7 @@ def test_list_templates():
     # Living should have templates
     living_ids = [t["id"] for t in templates["living"]]
     assert "shared-hybrid" in living_ids
-    assert "shared-hybrid" in living_ids
+    assert "separated-parents" in living_ids
 
     # Additional should have templates
     additional_ids = [t["id"] for t in templates["additional"]]
