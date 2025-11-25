@@ -93,16 +93,27 @@ def get_transactions(
     else:
         raise ValueError(f"Invalid period format: {period}")
 
-    # Fetch transactions
-    transactions = client.get_transactions(
-        user_id=user["id"],
-        start_date=start_date.strftime("%Y-%m-%d"),
-        end_date=end_date.strftime("%Y-%m-%d"),
-    )
+    # Fetch ALL transactions with pagination
+    all_transactions = []
+    page = 1
+    while True:
+        batch = client.get_transactions(
+            user_id=user["id"],
+            start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d"),
+            page=page,
+            per_page=100,
+        )
+        if not batch:
+            break
+        all_transactions.extend(batch)
+        if len(batch) < 100:  # Last page
+            break
+        page += 1
 
     # Filter by account if specified
     if account_filter:
-        transactions = [t for t in transactions if t.get("_account_name") == account_filter]
+        all_transactions = [t for t in all_transactions if t.get("_account_name") == account_filter]
 
     # Option 4: Process ALL transactions (smart platform coexistence)
     # The workflow will intelligently handle:
@@ -110,7 +121,7 @@ def get_transactions(
     # - Already categorized + matching: apply labels only
     # - Already categorized + conflict: flag for review
     # - Label-only rules: apply labels regardless
-    return transactions
+    return all_transactions
 
 
 def main() -> int:
