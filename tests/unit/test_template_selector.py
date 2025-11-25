@@ -72,7 +72,7 @@ def test_list_templates():
 
     # Living should have templates
     living_ids = [t["id"] for t in templates["living"]]
-    assert "single" in living_ids
+    assert "shared-hybrid" in living_ids
     assert "shared-hybrid" in living_ids
 
     # Additional should have templates
@@ -98,8 +98,8 @@ def test_list_templates_metadata_content():
     payg = next(t for t in templates["primary"] if t["id"] == "payg-employee")
     assert "PAYG" in payg["name"] or "Employee" in payg["name"]
 
-    single = next(t for t in templates["living"] if t["id"] == "single")
-    assert "Single" in single["name"]
+    shared_hybrid = next(t for t in templates["living"] if t["id"] == "shared-hybrid")
+    assert "Shared" in shared_hybrid["name"]
 
 
 def test_apply_templates_file_not_found():
@@ -107,7 +107,7 @@ def test_apply_templates_file_not_found():
     selector = TemplateSelector()
 
     with pytest.raises(FileNotFoundError):
-        selector.apply_templates("nonexistent-primary", "single", [])
+        selector.apply_templates("nonexistent-primary", "shared-hybrid", [])
 
 
 def test_apply_templates_merges_correctly():
@@ -115,7 +115,7 @@ def test_apply_templates_merges_correctly():
     selector = TemplateSelector()
 
     # Apply primary + living templates
-    result = selector.apply_templates("payg-employee", "single", [])
+    result = selector.apply_templates("payg-employee", "shared-hybrid", [])
 
     # Should have merged content
     assert "categories" in result
@@ -130,7 +130,7 @@ def test_apply_templates_with_additional():
     selector = TemplateSelector()
 
     # Apply all three layers
-    result = selector.apply_templates("payg-employee", "single", ["share-investor"])
+    result = selector.apply_templates("payg-employee", "shared-hybrid", ["share-investor"])
 
     # Should have content from all templates
     assert "categories" in result
@@ -158,7 +158,7 @@ def test_template_files_exist():
         assert template_file.exists(), f"Primary template {template}.yaml not found"
 
     # Check living templates exist
-    living_templates = ["single", "shared-hybrid", "separated-parents"]
+    living_templates = ["shared-hybrid", "separated-parents"]
     for template in living_templates:
         template_file = selector.templates_dir / "living" / f"{template}.yaml"
         assert template_file.exists(), f"Living template {template}.yaml not found"
@@ -173,7 +173,7 @@ def test_template_files_valid_yaml():
     # Test one template from each layer
     test_files = [
         selector.templates_dir / "primary" / "payg-employee.yaml",
-        selector.templates_dir / "living" / "single.yaml",
+        selector.templates_dir / "living" / "shared-hybrid.yaml",
         selector.templates_dir / "additional" / "share-investor.yaml",
     ]
 

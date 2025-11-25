@@ -27,7 +27,7 @@ def test_merge_multiple_templates():
     merger = TemplateMerger()
 
     primary = loader.load_from_file(get_asset_path("templates", "primary", "payg-employee.yaml"))
-    living = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "shared-hybrid.yaml"))
 
     result = merger.merge([primary, living])
 
@@ -266,7 +266,7 @@ def test_merge_labels_with_real_templates():
 
     # Load templates from all three layers
     primary = loader.load_from_file(get_asset_path("templates", "primary", "sole-trader.yaml"))
-    living = loader.load_from_file(get_asset_path("templates", "living", "single.yaml"))
+    living = loader.load_from_file(get_asset_path("templates", "living", "shared-hybrid.yaml"))
     additional = loader.load_from_file(
         get_asset_path("templates", "additional", "property-investor.yaml")
     )
