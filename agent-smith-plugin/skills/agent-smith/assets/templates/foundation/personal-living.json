@@ -1,0 +1,211 @@
+{
+  "name": "Foundation: Personal Living",
+  "description": "Core personal expense categories for everyday living, aligned with ATO guidance",
+  "layer": "foundation",
+  "priority": 0,
+  "applies_to": ["all"],
+  "ato_aligned": true,
+  "categories": [
+    {
+      "name": "Income",
+      "parent": null,
+      "description": "All income sources",
+      "ato_section": "Income"
+    },
+    {
+      "name": "Salary/Wages",
+      "parent": "Income",
+      "description": "Employment income from salary or wages",
+      "ato_section": "Item 1"
+    },
+    {
+      "name": "Other Income",
+      "parent": "Income",
+      "description": "Income not covered by other categories",
+      "ato_section": "Item 24"
+    },
+    {
+      "name": "Interest Income",
+      "parent": "Income",
+      "description": "Interest from bank accounts and investments",
+      "ato_section": "Item 10"
+    },
+    {
+      "name": "Food & Dining",
+      "parent": null,
+      "description": "Food and meal expenses"
+    },
+    {
+      "name": "Groceries",
+      "parent": "Food & Dining",
+      "description": "Supermarket and grocery shopping"
+    },
+    {
+      "name": "Restaurants",
+      "parent": "Food & Dining",
+      "description": "Dining out at restaurants"
+    },
+    {
+      "name": "Cafes & Takeaway",
+      "parent": "Food & Dining",
+      "description": "Coffee shops and takeaway food"
+    },
+    {
+      "name": "Housing & Utilities",
+      "parent": null,
+      "description": "Housing costs and utilities"
+    },
+    {
+      "name": "Rent/Mortgage",
+      "parent": "Housing & Utilities",
+      "description": "Rent or mortgage payments"
+    },
+    {
+      "name": "Electricity",
+      "parent": "Housing & Utilities",
+      "description": "Electricity bills"
+    },
+    {
+      "name": "Gas",
+      "parent": "Housing & Utilities",
+      "description": "Gas bills"
+    },
+    {
+      "name": "Water",
+      "parent": "Housing & Utilities",
+      "description": "Water bills"
+    },
+    {
+      "name": "Internet & Phone",
+      "parent": "Housing & Utilities",
+      "description": "Internet and phone services"
+    },
+    {
+      "name": "Home Maintenance",
+      "parent": "Housing & Utilities",
+      "description": "Repairs and maintenance for your home"
+    },
+    {
+      "name": "Transportation",
+      "parent": null,
+      "description": "Transport and vehicle expenses"
+    },
+    {
+      "name": "Fuel",
+      "parent": "Transportation",
+      "description": "Petrol and diesel for personal vehicles"
+    },
+    {
+      "name": "Public Transport",
+      "parent": "Transportation",
+      "description": "Buses, trains, trams, ferries"
+    },
+    {
+      "name": "Vehicle Registration",
+      "parent": "Transportation",
+      "description": "Vehicle registration and CTP insurance"
+    },
+    {
+      "name": "Vehicle Maintenance",
+      "parent": "Transportation",
+      "description": "Car servicing and repairs"
+    },
+    {
+      "name": "Parking & Tolls",
+      "parent": "Transportation",
+      "description": "Parking fees and road tolls"
+    },
+    {
+      "name": "Healthcare & Insurance",
+      "parent": null,
+      "description": "Medical expenses and insurance"
+    },
+    {
+      "name": "Medical",
+      "parent": "Healthcare & Insurance",
+      "description": "Doctor visits and medical expenses"
+    },
+    {
+      "name": "Dental",
+      "parent": "Healthcare & Insurance",
+      "description": "Dental care expenses"
+    },
+    {
+      "name": "Pharmacy",
+      "parent": "Healthcare & Insurance",
+      "description": "Prescription and over-the-counter medications"
+    },
+    {
+      "name": "Health Insurance",
+      "parent": "Healthcare & Insurance",
+      "description": "Private health insurance premiums"
+    },
+    {
+      "name": "Life Insurance",
+      "parent": "Healthcare & Insurance",
+      "description": "Life and income protection insurance"
+    },
+    {
+      "name": "Personal & Lifestyle",
+      "parent": null,
+      "description": "Personal care and lifestyle expenses"
+    },
+    {
+      "name": "Clothing & Footwear",
+      "parent": "Personal & Lifestyle",
+      "description": "Clothing and shoes for personal use"
+    },
+    {
+      "name": "Personal Care",
+      "parent": "Personal & Lifestyle",
+      "description": "Haircuts, cosmetics, toiletries"
+    },
+    {
+      "name": "Entertainment & Recreation",
+      "parent": "Personal & Lifestyle",
+      "description": "Entertainment, hobbies, and recreation"
+    },
+    {
+      "name": "Fitness & Wellness",
+      "parent": "Personal & Lifestyle",
+      "description": "Gym memberships, fitness activities, wellness"
+    },
+    {
+      "name": "Gifts & Donations",
+      "parent": "Personal & Lifestyle",
+      "description": "Gifts and charitable donations (donations may be tax deductible)",
+      "ato_section": "D9"
+    },
+    {
+      "name": "Banking & Fees",
+      "parent": null,
+      "description": "Banking fees and charges"
+    },
+    {
+      "name": "Bank Fees",
+      "parent": "Banking & Fees",
+      "description": "Account keeping fees and transaction fees"
+    },
+    {
+      "name": "Interest Charges",
+      "parent": "Banking & Fees",
+      "description": "Interest on personal loans and credit cards"
+    },
+    {
+      "name": "Transfers",
+      "parent": "Banking & Fees",
+      "description": "Transfers between accounts"
+    }
+  ],
+  "rules": [],
+  "labels": [],
+  "name": "Foundation: Personal Living",
+  "layer": "foundation",
+  "metadata": {
+    "version": "1.0.0",
+    "priority": 0,
+    "created": "2025-11-25",
+    "ato_alignment": "2024-25 tax year",
+    "recommended_for": ["new_users", "migration_users"]
+  }
+}

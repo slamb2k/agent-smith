@@ -11,8 +11,9 @@ class TestHealthDataCollector:
     def test_collector_initialization(self):
         """Collector initializes with API client."""
         mock_client = Mock()
-        collector = HealthDataCollector(api_client=mock_client)
+        collector = HealthDataCollector(api_client=mock_client, user_id=123)
         assert collector.api_client == mock_client
+        assert collector.user_id == 123
 
     def test_collect_data_quality_metrics(self):
         """Collects data quality metrics from transactions."""
@@ -24,7 +25,7 @@ class TestHealthDataCollector:
             {"id": 4, "category": {"id": 1}, "payee": "Store A"},
         ]
 
-        collector = HealthDataCollector(api_client=mock_client)
+        collector = HealthDataCollector(api_client=mock_client, user_id=123)
         data = collector.collect_data_quality()
 
         assert data["total_transactions"] == 4
@@ -39,7 +40,7 @@ class TestHealthDataCollector:
         mock_client.get_categories.return_value = []
         mock_client.get_user.return_value = {"id": 1}
 
-        collector = HealthDataCollector(api_client=mock_client)
+        collector = HealthDataCollector(api_client=mock_client, user_id=123)
 
         # Mock all collection methods
         collector.collect_data_quality = Mock(return_value={"total_transactions": 0})

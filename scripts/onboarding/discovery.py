@@ -629,7 +629,7 @@ class DiscoveryAnalyzer:
         if include_health_check:
             from scripts.onboarding.baseline_health import BaselineHealthChecker
 
-            checker = BaselineHealthChecker(client=self.client)
+            checker = BaselineHealthChecker(client=self.client, user_id=user_id)
             baseline_health_score = checker.run_baseline_check()
 
         return DiscoveryReport(

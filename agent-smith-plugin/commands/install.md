@@ -150,6 +150,134 @@ run_agent_smith "onboarding/discovery.py"
 - Display account classifications (household_shared, parenting_shared, individual)
 - Show any name suggestions detected
 
+### Stage 2a: Category Structure Assessment
+
+**IMPORTANT:** This stage determines whether to apply the Foundation template based on the user's existing category count.
+
+**Check existing category count** from discovery report:
+
+```python
+existing_category_count = len(discovery_report.categories)
+```
+
+**Decision logic:**
+
+- **0-5 categories**: Auto-apply Foundation (user has minimal setup)
+- **6-19 categories**: Offer Foundation with recommendation to apply (partial setup)
+- **20+ categories**: Offer Foundation with recommendation to skip (established setup)
+
+**For users with 20+ categories, present this choice:**
+
+```
+I detected {existing_category_count} existing categories in your PocketSmith account.
+
+Agent Smith includes a Foundation template with ATO-aligned categories for
+everyday expenses (Food, Housing, Transport, Healthcare, Personal, etc.).
+
+Applying Foundation would add approximately {estimated_new_categories} categories:
+  • {breakdown of what would be added}
+
+Choose your approach:
+
+1. Keep My Categories (RECOMMENDED for established users)
+   → Only add template-specific categories (e.g., Work Expenses)
+   → Your current structure stays intact
+   → Best for users happy with their existing setup
+
+2. Merge with Foundation Template
+   → Add granular ATO-aligned subcategories
+   → Better for detailed tracking and tax reporting
+   → Creates ~{estimated_new_categories} additional categories
+
+3. Preview Foundation Template
+   → Show me exactly what would be added
+   → Then decide whether to apply it
+
+Which approach do you prefer? (1/2/3):
+```
+
+**If user selects "3. Preview":**
+
+Run a dry-run merge simulation to show what would be created:
+
+```bash
+run_agent_smith "setup/template_applier.py" \
+    --template=assets/templates/foundation/personal-living.json \
+    --strategy=smart_merge \
+    --dry-run
+```
+
+Show the preview output, then re-ask the question (options 1 or 2).
+
+**If user selects "2. Merge with Foundation":**
+
+Save this decision to `data/template_config.json`:
+
+```json
+{
+  "apply_foundation": true
+}
+```
+
+The Foundation template will be merged in Stage 4 with priority 0 (applied first).
+
+**If user selects "1. Keep My Categories":**
+
+Save this decision:
+
+```json
+{
+  "apply_foundation": false
+}
+```
+
+Skip Foundation, only apply template-specific additions.
+
+**For users with 6-19 categories:**
+
+Present similar choice but with recommendation to apply Foundation:
+
+```
+I detected {existing_category_count} categories in your PocketSmith account.
+
+This is a good foundation, but Agent Smith's Foundation template can add
+more structure and ATO alignment for better tax tracking.
+
+Choose your approach:
+
+1. Merge with Foundation Template (RECOMMENDED)
+   → Add granular ATO-aligned subcategories
+   → Better tax reporting and expense tracking
+   → Creates ~{estimated_new_categories} additional categories
+
+2. Keep My Categories
+   → Only add template-specific categories
+   → Your current structure stays intact
+
+3. Preview Foundation Template
+   → Show me exactly what would be added
+
+Which approach do you prefer? (1/2/3):
+```
+
+**For users with 0-5 categories:**
+
+Auto-apply Foundation without asking (they need the structure):
+
+```
+I detected only {existing_category_count} categories in your PocketSmith account.
+
+Applying Agent Smith's Foundation template to provide ATO-aligned structure...
+This will create approximately {estimated_new_categories} categories for everyday expenses.
+```
+
+Save to config:
+```json
+{
+  "apply_foundation": true
+}
+```
+
 ### Stage 2b: Account Selection (Interactive)
 
 **IMPORTANT:** This stage enables context-aware name detection by identifying which accounts are used for household vs parenting expenses.
@@ -394,7 +522,26 @@ Save configurations to `data/template_config.json` for use during merge.
 
 **Step 4a: Merge Selected Templates**
 
-Combine the selected templates using priority-based merging:
+Combine the selected templates using priority-based merging.
+
+**Check if Foundation should be applied:**
+
+Read `data/template_config.json` and check for `"apply_foundation": true`.
+
+**If Foundation is enabled:**
+
+```bash
+echo "Merging selected templates (including Foundation)..."
+run_agent_smith "setup/template_merger.py" \
+    --foundation \
+    --primary="$PRIMARY_TEMPLATE" \
+    --living="$LIVING_TEMPLATE" \
+    --additional="$ADDITIONAL_TEMPLATES" \
+    --config=data/template_config.json \
+    --output=data/merged_template.json
+```
+
+**If Foundation is disabled:**
 
 ```bash
 echo "Merging selected templates..."
@@ -405,6 +552,14 @@ run_agent_smith "setup/template_merger.py" \
     --config=data/template_config.json \
     --output=data/merged_template.json
 ```
+
+**Template merge order (when Foundation enabled):**
+1. Foundation (priority 0) - Base ATO-aligned categories
+2. Primary Income (priority 1) - Income-specific categories
+3. Living Arrangement (priority 2) - Lifestyle and tracking labels
+4. Additional Income (priority 3) - Investment categories
+
+Later priorities can override/extend earlier ones.
 
 **Step 4b: Select Application Strategy**
 
@@ -452,23 +607,45 @@ run_agent_smith "setup/template_applier.py" \
     --dry-run
 ```
 
-**Expected output:**
+**Expected output (without Foundation):**
 ```
 Template Application Preview
 =============================
 Strategy: Add New Only
 
 Summary:
-  • 23 categories will be created
-  • 12 categories already exist (will reuse)
-  • 47 rules will be added
+  • 7 categories will be created
+  • 38 categories already exist (will reuse)
+  • 11 rules will be added
   • 0 rules will be skipped (duplicates)
-  • Backup will be created at: data/backups/2025-11-22_143022_template_application
+  • Backup will be created at: data/backups/2025-11-25_143022_template_application
 
 Templates Applied:
   ✓ PAYG Employee (primary, priority 1)
   ✓ Shared Household - Hybrid (living, priority 2)
-  ✓ Property Investor (additional, priority 3)
+  ✓ Separated Parents (living, priority 2)
+
+Proceed with application? (y/n):
+```
+
+**Expected output (with Foundation enabled):**
+```
+Template Application Preview
+=============================
+Strategy: Smart Merge
+
+Summary:
+  • 12 categories will be created
+  • 33 categories matched/reused (fuzzy matching)
+  • 11 rules will be added
+  • 0 rules will be skipped (duplicates)
+  • Backup will be created at: data/backups/2025-11-25_143022_template_application
+
+Templates Applied:
+  ✓ Foundation: Personal Living (foundation, priority 0)
+  ✓ PAYG Employee (primary, priority 1)
+  ✓ Shared Household - Hybrid (living, priority 2)
+  ✓ Separated Parents (living, priority 2)
 
 Proceed with application? (y/n):
 ```
