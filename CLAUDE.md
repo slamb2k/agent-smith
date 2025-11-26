@@ -1,321 +1,294 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides **mandatory operating instructions** for AI coding assistants working on Agent Smith. These rules ensure consistency, quality, and a great user experience.
 
-## Project Overview
+> **Audience:** AI coding assistants (Claude Code, etc.)
+> **For human developers:** See [DEVELOPMENT.md](DEVELOPMENT.md) and [CONTRIBUTING.md](CONTRIBUTING.md)
 
-**Agent Smith** is an intelligent financial management skill for Claude Code that provides comprehensive PocketSmith API integration with advanced AI-powered analysis, rule management, tax intelligence, and scenario planning.
+---
 
-**Status:** Design phase complete, ready for implementation
+## Project Identity
 
-## Architecture
+**Agent Smith** is an intelligent financial management skill for Claude Code providing PocketSmith API integration with AI-powered analysis, rule management, tax intelligence, and scenario planning.
 
-### Three-Tier System
+**Design Specification:** `docs/design/2025-11-20-agent-smith-design.md` (source of truth)
 
-1. **API Integration Layer** - PocketSmith API communication with rate limiting, caching, error handling, automatic backups
-2. **Intelligence Engine** - Hybrid rule engine (platform + local), 3-tier tax intelligence (Reference/Smart/Full), scenario analysis, AI categorization with tiered modes (Conservative/Smart/Aggressive)
-3. **Orchestration Layer** - Smart subagent conductor for context preservation, parallel processing, and result aggregation
+---
 
-### Core Design Principles
+## Critical Operating Rules
 
-- **Hybrid Approach:** Single-shot operations for simple tasks, conversational sessions for complex workflows
-- **User Choice:** Always recommend a mode but allow user override
-- **Context Preservation:** Use subagent orchestration to delegate heavy operations while preserving main context
-- **Smart Archiving:** Automatic retention policies with INDEX.md files for LLM-efficient discovery
-- **Backup-First:** Always backup before mutations
-- **Deterministic Operations:** All data operations use git-tracked scripts for testability and reproducibility (see pattern below)
+These rules are **non-negotiable**. Violating them causes bugs, data loss, or poor user experience.
 
-### Label Constants in Templates
+### 1. Source Code Location
 
-**Template rules can reference label constants using `$CONSTANT_NAME` syntax:**
-
-```json
-{
-  "name": "paypal-generic",
-  "payee_pattern": "PAYPAL",
-  "category": "Online Services",
-  "labels": ["$LABEL_GENERIC_PAYPAL"]
-}
+```
+agent-smith/
+├── scripts/                    ← ✅ EDIT HERE (tracked in git)
+└── agent-smith-plugin/.../scripts/  ← ❌ NEVER EDIT (gitignored, overwritten)
 ```
 
-When templates are applied, the `template_applier.py` resolves constants from `scripts/core/labels.py`:
-- `$LABEL_GENERIC_PAYPAL` → `"⚠️ Review: Generic PayPal"`
-- `$LABEL_CATEGORY_CONFLICT` → `"⚠️ Review: Category Conflict"`
-- `$LABEL_TAX_DEDUCTIBLE` → `"Tax Deductible"`
-- And all other constants defined in `scripts/core/labels.py`
+- **ALWAYS** edit files in `/scripts/`
+- **NEVER** edit files in `agent-smith-plugin/skills/agent-smith/scripts/`
+- Run `./scripts/dev-sync.sh` after editing to sync to plugin
 
-**Benefits:**
-- Ensures consistency between templates and code
-- Single source of truth for label values
-- Easy to update labels globally by changing constants
-- Type-safe (constants are defined in Python with docstrings)
+### 2. Python Execution
 
-### Deterministic Operations Pattern
+```bash
+# ✅ CORRECT - Always use uv run with unbuffered output
+uv run python -u scripts/some_script.py
 
-**CRITICAL: All data retrieval and mutation operations MUST use git-tracked Python scripts.**
+# ❌ WRONG - Dependencies won't be found
+python scripts/some_script.py
+```
 
-**Pattern Structure:**
+The `-u` flag is **mandatory** for real-time output streaming.
+
+### 3. Deterministic Operations
+
+**All PocketSmith API operations MUST use git-tracked Python scripts.**
+
 ```
 scripts/operations/
-├── fetch_*.py      # Data retrieval (read-only)
+├── fetch_*.py      # Read operations (no mutations)
 ├── update_*.py     # Single-record mutations
 ├── create_*.py     # Resource creation
 └── reprocess_*.py  # Batch operations
 ```
 
-**Why this pattern:**
-- ✅ **Version Controlled:** All logic is git-tracked and auditable
-- ✅ **Testable:** Each script can be tested independently
-- ✅ **Deterministic:** Same inputs = same outputs, no hidden state
-- ✅ **Reusable:** Scripts can be called from slash commands, skills, or terminal
-- ✅ **Debuggable:** Easy to trace and reproduce issues
+- ❌ **NEVER** embed Python code in slash commands or prompts
+- ❌ **NEVER** write ad-hoc scripts for one-time operations
+- ✅ **ALWAYS** use existing scripts in `scripts/operations/`
+- ✅ **ALWAYS** create new scripts if functionality doesn't exist
 
-**Implementation Rules:**
+### 4. Category Hierarchy
 
-1. **Never embed data operations in slash commands or conversational prompts**
-   - ❌ BAD: Python code blocks in command markdown files
-   - ✅ GOOD: Commands orchestrate git-tracked scripts via `uv run python -u`
+**ALWAYS** use `flatten=True` when retrieving categories:
 
-2. **Scripts must be self-contained and CLI-friendly**
-   - Accept arguments via argparse
-   - Output to stdout (JSON, summary, or count)
-   - Use exit codes (0 = success, non-zero = error)
-   - Support `--dry-run` for safe testing
+```python
+# ✅ CORRECT - Child categories are searchable
+categories = client.get_categories(user_id, flatten=True)
 
-3. **Naming conventions:**
-   - `fetch_*.py` - Read operations, no mutations
-   - `update_*.py` - Update existing records
-   - `create_*.py` - Create new records/resources
-   - `reprocess_*.py` - Batch processing with multiple operations
-
-4. **Example: Transaction conflict review workflow**
-   ```bash
-   # Fetch conflicts (deterministic read)
-   uv run python -u scripts/operations/fetch_conflicts.py --output json > /tmp/conflicts.json
-
-   # Update single transaction (deterministic write)
-   uv run python -u scripts/operations/update_transaction.py 123456 --category-name "Food"
-
-   # Create new rule (deterministic resource creation)
-   uv run python -u scripts/operations/create_rule.py "Food" --payee "WOOLWORTHS" --pattern-type keyword
-
-   # Reprocess with new rules (deterministic batch operation)
-   uv run python -u scripts/operations/reprocess_conflicts.py --transactions-file /tmp/conflicts.json
-   ```
-
-5. **Orchestration layers (slash commands, skills) should:**
-   - Call scripts via subprocess or uv run
-   - Parse script output (JSON preferred)
-   - Provide conversational UX around deterministic operations
-   - Never duplicate logic that belongs in scripts
-
-**Reference implementation:** See `/smith:review-conflicts` command and its associated scripts:
-- `scripts/operations/fetch_conflicts.py`
-- `scripts/operations/update_transaction.py`
-- `scripts/operations/create_rule.py`
-- `scripts/operations/reprocess_conflicts.py`
-
-### Subagent Strategy
-
-**When to delegate operations to subagents:**
-- Transaction count > 100
-- Estimated tokens > 5000
-- Bulk processing, deep analysis, or multi-period operations
-- Parallelization opportunities (e.g., analyze 12 months → 12 parallel agents)
-
-**Subagent types (in future `scripts/subagents/`):**
-- categorization-agent, analysis-agent, reporting-agent, tax-agent, optimization-agent, scenario-agent
-
-## Repository Structure
-
-**Key Directories:**
-
-- `docs/design/` - Complete design specifications (start here for understanding)
-- `ai_docs/` - Documentation for AI agents/subagents (PocketSmith API reference, future tax guidelines)
-- `.env` - API configuration (**NEVER commit**, protected by .gitignore)
-
-**Navigation:**
-- Each major directory has an `INDEX.md` file for efficient discovery by both humans and LLMs
-- `README.md` - Project overview and quick start
-- `INDEX.md` (root) - Complete repository navigation guide
-
-## Development Workflow
-
-### **CRITICAL: Source Code Location**
-
-**Agent Smith uses a dual-location architecture for scripts:**
-
-```
-agent-smith/
-├── scripts/                    ← ✅ SOURCE (edit here, tracked in git)
-│   ├── core/
-│   ├── health/
-│   └── ...
-│
-└── agent-smith-plugin/skills/agent-smith/
-    └── scripts/                ← ❌ COPY (gitignored, synced from source)
+# ❌ WRONG - 127 child categories are invisible!
+categories = client.get_categories(user_id, flatten=False)
 ```
 
-**THE GOLDEN RULE: Always edit `/scripts/`, NEVER `agent-smith-plugin/.../scripts/`**
+### 5. Backup Before Mutations
 
-Files in `agent-smith-plugin/skills/agent-smith/scripts/` are:
-- Gitignored (changes won't be committed)
-- Overwritten by sync (changes will be lost)
-- Build artifacts (not source code)
+**ALWAYS** backup data before any write operation to PocketSmith.
 
-**When editing code:**
-1. ✅ Edit files in `/scripts/` (source, tracked in git)
-2. ✅ Run `./scripts/dev-sync.sh` to sync to plugin
-3. ✅ Test using plugin copy
-4. ✅ Commit source changes from `/scripts/`
+### 6. Restart Notifications
 
-**See DEVELOPMENT.md for complete dual-location architecture documentation.**
+**ALWAYS** prompt user to restart Claude Code when creating/modifying:
+- Slash commands
+- Skills
+- Hooks
+- MCP servers
 
-### Initial Setup
+---
+
+## Development Principles
+
+These principles guide **how** we build Agent Smith. Follow them in order of priority.
+
+### Principle 1: Determinism & Consistency
+
+> **Python provides consistency. Prompts provide interactivity.**
+
+- Use **typed Python interfaces** for all PocketSmith operations
+- Same inputs MUST produce same outputs
+- No hidden state or side effects
+- All logic is testable and auditable
+
+```python
+# ✅ Typed, deterministic function
+def update_transaction(
+    transaction_id: int,
+    category_id: Optional[int] = None,
+    labels: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Update a transaction with explicit parameters."""
+    ...
+```
+
+### Principle 2: Code Reuse Over Creation
+
+> **Before writing new code, search for existing code that does what you need.**
+
+1. **Check existing scripts first:**
+   - `scripts/operations/` - Data operations
+   - `scripts/workflows/` - Multi-step processes
+   - `scripts/services/` - Business logic
+   - `scripts/core/` - Shared utilities
+
+2. **Look for similar patterns:**
+   - If `fetch_conflicts.py` exists, don't create `get_conflicts.py`
+   - If `update_transaction.py` handles labels, don't duplicate label logic
+
+3. **Extend, don't duplicate:**
+   - Add parameters to existing scripts
+   - Create shared utilities in `scripts/core/`
+   - Refactor common patterns into reusable functions
+
+### Principle 3: Test-Driven Development
+
+> **Write tests first. Watch them fail. Then implement.**
+
+- **Unit tests** for all new functions
+- **Integration tests** for API interactions
+- Tests live in `tests/unit/` and `tests/integration/`
+- Run tests: `uv run pytest tests/ -v`
 
 ```bash
-# Environment setup
-cp .env.sample .env
-# Add POCKETSMITH_API_KEY to .env
-
-# For isolated development, use git worktrees
-git worktree add ../agent-smith-dev -b feature/phase-1-foundation
+# TDD workflow
+1. Write failing test
+2. Run test, confirm failure
+3. Implement minimal code to pass
+4. Refactor if needed
+5. Repeat
 ```
 
-### Running Python Scripts
+### Principle 4: Separation of Concerns
 
-**CRITICAL: Always use `uv run` when executing Python scripts in this repository.**
+| Layer | Purpose | Tools |
+|-------|---------|-------|
+| **Python Scripts** | Data operations, business logic | Typed functions, argparse CLI |
+| **Skills/Commands** | User interaction, orchestration | Markdown prompts, Claude Code |
+| **Prompts** | Conversational UX, guidance | Natural language |
 
-```bash
-# ✅ CORRECT - Use uv run with unbuffered output
-uv run python -u scripts/some_script.py
-
-# ✅ For background tasks with real-time output
-uv run python -u scripts/some_script.py &
-
-# ✅ For one-liners
-uv run python -u -c "from scripts.core.api_client import PocketSmithClient; ..."
-
-# ❌ WRONG - Do not run Python directly (dependencies won't be found)
-python scripts/some_script.py  # Will get ModuleNotFoundError
+```
+User → Slash Command → Python Script → PocketSmith API
+         (UX)           (Logic)         (Data)
 ```
 
-**Why use `uv run`:** Dependencies (`requests`, `python-dateutil`, `python-dotenv`) are installed in the `.venv` virtual environment. Using `uv run` ensures Python uses the venv automatically.
+### Principle 5: Real-Time Feedback
 
-**Why use `-u` flag:** Python buffers output by default, hiding progress during long operations. The `-u` flag enables unbuffered output so you see results in real-time. This is especially important for:
-- Long-running categorization tasks
-- Health checks analyzing large datasets
-- Multi-step workflows with progress indicators
-- Background tasks where you need to monitor progress
+> **Stream information to the user during long operations.**
 
-**Alternative:** Activate the venv first, then run Python with `-u`:
-```bash
-source .venv/bin/activate  # Unix/macOS
-python -u scripts/some_script.py
+- Use `print()` with flush for progress updates
+- Use `-u` flag for unbuffered Python output
+- Provide progress indicators: `[23/100] Processing...`
+- Never leave user waiting without feedback
+
+```python
+# ✅ Stream progress to user
+for i, txn in enumerate(transactions):
+    print(f"[{i+1}/{len(transactions)}] Processing {txn['payee']}...")
+    process(txn)
+print(f"✅ Completed {len(transactions)} transactions")
 ```
 
-**Or set environment variable:**
-```bash
-export PYTHONUNBUFFERED=1  # Unix/macOS
-uv run python scripts/some_script.py
+---
+
+## User Experience Guidelines
+
+Agent Smith should feel like a **guided, intuitive assistant**. Follow these UX patterns.
+
+### Guided Workflows
+
+Every command/skill interaction should include:
+
+1. **Goal** - What will this accomplish?
+2. **Why** - Why is this important?
+3. **Steps** - What steps will be taken?
+4. **Progress** - Real-time feedback during execution
+5. **Summary** - What was accomplished?
+6. **Next Steps** - What should the user do next?
+
+```markdown
+## Goal
+Categorize uncategorized transactions using rules and AI.
+
+## Why This Matters
+Uncategorized transactions reduce your financial visibility and health score.
+
+## Steps
+1. Fetch uncategorized transactions
+2. Apply rule engine matching
+3. Use AI for unmatched transactions
+4. Update PocketSmith
+
+## Next Steps
+- Review flagged conflicts: `/smith:review-conflicts`
+- Check your health score: `/smith:health`
 ```
 
-### Implementation Phases
+### Visual Elements
 
-**Current Phase:** Foundation (Phase 1 of 8)
+Leverage Claude Code's UI capabilities:
 
-Refer to `docs/design/2025-11-20-agent-smith-design.md` Section 11 for complete 16-week roadmap:
-1. Foundation (weeks 1-2) - Directory structure, core libraries
-2. Rule Engine (weeks 3-4)
-3. Analysis & Reporting (weeks 5-6)
-4. Tax Intelligence (weeks 7-8)
-5. Scenario Analysis (weeks 9-10)
-6. Orchestration & UX (weeks 11-12)
-7. Advanced Features (weeks 13-14)
-8. Health Check & Polish (weeks 15-16)
+| Element | Use Case | Example |
+|---------|----------|---------|
+| **Emojis** | Status indicators | ✅ ❌ ⚠️ 🔄 📊 💰 |
+| **Progress** | Long operations | `[23/100] Processing...` |
+| **Tables** | Data summaries | Markdown tables |
+| **ASCII Charts** | Visual data | Bar charts, sparklines |
+| **Colors** | Emphasis (in prompts) | Status highlighting |
+| **Selection Menus** | User choices | `AskUserQuestion` tool |
 
-### Reference Materials
+### Command Frontmatter
 
-Insights from previous PocketSmith migration work have been incorporated into Agent Smith's design.
+Define helpful metadata in slash commands:
 
-**See:** `docs/design/LESSONS_LEARNED.md` for detailed patterns, API quirks, and best practices extracted from prior migration experience.
-
-## Key Technical Decisions
-
-### Hybrid Rule Engine
-
-**Two-tier system:**
-1. **Platform Rules** - Created via PocketSmith API (keyword-only), auto-apply server-side, tracked in `data/platform_rules.json`
-2. **Local Rules** - Enhanced engine with regex, multi-condition logic, confidence scoring, stored in `data/local_rules.json`
-
-**Decision logic:** Simple keyword patterns → Platform API. Complex patterns → Local engine.
-
-### Tax Intelligence Levels
-
-Configurable via `TAX_INTELLIGENCE_LEVEL` env var or runtime override:
-
-- **Reference** - Basic reporting, ATO category mapping, links to resources
-- **Smart** - Deduction flagging, expense splitting suggestions, CGT tracking, threshold monitoring
-- **Full** - BAS preparation, compliance checks, scenario planning, audit-ready documentation
-
-All Level 3 outputs must include disclaimer: "Consult a registered tax agent for advice"
-
-### Smart Archiving & INDEX.md
-
-**Retention policies:**
-- Cache: 7 days auto-purge
-- Logs: 14 days active → monthly .tar.gz archives
-- Backups: 30 days recent → monthly archives
-- Reports: 90 days → archive (tax reports: 7 years for ATO)
-
-**Every file operation must update relevant INDEX.md** - Contains filename, date, size, description, tags. Enables LLM quick scanning without reading all files.
-
-### Australian Tax Compliance
-
-**ATO documentation caching strategy:**
-- Cache ATO guidelines locally in `ai_docs/tax/`
-- Track version/hash in `cache_metadata.json`
-- Monthly refresh, force refresh pre-EOFY (May-June) and post-Budget (October)
-- Before tax operations: verify cache freshness, alert on changes
-
-## PocketSmith API Integration
-
-**Authentication:** Developer key via `X-Developer-Key` header (from `.env`)
-
-**Key endpoints used:**
-- `/v2/me` - Get authorized user
-- `/v2/users/{id}/transactions` - Transaction operations
-- `/v2/users/{id}/categories` - Category management
-- `/v2/categories/{id}/category-rules` - Rule creation (limited: keyword-only, no delete/modify)
-
-**API constraints:**
-- Rate limiting required (configurable delay via `API_RATE_LIMIT_DELAY`)
-- Category rules API only supports simple keywords
-- Rules cannot be modified/deleted via API (must track externally)
-
-**Reference:** `ai_docs/pocketsmith-api-documentation.md`
-
-### Category Hierarchy Handling
-
-**CRITICAL: PocketSmith categories are hierarchical - parent categories contain child categories.**
-
-**The Problem:**
-The API returns categories with children nested in a `children` array:
-```json
-{
-  "id": 26796189,
-  "title": "Utilities",
-  "children": [
-    {"id": 26927667, "title": "Internet & Phone", "parent_id": 26796189},
-    {"id": 17151799, "title": "Power", "parent_id": 26796189}
-  ]
-}
+```yaml
+---
+description: Categorize uncategorized transactions
+argument-hint: [period] [--mode smart|conservative|aggressive] [--dry-run]
+---
 ```
 
-**Without flattening, child categories are invisible to search/matching operations!**
+### Error Handling UX
 
-**The Solution:**
-Always use `flatten=True` when retrieving categories for operations:
+- **Explain** what went wrong in plain language
+- **Suggest** how to fix it
+- **Offer** next steps or alternatives
+
+```markdown
+❌ **Error:** Could not find category "Grocereis"
+
+**Did you mean:** "Groceries" (Food & Dining > Groceries)?
+
+**To fix:** Run the command again with the correct category name.
+```
+
+---
+
+## Code Patterns
+
+### Script CLI Pattern
+
+All scripts should follow this pattern:
+
+```python
+#!/usr/bin/env python3
+"""Brief description of what this script does."""
+
+import argparse
+import json
+import sys
+from typing import Any, Dict, List, Optional
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dry-run", action="store_true", help="Preview without changes")
+    parser.add_argument("--output", choices=["json", "summary"], default="summary")
+    args = parser.parse_args()
+
+    # Implementation here
+    result = do_work(dry_run=args.dry_run)
+
+    # Output
+    if args.output == "json":
+        print(json.dumps(result, indent=2))
+    else:
+        print(f"✅ Processed {result['count']} items")
+
+    return 0 if result["success"] else 1
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+### API Client Usage
 
 ```python
 from scripts.core.api_client import PocketSmithClient
@@ -324,78 +297,88 @@ from scripts.core.category_utils import find_category_by_name
 client = PocketSmithClient()
 user = client.get_user()
 
-# ✅ CORRECT - Flatten to include all child categories
+# Always flatten categories for operations
 categories = client.get_categories(user["id"], flatten=True)
+category = find_category_by_name(categories, "Groceries")
 
-# Now child categories like "Internet & Phone" are searchable
-cat = find_category_by_name(categories, "Internet & Phone")
-print(cat["id"])  # 26927667
-
-# ❌ WRONG - Hierarchical structure hides children
-categories = client.get_categories(user["id"], flatten=False)
-# Child categories are nested, won't be found by simple iteration!
+# Update with explicit parameters
+client.update_transaction(
+    transaction_id=12345,
+    category_id=category["id"],
+    labels=["processed"]
+)
 ```
 
-**When to use each mode:**
+### Label Constants
 
-| Mode | Use Case | Example |
-|------|----------|---------|
-| `flatten=True` | **Searching, matching, categorization** | Find category by name, update transactions, conflict resolution |
-| `flatten=False` | **Display hierarchy, tree views** | Showing category structure to user, printing trees |
+Use constants from `scripts/core/labels.py`:
 
-**Helper Functions in `scripts/core/category_utils.py`:**
-
-*Basic Search & Lookup:*
-- `find_category_by_name(categories, name)` - Search by name (case-insensitive)
-- `find_category_by_id(categories, id)` - Search by ID
-- `get_category_path(categories, category)` - Get full path (e.g., ["Utilities", "Internet & Phone"])
-- `search_categories(categories, query)` - Partial match search
-- `filter_categories(categories, parent_only=True)` - Filter by type
-
-*Hierarchy & Specificity (uses `hierarchy_level` field added by flatten):*
-- `sort_by_specificity(categories, prefer_specific=True)` - Sort by hierarchy level (child/parent)
-- `find_most_specific_category(categories, query)` - Search and prioritize specific (child) categories
-- `get_hierarchy_level(category)` - Get level (0=parent, 1=child, 2=grandchild)
-- `is_child_category(category)` - Check if has parent
-- `is_parent_category(category)` - Check if is root-level
-
-**Hierarchy Level Metadata:**
-
-When using `flatten=True`, each category gets a `hierarchy_level` field:
-- **Level 0**: Parent categories (49 total) - e.g., "Utilities", "Food & Dining"
-- **Level 1**: Child categories (127 total) - e.g., "Internet & Phone", "Groceries"
-- **Level 2+**: Grandchildren (if any) - deeper nesting levels
-
-**Use Cases for Hierarchy Awareness:**
 ```python
-# Prioritize specific categories in AI categorization
-specific_cats = sort_by_specificity(categories, prefer_specific=True)
-# Result: ["Internet & Phone" (level 1), "Utilities" (level 0)]
+from scripts.core.labels import (
+    LABEL_CATEGORY_CONFLICT,
+    LABEL_NEEDS_REVIEW,
+    LABEL_TAX_DEDUCTIBLE,
+)
 
-# Find the most specific match
-results = find_most_specific_category(categories, "utilities")
-# Prefers child categories over parents when both match
+# In templates, use $CONSTANT_NAME syntax
+# $LABEL_CATEGORY_CONFLICT → "⚠️ Review: Category Conflict"
 ```
 
-**Mandatory Pattern for All Scripts:**
-```python
-# ✅ Use this pattern everywhere categories are used for operations
-categories = client.get_categories(user_id, flatten=True)
-cat = find_category_by_name(categories, "Internet & Phone")
+---
+
+## Quick Reference
+
+### Common Commands
+
+```bash
+# Run tests
+uv run pytest tests/ -v
+
+# Sync scripts to plugin
+./scripts/dev-sync.sh
+
+# Health check
+uv run python -u scripts/health/check.py
+
+# Categorize transactions
+uv run python -u scripts/operations/categorize_batch.py --period 2025-11
 ```
 
-**Scripts Updated to Use flatten=True:**
-- ✅ `scripts/operations/update_transaction.py`
-- ✅ `scripts/operations/categorize_batch.py`
-- ✅ `scripts/setup/template_applier.py`
-- ✅ `scripts/health/collector.py`
-- ✅ `scripts/find_category.py`
+### Directory Structure
 
-**Real Impact:** Without flattening, 127 child categories (out of 176 total) are invisible to categorization, conflict resolution, and rule matching!
+| Directory | Purpose |
+|-----------|---------|
+| `scripts/core/` | Shared libraries (API client, rules, utils) |
+| `scripts/operations/` | Data operations (fetch, update, create) |
+| `scripts/workflows/` | Multi-step processes |
+| `scripts/services/` | Business logic (LLM categorization) |
+| `scripts/health/` | Health check system |
+| `scripts/tax/` | Tax intelligence |
+| `scripts/scenarios/` | Scenario analysis |
+| `scripts/setup/` | Onboarding and templates |
 
-## Configuration
+### Key Files
 
-**Environment variables (`.env`):**
+| File | Purpose |
+|------|---------|
+| `scripts/core/api_client.py` | PocketSmith API client |
+| `scripts/core/rule_engine.py` | Transaction rule matching |
+| `scripts/core/labels.py` | Label constants |
+| `scripts/core/category_utils.py` | Category helpers |
+| `data/rules.yaml` | User-defined rules |
+
+---
+
+## Technical Reference
+
+### PocketSmith API
+
+- **Auth:** `X-Developer-Key` header from `.env`
+- **Rate Limit:** Configurable via `API_RATE_LIMIT_DELAY`
+- **Docs:** `ai_docs/pocketsmith-api-documentation.md`
+
+### Environment Variables
+
 ```bash
 POCKETSMITH_API_KEY=<required>
 TAX_INTELLIGENCE_LEVEL=smart|reference|full
@@ -404,38 +387,22 @@ TAX_JURISDICTION=AU
 FINANCIAL_YEAR_END=06-30
 ```
 
-**User preferences:** `data/config.json` (household settings, alerts, report formats, benchmarking)
+### Tax Intelligence Levels
 
-## Slash Commands
+| Level | Features |
+|-------|----------|
+| **Reference** | Basic reporting, ATO category mapping |
+| **Smart** | Deduction flagging, CGT tracking, thresholds |
+| **Full** | BAS preparation, compliance checks (requires disclaimer) |
 
-Agent Smith provides 8 slash commands in `agent-smith-plugin/commands/`:
-- `/smith:install` - Installation and onboarding wizard
-- `/smith:categorize` - Transaction categorization
-- `/smith:analyze` - Financial analysis
-- `/smith:scenario` - Scenario modeling
-- `/smith:report` - Multi-format reports
-- `/smith:optimize` - Category/rule/spending optimization
-- `/smith:tax` - Tax intelligence operations
-- `/smith:health` - PocketSmith setup health check
-
-**Main conversational interface:** Use the Agent Smith skill directly for natural language
-financial conversations and ad-hoc analysis.
-
-**Note:** When creating slash commands, **immediately prompt user to restart Claude Code**.
-
-## Important Notes
-
-- **Never commit `.env`** - Contains sensitive API keys (protected by .gitignore)
-- **Always edit `/scripts/`, never `agent-smith-plugin/.../scripts/`** - Plugin scripts are gitignored copies
-- **Use Deterministic Operations Pattern** - All data operations MUST use git-tracked scripts in `scripts/operations/` (see pattern above)
-- **Always backup before mutations** - Use timestamped backup directories
-- **Tax advice disclaimer required** - All Level 3 tax outputs must include professional advice disclaimer
-- **INDEX.md must be current** - Update whenever files are created/modified/deleted
-- Complete design specification is the source of truth: `docs/design/2025-11-20-agent-smith-design.md`
-- Always create a feature branch and use a PR to merge changes to main.
+---
 
 ## Additional Documentation
 
-- **DEVELOPMENT.md** - Complete development workflow guide, explains dual-location architecture for scripts
-- **CONTRIBUTING.md** - Development setup and contribution guidelines
-- **README.md** - Project overview, quick start, and repository structure
+| Document | Audience | Purpose |
+|----------|----------|---------|
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Humans | Development workflow, dual-location architecture |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Humans | Setup, testing, PR process |
+| [README.md](README.md) | Everyone | Project overview, quick start |
+| `docs/design/*.md` | Everyone | Architecture and design specs |
+| `ai_docs/` | AI Agents | API reference, tax guidelines |
