@@ -177,6 +177,47 @@ for i, txn in enumerate(transactions):
 print(f"✅ Completed {len(transactions)} transactions")
 ```
 
+### Principle 6: Context Window Management
+
+> **Delegate heavy operations to subagents to preserve main conversation context.**
+
+The main conversation context is precious. Protect it by delegating context-heavy operations to isolated subagents.
+
+**When to use subagents:**
+- Exploring large codebases or many files
+- Processing >50 transactions or records
+- Multi-step operations with verbose output
+- Any operation that could pollute context with intermediate data
+
+**Subagent patterns:**
+
+| Pattern | Use Case | Example |
+|---------|----------|---------|
+| **General-purpose** | Complex multi-step tasks | Code review, implementation |
+| **Explore** | Codebase exploration | Finding files, understanding architecture |
+| **Purpose-built** | Repeated specialized tasks | Categorization, analysis, reporting |
+
+**Implementation:**
+```markdown
+# In slash commands, delegate to subagent:
+Use the Task tool with `subagent_type: "general-purpose"` to execute...
+
+# For exploration:
+Use the Task tool with `subagent_type: "Explore"` to find...
+```
+
+**Benefits:**
+- Main context stays focused on user conversation
+- Subagents get fresh context for their specific task
+- Verbose operations don't pollute conversation history
+- Enables parallel execution of independent tasks
+
+**Rules:**
+- ✅ **DO** delegate file exploration, batch processing, code review
+- ✅ **DO** use purpose-built subagents for repeated patterns
+- ❌ **DON'T** keep large data structures in main context
+- ❌ **DON'T** let verbose tool output accumulate in conversation
+
 ---
 
 ## User Experience Guidelines
