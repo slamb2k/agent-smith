@@ -3,301 +3,242 @@
 Ship current changes: manage branches, bump versions, commit, push, and create/update PR.
 
 ## Arguments
-- `$ARGUMENTS` - Optional: version bump type (patch|minor|major, default: patch) and/or commit message hint
+- `$ARGUMENTS` - Optional: version bump type (patch|minor|major, default: patch)
 
-## Workflow
+## Execution
 
-Execute the following steps in order. Stop and fix any errors before continuing.
+**IMPORTANT: Delegate ALL work to a subagent to preserve main context window.**
 
-### Step 1: Analyze Current State
+Use the Task tool with `subagent_type: "general-purpose"` to execute the shipping workflow:
 
-Run these commands to understand the current git state:
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Ship changes workflow",
+  prompt: <full prompt below>
+)
+```
+
+### Subagent Prompt
+
+You are the Ship Agent. Execute the shipping workflow with visual progress indicators.
+
+**Arguments received:** $ARGUMENTS (default bump type: patch)
+
+## Visual Style Guide
+
+Use these indicators throughout:
+- Step headers: `🚀 STEP N: Title`
+- Success: `✅`
+- In progress: `⏳`
+- Warning: `⚠️`
+- Error: `❌`
+- Info: `📋`
+- Git: `🔀`
+- Version: `📦`
+- Commit: `💾`
+- Push: `📤`
+- PR: `🔗`
+
+Print progress as you work:
+```
+🚀 STEP 1: Analyzing Repository State
+   ⏳ Checking current branch...
+   ✅ On branch: main
+   ⏳ Checking for changes...
+   ✅ Found 5 modified files
+```
+
+## Workflow Steps
+
+### Step 1: Analyze Current State 🔍
 
 ```bash
-# Get current branch
 git branch --show-current
-
-# Check for uncommitted changes
 git status --porcelain
-
-# Check if we're on main
 git branch --show-current | grep -q "^main$" && echo "ON_MAIN" || echo "ON_FEATURE"
 ```
 
-### Step 2: Branch Management
+Print: `🔍 STEP 1: Analyzing Repository State`
 
-**If on `main` branch:**
+### Step 2: Branch Management 🔀
 
-1. Stash any uncommitted changes:
-   ```bash
-   git stash --include-untracked -m "ship-command-autostash"
-   ```
+**If on `main`:**
+1. `git stash --include-untracked -m "ship-command-autostash"`
+2. `git pull origin main --rebase`
+3. Generate descriptive branch name, create: `git checkout -b feature/<name>`
+4. `git stash pop` (if stashed)
 
-2. Pull latest from origin:
-   ```bash
-   git pull origin main --rebase
-   ```
+**If on feature branch:**
+1. Check PR: `gh pr view --json state,number,url 2>/dev/null || echo "NO_PR"`
+2. If OPEN: continue
+3. If CLOSED/NO_PR: stash → checkout main → pull → new branch → unstash
 
-3. Generate a feature branch name based on the changes being shipped (use format `feature/<descriptive-name>`):
-   ```bash
-   git checkout -b feature/<branch-name>
-   ```
+Print: `🔀 STEP 2: Managing Branches`
 
-4. Unstash changes if there were any:
-   ```bash
-   git stash pop
-   ```
+### Step 3: Version Bump 📦
 
-**If on a feature branch:**
+Parse bump type from arguments (default: patch).
 
-1. Check PR status:
-   ```bash
-   gh pr view --json state,number,url 2>/dev/null || echo "NO_PR"
-   ```
-
-2. **If PR is OPEN**: Continue with the existing branch (proceed to Step 3)
-
-3. **If PR is CLOSED/MERGED or NO_PR exists**:
-   - Stash any changes:
-     ```bash
-     git stash --include-untracked -m "ship-command-autostash"
-     ```
-   - Switch to main and update:
-     ```bash
-     git checkout main
-     git pull origin main --rebase
-     ```
-   - Create a new feature branch:
-     ```bash
-     git checkout -b feature/<new-descriptive-name>
-     ```
-   - Unstash changes:
-     ```bash
-     git stash pop
-     ```
-
-### Step 3: Version Bump
-
-Determine bump type from `$ARGUMENTS` (default: `patch`).
-
-1. Read current versions:
+1. Read versions:
    ```bash
    grep -E '^version = "' pyproject.toml
    grep -E '"version":' agent-smith-plugin/.claude-plugin/plugin.json
    ```
 
-2. Calculate new version (semver: MAJOR.MINOR.PATCH):
-   - `patch`: increment PATCH (e.g., 1.5.0 -> 1.5.1)
-   - `minor`: increment MINOR, reset PATCH (e.g., 1.5.0 -> 1.6.0)
-   - `major`: increment MAJOR, reset MINOR and PATCH (e.g., 1.5.0 -> 2.0.0)
+2. Calculate new version:
+   - `patch`: X.Y.Z → X.Y.(Z+1)
+   - `minor`: X.Y.Z → X.(Y+1).0
+   - `major`: X.Y.Z → (X+1).0.0
 
-3. Update `pyproject.toml`:
+3. Update files:
    ```bash
-   sed -i 's/^version = ".*"/version = "<NEW_VERSION>"/' pyproject.toml
+   sed -i 's/^version = ".*"/version = "<NEW>"/' pyproject.toml
+   sed -i 's/"version": ".*"/"version": "<NEW>"/' agent-smith-plugin/.claude-plugin/plugin.json
    ```
 
-4. Update `agent-smith-plugin/.claude-plugin/plugin.json`:
-   ```bash
-   sed -i 's/"version": ".*"/"version": "<NEW_VERSION>"/' agent-smith-plugin/.claude-plugin/plugin.json
-   ```
+Print: `📦 STEP 3: Bumping Version (X.Y.Z → A.B.C)`
 
-5. Verify updates:
-   ```bash
-   grep -E '^version = "' pyproject.toml
-   grep -E '"version":' agent-smith-plugin/.claude-plugin/plugin.json
-   ```
-
-### Step 4: Sync Plugin Scripts
-
-Sync source scripts to the plugin directory (plugin scripts are gitignored copies):
+### Step 4: Sync Plugin Scripts 🔄
 
 ```bash
 ./scripts/dev-sync.sh
 ```
 
-This ensures the plugin has the latest script changes. The sync copies from:
-- Source: `/scripts/` (tracked in git)
-- Target: `/agent-smith-plugin/skills/agent-smith/scripts/` (gitignored)
+Print: `🔄 STEP 4: Syncing Plugin Scripts`
 
-### Step 5: Stage and Commit
+### Step 5: Commit Changes 💾
 
-1. Stage all changes:
+1. `git add -A`
+2. `git diff --cached --stat`
+3. Generate semantic commit message:
+   - Types: `feat:` | `fix:` | `refactor:` | `docs:` | `chore:` | `perf:` | `test:`
+   - Include version bump
+4. Commit with HEREDOC format
+
+Print: `💾 STEP 5: Creating Commit`
+
+### Step 6: Handle Pre-commit Hooks 🔧
+
+If commit fails:
+1. Check `git status`
+2. If auto-formatted: `git add -A` and retry
+3. If errors: fix them, stage, retry
+4. Loop until success (max 5 attempts)
+
+Track iterations for report.
+
+Print: `🔧 STEP 6: Running Pre-commit Hooks`
+
+### Step 7: Push to Remote 📤
+
+```bash
+git push -u origin HEAD
+```
+
+Print: `📤 STEP 7: Pushing to Remote`
+
+### Step 8: Handle Pre-push Hooks 🧪
+
+If push fails:
+1. Fix issues (tests, builds)
+2. `git add -A && git commit --amend --no-edit`
+3. `git push -u origin HEAD --force-with-lease`
+4. Loop until success (max 5 attempts)
+
+Track iterations for report.
+
+Print: `🧪 STEP 8: Running Pre-push Hooks`
+
+### Step 9: Create/Update PR 🔗
+
+1. Check: `gh pr view --json number,url 2>/dev/null`
+2. If no PR:
    ```bash
-   git add -A
+   gh pr create --title "<type>: <description>" --body "<detailed-body>"
+   gh pr merge --auto --squash
    ```
+3. If PR exists: already updated by push
 
-2. Review what will be committed:
-   ```bash
-   git diff --cached --stat
-   ```
+Print: `🔗 STEP 9: Managing Pull Request`
 
-3. Generate a semantic commit message based on the changes:
-   - Analyze the staged diff to determine the commit type:
-     - `feat:` - New feature
-     - `fix:` - Bug fix
-     - `refactor:` - Code refactoring
-     - `docs:` - Documentation only
-     - `chore:` - Maintenance tasks
-     - `perf:` - Performance improvement
-     - `test:` - Adding/updating tests
-   - Include the version bump in the message
-   - Format: `<type>: <description>\n\n<detailed bullet points>\n\nBumps version to <NEW_VERSION>`
+### Step 10: Generate Report 📊
 
-4. Commit with the generated message:
-   ```bash
-   git commit -m "<semantic-commit-message>"
-   ```
-
-### Step 6: Handle Pre-commit Hook Failures
-
-If the commit fails due to pre-commit hooks:
-
-1. Check what failed:
-   ```bash
-   git status
-   ```
-
-2. If files were auto-formatted (black, prettier, etc.):
-   - Stage the reformatted files:
-     ```bash
-     git add -A
-     ```
-   - Retry the commit with `--no-verify` ONLY if the hooks made the fixes:
-     ```bash
-     git commit -m "<semantic-commit-message>"
-     ```
-
-3. If there are actual errors (lint errors, type errors):
-   - Fix the errors in the code
-   - Stage the fixes
-   - Retry the commit
-
-4. **IMPORTANT**: Loop until commit succeeds. Do not proceed until committed.
-
-### Step 7: Push to Remote
-
-1. Push the branch (set upstream if needed):
-   ```bash
-   git push -u origin HEAD
-   ```
-
-### Step 8: Handle Pre-push Hook Failures
-
-If push fails due to pre-push hooks:
-
-1. Identify the failures from the hook output
-
-2. Fix any issues (tests, builds, etc.)
-
-3. Amend the commit if needed:
-   ```bash
-   git add -A
-   git commit --amend --no-edit
-   ```
-
-4. Retry push:
-   ```bash
-   git push -u origin HEAD --force-with-lease
-   ```
-
-5. **IMPORTANT**: Loop until push succeeds. Do not proceed until pushed.
-
-### Step 9: Create or Update PR
-
-1. Check if PR already exists:
-   ```bash
-   gh pr view --json number,url 2>/dev/null
-   ```
-
-2. **If NO PR exists**, create one:
-
-   a. Generate a detailed PR description based on:
-      - The commits on the branch
-      - The files changed
-      - The version bump
-
-   b. Create the PR:
-      ```bash
-      gh pr create \
-        --title "<semantic-type>: <concise-description>" \
-        --body "$(cat <<'EOF'
-      ## Summary
-      <2-4 bullet points describing the changes>
-
-      ## Changes
-      <list of specific changes made>
-
-      ## Version
-      Bumps version from X.Y.Z to A.B.C
-
-      ## Test Plan
-      - [ ] <verification steps>
-
-      ---
-      Generated with [Claude Code](https://claude.ai/code)
-      EOF
-      )"
-      ```
-
-   c. Enable auto-merge with squash:
-      ```bash
-      gh pr merge --auto --squash
-      ```
-
-3. **If PR exists**, it will be updated automatically by the push.
-
-### Step 10: Generate Report
-
-Output a detailed report in this format:
+**Output this exact format with the collected data:**
 
 ```
-============================================================
-                    SHIP REPORT
-============================================================
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   🚀  S H I P   R E P O R T                                      ║
+║                                                                  ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║   📋 SUMMARY                                                     ║
+║   ─────────────────────────────────────────────────────────────  ║
+║   Branch:       <branch-name>                                    ║
+║   Previous:     <previous-branch or "—">                         ║
+║   Version:      <old> → <new>                                    ║
+║   Bump Type:    <patch|minor|major>                              ║
+║                                                                  ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║   💾 COMMIT                                                      ║
+║   ─────────────────────────────────────────────────────────────  ║
+║   <short-hash>  <commit-title>                                   ║
+║                                                                  ║
+║   📁 Files Changed: <N> files (+<additions> -<deletions>)        ║
+║                                                                  ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║   🔧 HOOKS                                                       ║
+║   ─────────────────────────────────────────────────────────────  ║
+║   Pre-commit:   <✅ Passed | ⚠️ Fixed (N iterations) | — N/A>    ║
+║   Pre-push:     <✅ Passed | ⚠️ Fixed (N iterations) | — N/A>    ║
+║                                                                  ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║   🔗 PULL REQUEST                                                ║
+║   ─────────────────────────────────────────────────────────────  ║
+║   Status:       <✨ Created | 📝 Updated | 📋 Existing>          ║
+║   Auto-merge:   <✅ Enabled | ⏳ Already Set | — N/A>            ║
+║   PR Number:    #<number>                                        ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
 
-Branch:        <branch-name>
-Previous:      <previous-branch-if-changed>
-Version:       <old-version> -> <new-version>
-Bump Type:     <patch|minor|major>
-
-------------------------------------------------------------
-                      COMMITS
-------------------------------------------------------------
-<commit-hash-short> <commit-message>
-
-------------------------------------------------------------
-                    FILES CHANGED
-------------------------------------------------------------
-<file-change-summary>
-
-------------------------------------------------------------
-                   HOOK RESULTS
-------------------------------------------------------------
-Pre-commit:    <PASSED|FIXED (n iterations)|N/A>
-Pre-push:      <PASSED|FIXED (n iterations)|N/A>
-
-------------------------------------------------------------
-                   PULL REQUEST
-------------------------------------------------------------
-Status:        <CREATED|UPDATED|EXISTING>
-Auto-merge:    <ENABLED|ALREADY SET|N/A>
-
->>> PR URL: <full-github-pr-url> <<<
-
-============================================================
+   ┌──────────────────────────────────────────────────────────────┐
+   │                                                              │
+   │  🔗 <full-github-pr-url>                                     │
+   │                                                              │
+   └──────────────────────────────────────────────────────────────┘
 ```
 
 ## Error Handling
 
-- If any git operation fails unexpectedly, stop and report the error
-- If hooks fail more than 5 times, stop and ask for user intervention
-- If PR creation fails, provide the gh command output for debugging
-- Never skip pre-commit or pre-push hooks unless they auto-fixed issues
+- If any git operation fails unexpectedly: stop and report with `❌`
+- If hooks fail more than 5 times: stop and report, ask for intervention
+- If PR creation fails: show `gh` output for debugging
+- Never skip hooks unless they auto-fixed the issues
 
-## Notes
+## Data to Track
 
-- This command follows the project's git workflow conventions
-- Uses semantic versioning (semver)
-- Uses conventional/semantic commit messages
-- Squash merge is enforced for clean history
-- Auto-merge is enabled to merge once CI passes
+Throughout execution, track:
+- `previous_branch`: branch before any changes
+- `current_branch`: final branch name
+- `old_version`: version before bump
+- `new_version`: version after bump
+- `bump_type`: patch/minor/major
+- `commit_hash`: short hash of commit
+- `commit_title`: first line of commit message
+- `files_changed`: count of files
+- `additions`: lines added
+- `deletions`: lines removed
+- `precommit_result`: "passed" | "fixed" | "n/a"
+- `precommit_iterations`: number if fixed
+- `prepush_result`: "passed" | "fixed" | "n/a"
+- `prepush_iterations`: number if fixed
+- `pr_status`: "created" | "updated" | "existing"
+- `pr_number`: PR number
+- `pr_url`: full URL
+- `automerge_status`: "enabled" | "already_set" | "n/a"
+
+Return ONLY the final beautiful report to the main agent.
