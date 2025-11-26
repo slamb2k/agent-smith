@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """Find or create Online Payments category."""
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from scripts.core.api_client import PocketSmithClient
+from scripts.core.category_utils import find_category_by_name
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,41 +11,39 @@ client = PocketSmithClient()
 user = client.get_user()
 user_id = user["id"]
 
-# Get all categories
-categories = client.get_categories(user_id)
+# Get categories - hierarchical for display, flattened for searching
+categories_hierarchical = client.get_categories(user_id, flatten=False)
+categories_flat = client.get_categories(user_id, flatten=True)
 
 
-def find_category(cats: List[Dict[str, Any]], name: str, indent: int = 0) -> Optional[int]:
-    """Recursively search for category and print tree."""
+def print_category_tree(cats: List[Dict[str, Any]], indent: int = 0) -> None:
+    """Print category tree recursively."""
     for cat in cats:
         title = cat.get("title")
         cat_id: int = cat["id"]
         print("  " * indent + f"- {title} (ID: {cat_id})")
 
-        if title == name:
-            return cat_id
-
         if cat.get("children"):
-            child_id = find_category(cat["children"], name, indent + 1)
-            if child_id:
-                return child_id
-    return None
+            print_category_tree(cat["children"], indent + 1)
 
 
 print("Existing categories:")
-online_payments_id = find_category(categories, "Online Payments")
+print_category_tree(categories_hierarchical)
 
-if online_payments_id:
-    print(f'\nFound "Online Payments" with ID: {online_payments_id}')
+# Search in flattened list (much simpler!)
+online_payments = find_category_by_name(categories_flat, "Online Payments")
+
+if online_payments:
+    print(f'\n✓ Found "Online Payments" with ID: {online_payments["id"]}')
 else:
-    print('\n"Online Payments" category not found')
+    print('\n✗ "Online Payments" category not found')
 
     # Look for Shopping or Online Services as potential parents
-    shopping_id = find_category(categories, "Shopping")
-    online_services_id = find_category(categories, "Online Services")
+    shopping = find_category_by_name(categories_flat, "Shopping")
+    online_services = find_category_by_name(categories_flat, "Online Services")
 
-    if online_services_id:
+    if online_services:
         suggestion = "- could rename or create sibling"
-        print(f'Found "Online Services" (ID: {online_services_id}) {suggestion}')
-    if shopping_id:
-        print(f'Found "Shopping" (ID: {shopping_id})')
+        print(f'Found "Online Services" (ID: {online_services["id"]}) {suggestion}')
+    if shopping:
+        print(f'Found "Shopping" (ID: {shopping["id"]})')

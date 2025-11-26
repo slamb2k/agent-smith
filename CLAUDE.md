@@ -295,6 +295,104 @@ All Level 3 outputs must include disclaimer: "Consult a registered tax agent for
 
 **Reference:** `ai_docs/pocketsmith-api-documentation.md`
 
+### Category Hierarchy Handling
+
+**CRITICAL: PocketSmith categories are hierarchical - parent categories contain child categories.**
+
+**The Problem:**
+The API returns categories with children nested in a `children` array:
+```json
+{
+  "id": 26796189,
+  "title": "Utilities",
+  "children": [
+    {"id": 26927667, "title": "Internet & Phone", "parent_id": 26796189},
+    {"id": 17151799, "title": "Power", "parent_id": 26796189}
+  ]
+}
+```
+
+**Without flattening, child categories are invisible to search/matching operations!**
+
+**The Solution:**
+Always use `flatten=True` when retrieving categories for operations:
+
+```python
+from scripts.core.api_client import PocketSmithClient
+from scripts.core.category_utils import find_category_by_name
+
+client = PocketSmithClient()
+user = client.get_user()
+
+# ✅ CORRECT - Flatten to include all child categories
+categories = client.get_categories(user["id"], flatten=True)
+
+# Now child categories like "Internet & Phone" are searchable
+cat = find_category_by_name(categories, "Internet & Phone")
+print(cat["id"])  # 26927667
+
+# ❌ WRONG - Hierarchical structure hides children
+categories = client.get_categories(user["id"], flatten=False)
+# Child categories are nested, won't be found by simple iteration!
+```
+
+**When to use each mode:**
+
+| Mode | Use Case | Example |
+|------|----------|---------|
+| `flatten=True` | **Searching, matching, categorization** | Find category by name, update transactions, conflict resolution |
+| `flatten=False` | **Display hierarchy, tree views** | Showing category structure to user, printing trees |
+
+**Helper Functions in `scripts/core/category_utils.py`:**
+
+*Basic Search & Lookup:*
+- `find_category_by_name(categories, name)` - Search by name (case-insensitive)
+- `find_category_by_id(categories, id)` - Search by ID
+- `get_category_path(categories, category)` - Get full path (e.g., ["Utilities", "Internet & Phone"])
+- `search_categories(categories, query)` - Partial match search
+- `filter_categories(categories, parent_only=True)` - Filter by type
+
+*Hierarchy & Specificity (uses `hierarchy_level` field added by flatten):*
+- `sort_by_specificity(categories, prefer_specific=True)` - Sort by hierarchy level (child/parent)
+- `find_most_specific_category(categories, query)` - Search and prioritize specific (child) categories
+- `get_hierarchy_level(category)` - Get level (0=parent, 1=child, 2=grandchild)
+- `is_child_category(category)` - Check if has parent
+- `is_parent_category(category)` - Check if is root-level
+
+**Hierarchy Level Metadata:**
+
+When using `flatten=True`, each category gets a `hierarchy_level` field:
+- **Level 0**: Parent categories (49 total) - e.g., "Utilities", "Food & Dining"
+- **Level 1**: Child categories (127 total) - e.g., "Internet & Phone", "Groceries"
+- **Level 2+**: Grandchildren (if any) - deeper nesting levels
+
+**Use Cases for Hierarchy Awareness:**
+```python
+# Prioritize specific categories in AI categorization
+specific_cats = sort_by_specificity(categories, prefer_specific=True)
+# Result: ["Internet & Phone" (level 1), "Utilities" (level 0)]
+
+# Find the most specific match
+results = find_most_specific_category(categories, "utilities")
+# Prefers child categories over parents when both match
+```
+
+**Mandatory Pattern for All Scripts:**
+```python
+# ✅ Use this pattern everywhere categories are used for operations
+categories = client.get_categories(user_id, flatten=True)
+cat = find_category_by_name(categories, "Internet & Phone")
+```
+
+**Scripts Updated to Use flatten=True:**
+- ✅ `scripts/operations/update_transaction.py`
+- ✅ `scripts/operations/categorize_batch.py`
+- ✅ `scripts/setup/template_applier.py`
+- ✅ `scripts/health/collector.py`
+- ✅ `scripts/find_category.py`
+
+**Real Impact:** Without flattening, 127 child categories (out of 176 total) are invisible to categorization, conflict resolution, and rule matching!
+
 ## Configuration
 
 **Environment variables (`.env`):**

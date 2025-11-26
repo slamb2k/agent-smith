@@ -62,14 +62,33 @@ class LLMCategorizationService:
         Returns:
             Formatted prompt string for LLM
         """
-        # Build category hierarchy section
-        category_lines = []
+        # Build category list - use EXACT titles as they appear in PocketSmith
+        # Group by parent for readability, but tell LLM to use exact child names
+        parent_categories = [c for c in categories if not c.get("parent_id")]
+        child_categories = [c for c in categories if c.get("parent_id")]
+
+        # Build parent-to-children mapping
+        parent_map: Dict[int, List[str]] = {}
         for cat in categories:
-            parent = cat.get("parent", "")
-            if parent:
-                category_lines.append(f"- {parent} > {cat['title']}")
+            cat_id = cat.get("id")
+            if cat_id is not None:
+                parent_map[cat_id] = []
+        for cat in child_categories:
+            parent_id = cat.get("parent_id")
+            if parent_id and parent_id in parent_map:
+                parent_map[parent_id].append(cat["title"])
+
+        category_lines = []
+        for parent in parent_categories:
+            parent_id = parent.get("id")
+            children = parent_map.get(parent_id, []) if parent_id is not None else []
+            if children:
+                # Show hierarchy for understanding, but emphasize exact names
+                category_lines.append(f"- {parent['title']} (parent category)")
+                for child in sorted(children):
+                    category_lines.append(f"  - {child}")
             else:
-                category_lines.append(f"- {cat['title']}")
+                category_lines.append(f"- {parent['title']}")
 
         categories_text = "\n".join(category_lines)
 
@@ -110,19 +129,18 @@ GUIDANCE: {guidance}
 Available Categories:
 {categories_text}
 
-IMPORTANT: Always use the MOST SPECIFIC subcategory available.
-- For "Parent > Child" hierarchies, use the full "Parent > Child" format
-- Example: Use "Food & Dining > Groceries" for supermarkets, NOT just "Food & Dining"
-- Example: Use "Food & Dining > Restaurants" for dining out, NOT just "Food & Dining"
-- Only use parent categories when no specific subcategory fits
+CRITICAL: You MUST use the EXACT category name as shown above.
+- Use specific subcategory names like "Groceries", "Restaurants", "Fuel"
+- Do NOT use "Parent > Child" format (e.g., do NOT write "Food & Dining > Groceries")
+- Just use the exact name: "Groceries" (not "Food & Dining > Groceries")
+- Prefer specific subcategories over parent categories when available
 
 Transactions to Categorize:
 {transactions_text}
 
 For each transaction provide:
 - transaction_id: The transaction number (1, 2, 3, etc.)
-- category: The MOST SPECIFIC category from the list above
-  (use "Parent > Child" format when available)
+- category: The EXACT category name from the list above (e.g., "Groceries", "Fuel")
 - confidence: Integer 0-100 indicating certainty
 - reasoning: Brief explanation for your choice
 """

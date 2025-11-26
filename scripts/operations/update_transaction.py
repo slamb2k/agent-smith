@@ -94,23 +94,18 @@ def main() -> int:
         load_dotenv()
         client = PocketSmithClient()
         user = client.get_user()
-        categories = client.get_categories(user["id"])
+        # Use flatten=True to get all categories including children
+        categories = client.get_categories(user["id"], flatten=True)
 
-        def find_category(cats: List[dict], name: str) -> Optional[int]:
-            for cat in cats:
-                if cat.get("title") == name:
-                    cat_id: int = cat["id"]
-                    return cat_id
-                if cat.get("children"):
-                    child_id = find_category(cat["children"], name)
-                    if child_id:
-                        return child_id
-            return None
+        # Simple linear search in flattened list
+        from scripts.core.category_utils import find_category_by_name
 
-        category_id = find_category(categories, args.category_name)
-        if not category_id:
+        cat = find_category_by_name(categories, args.category_name)
+        if not cat:
             print(f"Error: Category '{args.category_name}' not found", file=sys.stderr)
             return 1
+
+        category_id = cat["id"]
 
     # Update transaction
     result = update_transaction(

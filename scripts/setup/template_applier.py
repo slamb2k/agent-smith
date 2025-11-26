@@ -109,7 +109,8 @@ class TemplateApplier:
         """Fetch existing categories from PocketSmith."""
         assert self.user_id is not None
         logger.info(f"Fetching existing categories for user {self.user_id}")
-        return self.api_client.get_categories(self.user_id)
+        # Fetch with flatten=True to include all child categories
+        return self.api_client.get_categories(self.user_id, flatten=True)
 
     def _fetch_existing_rules(self, categories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Fetch existing rules for all categories."""
@@ -809,9 +810,9 @@ def main() -> None:
     print(f"Strategy: {args.strategy}")
     print()
 
-    # Fetch existing categories for visualization
+    # Fetch existing categories for visualization (flatten to include all children)
     user = api_client.get_user()
-    existing_categories_api = api_client.get_categories(user["id"])
+    existing_categories_api = api_client.get_categories(user["id"], flatten=True)
 
     # Flatten existing categories for visualization
     def flatten_categories(

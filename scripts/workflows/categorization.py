@@ -262,14 +262,25 @@ class CategorizationWorkflow:
 
         # Case 2: Already categorized
         if rule_result["category"] is None:
-            # Label-only rule - apply labels, keep existing category
-            return {
-                "category": existing_category,
-                "labels": rule_result["labels"],
-                "confidence": rule_result["confidence"],
-                "source": "rule",
-                "llm_used": False,
-            }
+            # Check if this is a label-only rule (has labels) or no match at all
+            if rule_result["labels"]:
+                # Label-only rule - apply labels, keep existing category
+                return {
+                    "category": existing_category,
+                    "labels": rule_result["labels"],
+                    "confidence": rule_result["confidence"],
+                    "source": "rule",  # Label-only rule is still a rule match
+                    "llm_used": False,
+                }
+            else:
+                # No rule matched at all - just preserve existing
+                return {
+                    "category": existing_category,
+                    "labels": [],
+                    "confidence": rule_result["confidence"],
+                    "source": "existing",  # No rule match, preserving existing
+                    "llm_used": False,
+                }
         elif rule_result["category"] == existing_category:
             # Category matches - apply labels only
             return {
@@ -406,6 +417,7 @@ class CategorizationWorkflow:
         stats = {
             "total": len(transactions),
             "rule_matches": 0,
+            "existing_preserved": 0,  # Already categorized, no rule match
             "llm_categorized": 0,
             "llm_validated": 0,
             "skipped": 0,
@@ -427,6 +439,8 @@ class CategorizationWorkflow:
             # Update stats
             if result["source"] == "conflict":
                 stats["conflicts"] += 1
+            elif result["source"] == "existing":
+                stats["existing_preserved"] += 1
             elif result["source"] == "rule":
                 stats["rule_matches"] += 1
             elif result["source"] == "none" and result["category"] is None:
