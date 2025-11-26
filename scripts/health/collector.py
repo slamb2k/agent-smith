@@ -71,7 +71,8 @@ class HealthDataCollector:
         Returns:
             Dict with category structure metrics
         """
-        categories = self.api_client.get_categories(self.user_id)
+        # Fetch with flatten=True to include all child categories
+        categories = self.api_client.get_categories(self.user_id, flatten=True)
 
         total = len(categories)
         with_transactions = sum(1 for c in categories if c.get("transaction_count", 0) > 0)
@@ -157,8 +158,8 @@ class HealthDataCollector:
         deductible = sum(1 for t in transactions if self._is_deductible(t))
         substantiated = substantiation.get("substantiated_count", 0)
 
-        # ATO coverage
-        categories = self.api_client.get_categories(self.user_id)
+        # ATO coverage (flatten to include all child categories)
+        categories = self.api_client.get_categories(self.user_id, flatten=True)
         cats_used = sum(1 for c in categories if c.get("transaction_count", 0) > 0)
         cats_mapped = len(ato_mappings.get("mappings", {}))
         ato_coverage = cats_mapped / cats_used if cats_used > 0 else 0

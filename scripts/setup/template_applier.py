@@ -109,7 +109,8 @@ class TemplateApplier:
         """Fetch existing categories from PocketSmith."""
         assert self.user_id is not None
         logger.info(f"Fetching existing categories for user {self.user_id}")
-        return self.api_client.get_categories(self.user_id)
+        # Fetch with flatten=True to include all child categories
+        return self.api_client.get_categories(self.user_id, flatten=True)
 
     def _fetch_existing_rules(self, categories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Fetch existing rules for all categories."""
@@ -123,7 +124,9 @@ class TemplateApplier:
                     rule["category_name"] = category["title"]  # Add category name for reference
                 all_rules.extend(rules)
             except Exception as e:
-                logger.warning(f"Failed to fetch rules for category {category['id']}: {e}")
+                # 404 is expected for categories without rules - don't warn
+                if "404" not in str(e):
+                    logger.warning(f"Failed to fetch rules for category {category['id']}: {e}")
 
         logger.info(f"Fetched {len(all_rules)} existing rules")
         return all_rules
@@ -266,13 +269,23 @@ class TemplateApplier:
         # Smart matching: Try to match template categories to existing
         for template_cat in merged_template.get("categories", []):
             cat_name = template_cat["name"]
+            parent_name = template_cat.get("parent")
 
-            # Exact match
+            # Exact match (simple name)
             if cat_name in existing_map:
                 category_id_map[cat_name] = existing_map[cat_name]["id"]
                 stats["categories_matched"] += 1
                 logger.debug(f"Exact match: {cat_name}")
                 continue
+
+            # Hierarchical match (parent:child)
+            if parent_name:
+                hierarchical_name = f"{parent_name}:{cat_name}"
+                if hierarchical_name in existing_map:
+                    category_id_map[cat_name] = existing_map[hierarchical_name]["id"]
+                    stats["categories_matched"] += 1
+                    logger.debug(f"Hierarchical match: {cat_name} -> {hierarchical_name}")
+                    continue
 
             # Fuzzy match: Check for similar names
             matched = self._find_similar_category(template_cat, existing_categories)
@@ -283,13 +296,29 @@ class TemplateApplier:
             else:
                 # Create new category
                 if not dry_run:
-                    created_cat = self._create_category(template_cat, category_id_map)
-                    category_id_map[cat_name] = created_cat["id"]
+                    try:
+                        created_cat = self._create_category(template_cat, category_id_map)
+                        category_id_map[cat_name] = created_cat["id"]
+                        stats["categories_created"] += 1
+                        logger.debug(f"Creating new category: {cat_name}")
+                    except Exception as e:
+                        # Handle title conflicts gracefully
+                        response_text = getattr(e, "response", None)
+                        response_text = response_text.text if response_text else ""
+                        if "Title has already been taken" in response_text:
+                            logger.warning(
+                                f"Category '{cat_name}' title conflicts - skipping creation"
+                            )
+                            stats["categories_skipped"] = stats.get("categories_skipped", 0) + 1
+                            # Note: Category wasn't added to category_id_map, so rules
+                            # referencing this category won't be created (avoids orphaned rules).
+                        else:
+                            raise
                 else:
                     # In dry run, use placeholder ID so rules can be validated
                     category_id_map[cat_name] = 9999999 + len(category_id_map)
-                stats["categories_created"] += 1
-                logger.debug(f"Creating new category: {cat_name}")
+                    stats["categories_created"] += 1
+                    logger.debug(f"Creating new category: {cat_name}")
 
         # Write all rules to rules.yaml (platform rules are deprecated)
         # NOTE: Smart merge previously deduplicated platform rules, but with YAML
@@ -402,24 +431,45 @@ class TemplateApplier:
                 rules = self.api_client.get_category_rules(category["id"])
                 rules_map[category["id"]] = [r.get("payee_matches", "") for r in rules]
             except Exception as e:
-                logger.warning(f"Failed to fetch rules for category {category['id']}: {e}")
+                # 404 is expected for categories without rules - don't warn
+                if "404" not in str(e):
+                    logger.warning(f"Failed to fetch rules for category {category['id']}: {e}")
 
         return rules_map
 
     def _find_similar_category(
-        self, template_cat: Dict[str, Any], existing_categories: List[Dict[str, Any]]
+        self,
+        template_cat: Dict[str, Any],
+        existing_categories: List[Dict[str, Any]],
+        category_id_map: Optional[Dict[str, int]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Find similar category using fuzzy matching.
 
         Matches on:
+        - Exact name match (regardless of parent - for cases where parent differs)
         - Name similarity (case-insensitive)
         - Description similarity
         """
         template_name = template_cat["name"].lower()
         template_desc = template_cat.get("description", "").lower()
 
-        for existing in existing_categories:
+        # Flatten existing categories (includes children at all levels)
+        def flatten_categories(cats: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+            result = []
+            for cat in cats:
+                result.append(cat)
+                if cat.get("children"):
+                    result.extend(flatten_categories(cat["children"]))
+            return result
+
+        flat_existing = flatten_categories(existing_categories)
+
+        for existing in flat_existing:
             existing_name = existing.get("title", "").lower()
+
+            # Exact name match (case-insensitive)
+            if template_name == existing_name:
+                return existing
 
             # Check for substring match
             if template_name in existing_name or existing_name in template_name:
@@ -511,17 +561,68 @@ class TemplateApplier:
         )
         return created_rule
 
-    def _convert_confidence(self, confidence_str: str) -> int:
+    def _convert_confidence(self, confidence_str: str | int | float) -> int:
         """Convert confidence string to numeric value.
 
         Args:
-            confidence_str: "high", "medium", or "low"
+            confidence_str: "high", "medium", "low", or numeric value (0-100)
 
         Returns:
-            Numeric confidence: 95 (high), 90 (medium), 80 (low)
+            Numeric confidence: 95 (high), 90 (medium), 80 (low), or the numeric value
         """
+        # Handle numeric values (0.0-1.0 or 0-100)
+        if isinstance(confidence_str, (int, float)):
+            if 0 <= confidence_str <= 1:
+                # Convert 0.0-1.0 to 0-100
+                return int(confidence_str * 100)
+            else:
+                # Already 0-100
+                return int(confidence_str)
+
+        # Handle string values
         mapping = {"high": 95, "medium": 90, "low": 80}
         return mapping.get(confidence_str.lower(), 90)
+
+    def _resolve_label_constants(self, labels: List[str]) -> List[str]:
+        """Resolve label constant references to actual label values.
+
+        Labels starting with $ are treated as constant references and resolved
+        from scripts.core.labels module.
+
+        Args:
+            labels: List of label strings (may contain $CONSTANT_NAME references)
+
+        Returns:
+            List of resolved label strings
+
+        Examples:
+            >>> _resolve_label_constants(["$LABEL_GENERIC_PAYPAL", "Tax Deductible"])
+            ["⚠️ Review: Generic PayPal", "Tax Deductible"]
+        """
+        resolved = []
+        for label in labels:
+            if label.startswith("$"):
+                # Extract constant name (remove $)
+                constant_name = label[1:]
+                try:
+                    # Import labels module dynamically
+                    from scripts.core import labels as labels_module
+
+                    # Get constant value
+                    constant_value = getattr(labels_module, constant_name, None)
+                    if constant_value is not None:
+                        resolved.append(constant_value)
+                        logger.debug(f"Resolved label constant: {label} -> {constant_value}")
+                    else:
+                        logger.warning(f"Label constant not found: {label}")
+                        resolved.append(label)  # Keep original if not found
+                except (ImportError, AttributeError) as e:
+                    logger.warning(f"Failed to resolve label constant {label}: {e}")
+                    resolved.append(label)  # Keep original on error
+            else:
+                # Not a constant reference, use as-is
+                resolved.append(label)
+        return resolved
 
     def _convert_template_rule_to_yaml(
         self, rule: Dict[str, Any], category_id_map: Dict[str, int]
@@ -535,10 +636,10 @@ class TemplateApplier:
         Returns:
             Rule dict in YAML format, or None if rule should be skipped
         """
-        rule_id = rule.get("id", "unknown")
-        pattern = rule.get("pattern", "")
-        category = rule.get("category")
-        labels = rule.get("labels", [])
+        rule_id = rule.get("id", rule.get("name", "unknown"))
+        pattern = rule.get("payee_pattern", rule.get("pattern", ""))
+        category = rule.get("target_category", rule.get("category"))
+        labels = self._resolve_label_constants(rule.get("labels", []))
         confidence_str = rule.get("confidence", "medium")
         confidence = self._convert_confidence(confidence_str)
 
@@ -565,29 +666,25 @@ class TemplateApplier:
                 "confidence": confidence,
             }
         elif labels:
-            # Label-only rule
-            when_conditions: Dict[str, Any] = {}
+            # Label-only rule (applies labels without categorizing)
+            # These are valid for tax tracking, shared expense marking, etc.
+            result = {
+                "type": "label",
+                "name": rule.get("description", f"Label: {rule_id}"),
+                "labels": labels,
+            }
 
-            # Add amount conditions if present
+            # Add pattern-based matching
+            if pattern and pattern != ".*":
+                result["patterns"] = [pattern]
+                result["confidence"] = confidence
+
+            # Add amount-based conditions if present
+            when_conditions: Dict[str, Any] = {}
             if "amount_operator" in rule:
                 when_conditions["amount_operator"] = rule["amount_operator"]
             if "amount_value" in rule:
                 when_conditions["amount_value"] = rule["amount_value"]
-
-            # If no conditions, this rule applies to all transactions
-            # We can skip the when clause entirely for "always" rules
-            # Or add a pattern match condition
-            if not when_conditions and pattern != ".*":
-                # Has a pattern, but no category
-                # This is unusual - skip for now
-                logger.warning(f"Skipping label-only rule with pattern but no category: {rule_id}")
-                return None
-
-            result = {
-                "type": "label",
-                "name": rule.get("description", rule_id),
-                "labels": labels,
-            }
 
             if when_conditions:
                 result["when"] = when_conditions
@@ -644,6 +741,25 @@ class TemplateApplier:
 
 def main() -> None:
     """CLI interface for template application."""
+    import os
+
+    # Load .env file (plugin-aware)
+    # When run as a plugin, USER_CWD environment variable should point to user's directory
+    try:
+        from dotenv import load_dotenv
+
+        user_dir = os.getenv("USER_CWD", os.getcwd())
+        env_path = Path(user_dir) / ".env"
+
+        if env_path.exists():
+            load_dotenv(env_path)
+        else:
+            # Fallback to searching from current directory
+            load_dotenv()
+    except ImportError:
+        # python-dotenv not available - rely on environment variables
+        pass
+
     parser = argparse.ArgumentParser(description="Apply merged templates to PocketSmith account")
     parser.add_argument(
         "--template", type=Path, required=True, help="Path to merged template JSON file"
@@ -694,9 +810,9 @@ def main() -> None:
     print(f"Strategy: {args.strategy}")
     print()
 
-    # Fetch existing categories for visualization
+    # Fetch existing categories for visualization (flatten to include all children)
     user = api_client.get_user()
-    existing_categories_api = api_client.get_categories(user["id"])
+    existing_categories_api = api_client.get_categories(user["id"], flatten=True)
 
     # Flatten existing categories for visualization
     def flatten_categories(
@@ -731,10 +847,15 @@ def main() -> None:
         print("\nSummary:")
         print(f"  • {result.get('categories_created', 0)} categories created")
         print(f"  • {result.get('categories_reused', 0)} categories reused")
-        print(f"  • {result.get('rules_created', 0)} rules created")
+
+        # Display rule counts (either rules_created or rules_written_to_yaml)
+        rules_count = result.get("rules_written_to_yaml", result.get("rules_created", 0))
+        print(f"  • {rules_count} rules written to data/rules.yaml")
+
         if result.get("label_only_rules", 0) > 0:
             print(f"  • {result['label_only_rules']} label-only rules (local engine)")
-        print(f"  • {result.get('rules_skipped', 0)} rules skipped")
+        if result.get("rules_skipped", 0) > 0:
+            print(f"  • {result.get('rules_skipped', 0)} rules skipped")
 
         if not dry_run and result.get("backup_path"):
             print(f"  • Backup saved: {result['backup_path']}")

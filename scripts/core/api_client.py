@@ -3,7 +3,8 @@
 import os
 import time
 import logging
-from typing import Optional, Dict, Any, List, cast
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Optional, Dict, Any, List, Tuple, cast
 import requests
 
 
@@ -221,17 +222,126 @@ class PocketSmithClient:
         logger.info(f"Fetching transactions for user {user_id} (page {page})")
         return cast(List[Any], self.get(f"/users/{user_id}/transactions", params=params))
 
-    def get_categories(self, user_id: int) -> list:
+    def get_all_transactions(
+        self,
+        user_id: int,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        uncategorised: Optional[bool] = None,
+        account_id: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get ALL transactions for a user with automatic pagination.
+
+        This method handles pagination automatically, fetching all pages until
+        no more results are returned. Use this instead of get_transactions()
+        when you need the complete transaction list.
+
+        Args:
+            user_id: PocketSmith user ID
+            start_date: Filter start date (YYYY-MM-DD)
+            end_date: Filter end date (YYYY-MM-DD)
+            uncategorised: Filter for uncategorized transactions only
+            account_id: Filter by specific account
+
+        Returns:
+            Complete list of all transaction objects matching the filters
+        """
+        all_transactions: List[Dict[str, Any]] = []
+        page = 1
+        per_page = 100
+
+        while True:
+            batch = self.get_transactions(
+                user_id=user_id,
+                start_date=start_date,
+                end_date=end_date,
+                uncategorised=uncategorised,
+                account_id=account_id,
+                page=page,
+                per_page=per_page,
+            )
+
+            if not batch:
+                break
+
+            all_transactions.extend(batch)
+
+            # If we got fewer than per_page, we've reached the last page
+            if len(batch) < per_page:
+                break
+
+            page += 1
+
+        logger.info(f"Fetched {len(all_transactions)} total transactions for user {user_id}")
+        return all_transactions
+
+    def get_categories(self, user_id: int, flatten: bool = False) -> list:
         """Get all categories for a user.
 
         Args:
             user_id: PocketSmith user ID
+            flatten: If True, returns a flat list including all child categories.
+                    If False (default), returns hierarchical structure with children nested.
 
         Returns:
-            List of category objects with full hierarchy
+            List of category objects. When flatten=True, includes both parent and child
+            categories as separate items in a flat list. When flatten=False, children
+            are nested within parent's 'children' array.
         """
-        logger.info(f"Fetching categories for user {user_id}")
-        return cast(List[Any], self.get(f"/users/{user_id}/categories"))
+        logger.info(f"Fetching categories for user {user_id} (flatten={flatten})")
+        categories = cast(List[Any], self.get(f"/users/{user_id}/categories"))
+
+        if flatten:
+            return self._flatten_categories(categories)
+        return categories
+
+    @staticmethod
+    def _flatten_categories(
+        categories: List[Dict[str, Any]], level: int = 0, include_level: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Flatten hierarchical category structure into a single list.
+
+        PocketSmith API returns categories with children nested in a 'children' array.
+        This method recursively extracts all children and returns a flat list containing
+        both parents and children.
+
+        Args:
+            categories: List of category objects with potential nested children
+            level: Current hierarchy level (0 = root, 1 = child, 2 = grandchild, etc.)
+            include_level: If True, adds 'hierarchy_level' field to each category
+
+        Returns:
+            Flat list of all categories (parents + all descendants)
+            Each category includes 'hierarchy_level' if include_level=True
+
+        Example:
+            Input:  [{"id": 1, "title": "Food", "children": [{"id": 2, "title": "Groceries"}]}]
+            Output: [
+                {"id": 1, "title": "Food", "hierarchy_level": 0, ...},
+                {"id": 2, "title": "Groceries", "hierarchy_level": 1, ...}
+            ]
+        """
+        result = []
+
+        for category in categories:
+            # Create a copy to avoid mutating the original
+            cat_copy = category.copy()
+
+            # Add hierarchy level metadata
+            if include_level:
+                cat_copy["hierarchy_level"] = level
+
+            result.append(cat_copy)
+
+            # Recursively add all children at the next level
+            if category.get("children"):
+                result.extend(
+                    PocketSmithClient._flatten_categories(
+                        category["children"], level=level + 1, include_level=include_level
+                    )
+                )
+
+        return result
 
     def update_transaction(
         self,
@@ -261,6 +371,88 @@ class PocketSmithClient:
 
         logger.info(f"Updating transaction {transaction_id}")
         return cast(Dict[str, Any], self.put(f"/transactions/{transaction_id}", data=data))
+
+    def update_transactions_batch(
+        self,
+        updates: List[Dict[str, Any]],
+        max_workers: int = 5,
+        progress_callback: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Update multiple transactions concurrently.
+
+        PocketSmith API doesn't support batch updates, so we run concurrent
+        requests with rate limiting to maximize throughput while respecting
+        API limits.
+
+        Args:
+            updates: List of update dicts, each containing:
+                - transaction_id: int (required)
+                - category_id: int (optional)
+                - note: str (optional)
+                - labels: List[str] (optional)
+            max_workers: Maximum concurrent requests (default: 5)
+            progress_callback: Optional callback(completed, total, txn_id, success)
+
+        Returns:
+            Dict with:
+                - successful: int - Count of successful updates
+                - failed: int - Count of failed updates
+                - errors: List[Dict] - Details of failed updates
+        """
+        if not updates:
+            return {"successful": 0, "failed": 0, "errors": []}
+
+        results: Dict[str, Any] = {
+            "successful": 0,
+            "failed": 0,
+            "errors": [],
+        }
+
+        def update_single(update: Dict[str, Any]) -> Tuple[int, bool, Optional[str]]:
+            """Update a single transaction, return (txn_id, success, error_msg)."""
+            txn_id = update["transaction_id"]
+            try:
+                self.update_transaction(
+                    transaction_id=txn_id,
+                    category_id=update.get("category_id"),
+                    note=update.get("note"),
+                    labels=update.get("labels"),
+                )
+                return (txn_id, True, None)
+            except Exception as e:
+                return (txn_id, False, str(e))
+
+        total = len(updates)
+        completed = 0
+
+        logger.info(f"Starting batch update of {total} transactions (max_workers={max_workers})")
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(update_single, u): u for u in updates}
+
+            for future in as_completed(futures):
+                txn_id, success, error_msg = future.result()
+                completed += 1
+
+                if success:
+                    results["successful"] += 1
+                else:
+                    results["failed"] += 1
+                    results["errors"].append(
+                        {
+                            "transaction_id": txn_id,
+                            "error": error_msg,
+                        }
+                    )
+
+                if progress_callback:
+                    progress_callback(completed, total, txn_id, success)
+
+        logger.info(
+            f"Batch update complete: {results['successful']} successful, "
+            f"{results['failed']} failed"
+        )
+        return results
 
     def get_category_rules(self, category_id: int) -> List[Dict[str, Any]]:
         """Get all category rules for a specific category.
@@ -293,6 +485,27 @@ class PocketSmithClient:
         return cast(
             Dict[str, Any], self.post(f"/categories/{category_id}/category_rules", data=data)
         )
+
+    def delete_category(self, category_id: int) -> None:
+        """Delete a category.
+
+        WARNING: THIS IS PERMANENT AND IRREVERSIBLE!
+
+        Effects when deleting a category:
+        - Deletes all budgets associated with this category
+        - Uncategorizes all transactions in this category (sets to "Uncategorised")
+        - Cannot be restored via API
+        - Category rules pointing to this category will remain but be orphaned
+
+        Args:
+            category_id: Category ID to delete
+
+        Raises:
+            requests.HTTPError: If deletion fails
+        """
+        logger.warning(f"Deleting category {category_id} - THIS CANNOT BE UNDONE!")
+        self.delete(f"/categories/{category_id}")
+        logger.info(f"Category {category_id} deleted successfully")
 
     def get_transaction_accounts(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all transaction accounts for a user.
