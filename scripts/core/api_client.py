@@ -184,6 +184,32 @@ class PocketSmithClient:
         logger.info("Fetching authorized user")
         return cast(Dict[str, Any], self.get("/me"))
 
+    def get_with_headers(
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> Tuple[Any, Dict[str, str]]:
+        """Make GET request to API and return both response data and headers.
+
+        Args:
+            endpoint: API endpoint (e.g., "/me" or "/users/123/transactions")
+            params: Query parameters
+
+        Returns:
+            Tuple of (parsed JSON response, response headers dict)
+
+        Raises:
+            requests.HTTPError: If request fails
+        """
+        self._rate_limit()
+
+        url = f"{self.base_url}{endpoint}"
+        logger.debug(f"GET {url} (params: {params})")
+
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+
+        logger.debug(f"GET {url} - {response.status_code}")
+        return response.json(), dict(response.headers)
+
     def get_transactions(
         self,
         user_id: int,
@@ -221,6 +247,48 @@ class PocketSmithClient:
 
         logger.info(f"Fetching transactions for user {user_id} (page {page})")
         return cast(List[Any], self.get(f"/users/{user_id}/transactions", params=params))
+
+    def get_transaction_count(
+        self,
+        user_id: int,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        uncategorised: Optional[bool] = None,
+        account_id: Optional[int] = None,
+    ) -> int:
+        """Get total transaction count from API response headers.
+
+        This is more efficient than fetching all transactions when you only
+        need the count. Uses the 'Total' header returned by PocketSmith.
+
+        Args:
+            user_id: PocketSmith user ID
+            start_date: Filter start date (YYYY-MM-DD)
+            end_date: Filter end date (YYYY-MM-DD)
+            uncategorised: Filter for uncategorized transactions only
+            account_id: Filter by specific account
+
+        Returns:
+            Total count of transactions matching the filters
+        """
+        # Use per_page=10 as minimum (API doesn't accept per_page=1)
+        params: Dict[str, Any] = {"page": 1, "per_page": 10}
+
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        if uncategorised is not None:
+            params["uncategorised"] = 1 if uncategorised else 0
+        if account_id:
+            params["account_id"] = account_id
+
+        logger.info(f"Fetching transaction count for user {user_id}")
+        _, headers = self.get_with_headers(f"/users/{user_id}/transactions", params=params)
+
+        # PocketSmith uses 'Total' header for pagination count
+        total_count = headers.get("Total", headers.get("total", "0"))
+        return int(total_count)
 
     def get_all_transactions(
         self,

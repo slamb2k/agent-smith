@@ -90,17 +90,24 @@ The onboarding process will:
 
 ### Daily Usage
 
-**Main Interface:** Use the Agent Smith skill directly for natural language financial conversations and ad-hoc analysis.
+**Two Usage Modes:**
 
-**Slash Commands** (8 specialized commands):
+1. **Guided Journey Mode** - When you start Claude Code, Agent Smith displays a status dashboard with:
+   - Your health score
+   - Uncategorized transaction count
+   - Conflicts awaiting review
+   - Suggested next steps with both natural language and command options
+
+2. **Power User Mode** - Use slash commands directly for specific operations.
+
+**Slash Commands** (7 specialized commands):
 - `/smith:install` - Installation and onboarding wizard
 - `/smith:categorize [--mode] [--period]` - Transaction categorization
-- `/smith:analyze [type] [--period]` - Financial analysis
-- `/smith:scenario [type] [description]` - Scenario modeling
-- `/smith:report [format] [--period]` - Report generation
-- `/smith:optimize [target]` - Optimization operations
-- `/smith:tax [operation] [--period]` - Tax intelligence
-- `/smith:health [--full]` - Health check
+- `/smith:review-conflicts` - Review transactions flagged for review
+- `/smith:health [--full|--quick]` - Health check and recommendations
+- `/smith:insights <spending|trends|scenario|report>` - Financial analysis and reports
+- `/smith:tax <deductions|cgt|bas|eofy>` - Tax intelligence (ATO)
+- `/smith:schedule [--setup|--status|--remove]` - Automated categorization scheduling
 
 ## Python Scripts
 
@@ -125,15 +132,15 @@ uv run python -u scripts/tax/deduction_detector.py --period=2024-25
 ### Script Organization
 
 - **`scripts/core/`** - API client, rule engine, unified rules
-- **`scripts/operations/`** - Categorization, batch processing
+- **`scripts/operations/`** - Categorization, batch processing, transaction updates
 - **`scripts/analysis/`** - Spending analysis, trend detection
 - **`scripts/reporting/`** - Multi-format report generation
 - **`scripts/tax/`** - ATO mappings, deductions, CGT, BAS preparation
 - **`scripts/scenarios/`** - Historical, projections, optimization, tax scenarios
-- **`scripts/orchestration/`** - Subagent conductor, context management
-- **`scripts/workflows/`** - Interactive categorization workflows
-- **`scripts/features/`** - Alerts, merchant intelligence, documents, audit
+- **`scripts/status/`** - Status dashboard for SessionStart hook
+- **`scripts/scheduled/`** - Automated scheduled tasks (cron/launchd)
 - **`scripts/health/`** - Health check engine, recommendations, monitoring
+- **`scripts/workflows/`** - Interactive categorization workflows
 - **`scripts/utils/`** - Backup, validation, logging, merchant normalization
 
 ## Unified Rule System
@@ -499,7 +506,7 @@ For detailed documentation, see the `references/` directory:
 
 ## Support
 
-**Version**: 1.3.8
+**Version**: 1.6.0
 
 **Documentation**: See references/ directory for comprehensive guides
 

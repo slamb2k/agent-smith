@@ -1,12 +1,12 @@
 {
-  "description": "Agent Smith session initialization",
   "hooks": {
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py",
+            "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py",
             "timeout": 5
           }
         ]

@@ -2,116 +2,190 @@
 name: smith:tax
 description: Tax-focused analysis and compliance for Australian tax requirements
 argument-hints:
-  - "<deductions|cgt|bas|eofy|scenario> [--period=PERIOD] [--level=LEVEL] [--output=FORMAT]"
+  - "<deductions|cgt|bas|eofy|scenario> [--period=YYYY-YY] [--level=smart|full]"
 ---
 
-Tax-focused analysis and compliance for Australian tax requirements.
+# Tax Intelligence
 
-## Usage
+Tax-focused analysis and compliance for Australian tax requirements (ATO).
+
+## Goal
+
+Track tax-deductible expenses, capital gains, and prepare for tax obligations with confidence.
+
+## Why This Matters
+
+Proper tax tracking throughout the year maximizes legitimate deductions, ensures compliance, and reduces stress at EOFY. Agent Smith helps you stay organized and audit-ready.
+
+## Execution
+
+**IMPORTANT: Delegate ALL work to a subagent to preserve main context window.**
+
+Use the Task tool with `subagent_type: "general-purpose"` to execute tax operations:
 
 ```
-/smith:tax <operation> [options]
+Task(
+  subagent_type: "general-purpose",
+  description: "Tax analysis",
+  prompt: <full subagent prompt below>
+)
 ```
+
+### Subagent Prompt
+
+You are the Agent Smith tax intelligence assistant. Execute this workflow:
+
+## Step 1: Determine Operation
+
+Parse the command to determine which operation:
+- `deductions` - Track tax-deductible expenses
+- `cgt` - Capital gains tax tracking
+- `bas` - BAS preparation (GST calculations)
+- `eofy` - End of financial year prep
+- `scenario` - Tax scenario planning
+
+If no operation specified, ask using AskUserQuestion:
+"What tax operation would you like?"
+- Review my deductions (most common)
+- Track capital gains/losses
+- Prepare BAS worksheet
+- EOFY checklist
+- Run a tax scenario
+
+## Step 2: Run Tax Analysis
+
+Based on operation, call the appropriate script:
+
+**Deduction Tracking:**
+```bash
+uv run python -u scripts/tax/deduction_detector.py --period [PERIOD]
+```
+
+**CGT Analysis:**
+```bash
+uv run python -u scripts/tax/cgt_tracker.py --period [PERIOD]
+```
+
+**BAS Preparation:**
+```bash
+uv run python -u scripts/tax/bas_preparation.py --quarter [QUARTER]
+```
+
+**Tax Reporting:**
+```bash
+uv run python -u scripts/tax/reporting.py --period [PERIOD] --format [FORMAT]
+```
+
+Stream the output to show real-time progress.
+
+## Step 3: Present Results
+
+Present tax information with appropriate formatting:
+
+**Deductions Format:**
+```
+🧾 DEDUCTION SUMMARY - FY 2024-25
+═══════════════════════════════════════════════════════════════
+  Total Potential Deductions: $X,XXX.XX
+
+  By ATO Category:
+  D1 - Work-related expenses     $XXX.XX  ⚠️ Needs substantiation
+  D2 - Work-related car          $XXX.XX  ✅ Documented
+  D3 - Work-related travel       $XXX.XX  ✅ Documented
+  D5 - Self-education            $XXX.XX  ✅ Documented
+  ...
+
+  ⚠️ Substantiation Required:
+  • 3 items over $300 need receipts
+  • Review before October 31
+═══════════════════════════════════════════════════════════════
+```
+
+**CGT Format:**
+```
+📈 CAPITAL GAINS SUMMARY - FY 2024-25
+═══════════════════════════════════════════════════════════════
+  Gross Capital Gain:    $X,XXX.XX
+  50% CGT Discount:     -$X,XXX.XX  (held >12 months)
+  Net Capital Gain:      $X,XXX.XX
+
+  Events:
+  • BHP sold 01/15/2025: Gain $500 (eligible for discount)
+  • ETH sold 03/20/2025: Loss -$200 (offset)
+═══════════════════════════════════════════════════════════════
+```
+
+## Step 4: Tax Disclaimer (Level 3 only)
+
+For full tax intelligence operations, include:
+```
+⚠️ IMPORTANT: This analysis is for informational purposes only.
+Please consult a registered tax agent for professional advice
+specific to your situation before making tax decisions.
+```
+
+## Step 5: Offer Next Steps
+
+Based on operation:
+
+**After deductions review:**
+```
+🧾 Next Steps:
+→ /smith:categorize (ensure all transactions categorized)
+→ Upload missing receipts to PocketSmith
+→ Review flagged items before EOFY
+```
+
+**After CGT analysis:**
+```
+📈 Next Steps:
+→ Review unrealized gains for timing optimization
+→ Consider tax-loss harvesting if applicable
+```
+
+## Visual Style
+
+Use emojis for status:
+- ✅ Documented/substantiated
+- ⚠️ Needs attention/documentation
+- ❌ Missing/compliance issue
+
+Use tables for category breakdowns.
+Include ATO category codes (D1, D2, etc.).
+
+---
 
 ## Tax Operations
 
-- `deductions` - Track tax-deductible expenses
-- `cgt` - Capital gains tax tracking and optimization
-- `bas` - BAS preparation (GST calculations)
-- `eofy` - End of financial year tax prep
-- `scenario` - Tax scenario planning
-
-## Options
-
-- `--period=PERIOD` - Financial year (YYYY-YY format) [default: current FY]
-- `--level=LEVEL` - Tax intelligence (reference|smart|full) [default: smart]
-- `--output=FORMAT` - Output format [default: markdown]
-
-## Examples
-
-```bash
-# Track deductible expenses for FY 2024-25
-/smith:tax deductions --period=2024-25
-
-# CGT analysis with timing recommendations
-/smith:tax cgt --period=2024-25 --level=full
-
-# BAS worksheet preparation (GST only)
-/smith:tax bas --period=2024-Q4
-
-# Complete EOFY tax prep checklist
-/smith:tax eofy
-
-# Tax scenario: equipment purchase timing
-/smith:tax scenario "Buy $25k equipment before or after EOFY?"
-```
+| Operation | Description | Script |
+|-----------|-------------|--------|
+| `deductions` | Track deductible expenses | `deduction_detector.py` |
+| `cgt` | Capital gains tracking | `cgt_tracker.py` |
+| `bas` | BAS worksheet prep | `bas_preparation.py` |
+| `eofy` | Year-end checklist | `reporting.py --format=eofy` |
+| `scenario` | Tax planning scenarios | `scenarios/tax_scenarios.py` |
 
 ## Tax Intelligence Levels
 
-**Reference (Level 1):**
-- Basic ATO category mapping
-- Links to ATO resources
-- General guidance
-
-**Smart (Level 2 - default):**
-- Deduction detection with confidence scoring
-- Substantiation threshold monitoring
-- CGT discount eligibility tracking
-- Tax-saving suggestions
-
-**Full (Level 3):**
-- BAS preparation (GST calculations)
-- Compliance checks and validation
-- Audit-ready documentation
-- Detailed tax scenarios
-
-**Important:** Level 3 outputs include disclaimer to consult a registered tax agent.
-
-## Tax Operations Detail
-
-**Deductions:**
-- Expenses by ATO category code
-- Substantiation requirements (>$300)
-- Confidence scoring (high/medium/low)
-- Missing documentation alerts
-- Instant asset write-off eligibility
-
-**CGT Tracking:**
-- Purchase and sale events
-- Cost base calculations
-- 12-month discount eligibility
-- Capital gains/losses by FY
-- Optimization recommendations
-
-**BAS Preparation (Level 3):**
-- G1: Total sales
-- G10/G11: Capital/non-capital purchases
-- 1A/1B: GST calculations
-- 1C: Net GST position
-- Scope: GST only (W1, W2 excluded)
-
-**EOFY Preparation:**
-- Deduction summary
-- CGT event summary
-- Missing substantiation
-- Compliance checklist
-- Tax-saving opportunities
-- Deadlines and due dates
+| Level | Features | Best For |
+|-------|----------|----------|
+| **smart** (default) | Deduction detection, CGT tracking, substantiation alerts | Most users |
+| **full** | BAS prep, compliance checks, audit-ready docs | GST registered, complex situations |
 
 ## Australian Tax Compliance
 
-**ATO Guidelines:**
-- Substantiation thresholds
-- CGT 50% discount (>12 months)
-- Instant asset write-off (<$20k)
-- Commuting vs. business travel
-- Home office deductions
+**Key Thresholds:**
+- $300: Substantiation required above this
+- $75: Taxi/Uber receipt threshold
+- $20,000: Instant asset write-off
+- 12 months: CGT 50% discount eligibility
 
 **Financial Year:**
 - July 1 - June 30
-- EOFY deadline: October 31
-- BAS deadlines: Quarterly (monthly for some)
+- EOFY lodgment deadline: October 31
 
----
+## Next Steps
 
-**Starting tax analysis...**
+- **Categorize transactions**: `/smith:categorize`
+- **Check health**: `/smith:health --category=tax`
+- **View spending**: `/smith:insights spending`
