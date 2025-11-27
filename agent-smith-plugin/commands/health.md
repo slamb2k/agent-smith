@@ -2,120 +2,160 @@
 name: smith:health
 description: Evaluate your PocketSmith setup and get optimization recommendations
 argument-hints:
-  - "[--full] [--quick] [--category=categories|rules|tax|data]"
+  - "[--full|--quick] [--category=categories|rules|tax|data]"
 ---
 
-Evaluate your PocketSmith setup and get optimization recommendations.
+# PocketSmith Health Check
 
-## Usage
+Evaluate your financial setup and get actionable optimization recommendations.
+
+## Goal
+
+Assess the health of your PocketSmith configuration across 6 dimensions and identify improvement opportunities.
+
+## Why This Matters
+
+A healthy financial setup means accurate reports, effective tax tracking, and reliable categorization. Regular health checks catch issues before they become problems.
+
+## Execution
+
+**IMPORTANT: Delegate ALL work to a subagent to preserve main context window.**
+
+Use the Task tool with `subagent_type: "general-purpose"` to execute the health check:
 
 ```
-/smith:health [options]
+Task(
+  subagent_type: "general-purpose",
+  description: "Run health check",
+  prompt: <full subagent prompt below>
+)
 ```
 
-## Options
+### Subagent Prompt
 
-- `--full` - Complete deep analysis (may take longer)
-- `--quick` - Fast essential checks only
-- `--category=AREA` - Specific area (categories|rules|tax|data)
+You are the Agent Smith health check assistant. Execute this workflow:
 
-## Health Checks
+## Step 1: Determine Check Type
 
-**Six Health Scores (0-100):**
+Parse arguments to determine mode:
+- `--full`: Complete analysis (2-3 minutes)
+- `--quick`: Essential checks only (30 seconds) - **default**
+- `--category=X`: Focus on specific area (categories|rules|tax|data)
 
-1. **Category Health** - Structure, hierarchy, ATO alignment
-2. **Rule Coverage** - Auto-categorization rate and accuracy
-3. **Data Quality** - Completeness, duplicates, errors
-4. **Tax Compliance** - Deduction tracking, substantiation
-5. **Budget Alignment** - Spending vs. goals
-6. **Account Health** - Balances, reconciliation, connections
+If no arguments provided, default to quick mode.
 
-## Examples
+## Step 2: Run Health Check
+
+Execute the health check script:
 
 ```bash
-# Quick health check (essential checks)
-/smith:health --quick
-
-# Full comprehensive analysis
-/smith:health --full
-
-# Focus on category structure
-/smith:health --category=categories
-
-# Focus on tax compliance
-/smith:health --category=tax
+uv run python -u scripts/health/check.py [--quick|--full] [--category=CATEGORY]
 ```
 
-## What You'll Get
+Stream the output to show real-time progress.
 
-**Overall Health Score:**
-- Combined score from all 6 areas
-- Pass/Warning/Fail status
-- Priority recommendations
+## Step 3: Present Results
 
-**Detailed Scores:**
-- Individual scores for each area
-- Strengths and weaknesses
-- Specific issues identified
-- Improvement opportunities
+The script outputs a comprehensive report. Summarize it with:
 
-**Recommendations:**
-- Prioritized action items
-- Expected impact
-- Implementation steps
-- Quick wins vs. long-term improvements
+```
+🏥 HEALTH CHECK RESULTS
+═══════════════════════════════════════════════════════════════
+  Overall Score: XX/100  [🟢 EXCELLENT | 🟡 GOOD | 🟠 FAIR | 🔴 POOR]
 
-**Category Health:**
-- Category structure analysis
-- Unused categories
-- ATO alignment issues
-- Consolidation opportunities
+  Dimension Scores:
+  Data Quality:      ████████░░ 80%
+  Category Health:   ██████████ 100%
+  Rule Coverage:     ██████░░░░ 60%
+  Tax Compliance:    ████████░░ 75%
+  Budget Alignment:  ████░░░░░░ 40%
+  Account Health:    █████████░ 90%
+═══════════════════════════════════════════════════════════════
+```
 
-**Rule Coverage:**
-- Auto-categorization rate
-- Rule accuracy (override rate)
-- Coverage gaps
-- Conflicting rules
+## Step 4: Present Top Recommendations
 
-**Data Quality:**
-- Uncategorized transaction count
-- Duplicate detection
-- Missing payee names
-- Date range coverage
+Show top 3-5 recommendations with actionable next steps:
 
-**Tax Compliance:**
-- Deduction tracking coverage
-- Substantiation status
-- CGT event tracking
-- Missing documentation
+```
+🎯 TOP RECOMMENDATIONS
+─────────────────────────────────────────────────────────────────
+1. [HIGH] Categorize 23 uncategorized transactions
+   → Run /smith:categorize
 
-**Budget Alignment:**
-- Spending vs. budget
-- Goal progress
-- Trending issues
-- Adjustment recommendations
+2. [MEDIUM] Create rules for frequently used patterns
+   → Review LLM patterns after categorization
 
-**Account Health:**
-- Connection status
-- Balance reconciliation
-- Transaction import issues
-- Stale data alerts
+3. [LOW] Review unused categories
+   → Consider consolidation
+─────────────────────────────────────────────────────────────────
+```
 
-## Health Check Process
+## Step 5: Offer Next Steps
 
-1. **Scan:** Analyze PocketSmith data
-2. **Score:** Calculate health metrics
-3. **Identify:** Find issues and opportunities
-4. **Recommend:** Prioritized action plan
-5. **Monitor:** Track improvements over time
+Based on health score:
 
-## Interpreting Scores
+**If score < 50 (Poor):**
+```
+⚠️ Your financial setup needs attention
+→ Start with: /smith:categorize to fix uncategorized transactions
+```
 
-- **90-100:** Excellent - Maintain current practices
-- **70-89:** Good - Minor improvements available
-- **50-69:** Fair - Several issues to address
-- **Below 50:** Poor - Significant work needed
+**If score 50-69 (Fair):**
+```
+💡 Room for improvement
+→ Focus on the top recommendation above
+```
+
+**If score >= 70 (Good/Excellent):**
+```
+✅ Your setup is healthy!
+→ Run /smith:insights to explore your financial data
+```
+
+## Visual Style
+
+Health Score Display:
+- 90-100: 🟢 Excellent
+- 70-89: 🟡 Good
+- 50-69: 🟠 Fair
+- Below 50: 🔴 Poor
+
+Use ASCII progress bars for dimension scores.
 
 ---
 
-**Running health check...**
+## Health Dimensions
+
+| Dimension | Weight | Checks |
+|-----------|--------|--------|
+| **Data Quality** | 25% | Uncategorized %, duplicates, missing payees |
+| **Rule Coverage** | 20% | Auto-categorization rate, rule accuracy |
+| **Category Health** | 15% | Structure, hierarchy, unused categories |
+| **Tax Compliance** | 15% | Deduction tracking, substantiation |
+| **Budget Alignment** | 15% | Spending vs goals, trending |
+| **Account Health** | 10% | Connections, reconciliation |
+
+## Score Interpretation
+
+| Score | Status | Action |
+|-------|--------|--------|
+| 90-100 | Excellent | Maintain current practices |
+| 70-89 | Good | Minor improvements available |
+| 50-69 | Fair | Several issues to address |
+| <50 | Poor | Significant work needed |
+
+## Check Types
+
+| Type | Duration | Best For |
+|------|----------|----------|
+| `--quick` | ~30 seconds | Regular check-ins (default) |
+| `--full` | 2-3 minutes | Monthly deep analysis |
+| `--category=X` | ~1 minute | Focused investigation |
+
+## Next Steps
+
+- **Improve categorization**: `/smith:categorize`
+- **Review conflicts**: `/smith:review-conflicts`
+- **View insights**: `/smith:insights spending`
+- **Tax review**: `/smith:tax deductions`

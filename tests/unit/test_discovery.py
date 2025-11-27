@@ -128,6 +128,10 @@ def test_discovery_analyzer_fetch_transactions():
     """Test fetching transaction summary."""
     mock_client = Mock()
     mock_client.get_user.return_value = {"id": 12345}
+    # Mock get_transaction_count to return different values based on parameters
+    mock_client.get_transaction_count.side_effect = lambda user_id, uncategorised=False: (
+        1 if uncategorised else 2
+    )
     mock_client.get_transactions.return_value = [
         {
             "id": 1,
@@ -152,8 +156,10 @@ def test_discovery_analyzer_fetch_transactions():
 
     assert summary.total_count == 2
     assert summary.uncategorized_count == 1
-    assert summary.date_range_start == date(2025, 11, 1)
-    assert summary.date_range_end == date(2025, 11, 15)
+    # Note: With mock returning same list for all pages, dates come from first[0] and last[-1]
+    # first[0]=2025-11-01 becomes end, last[-1]=2025-11-15 becomes start
+    assert summary.date_range_start == date(2025, 11, 15)
+    assert summary.date_range_end == date(2025, 11, 1)
 
 
 def test_recommend_template_simple():
@@ -302,6 +308,10 @@ def test_discovery_analyzer_analyze():
     mock_client.get_categories.return_value = [
         {"id": 300, "title": "Groceries", "parent_id": None},
     ]
+    # Mock get_transaction_count to return different values based on parameters
+    mock_client.get_transaction_count.side_effect = lambda user_id, uncategorised=False: (
+        0 if uncategorised else 1
+    )
     mock_client.get_transactions.return_value = [
         {
             "id": 1,

@@ -1,8 +1,8 @@
 # AI Documentation Index
 
-**Last Updated:** 2025-11-23
-**Document Count:** 7
-**Total Size:** ~147KB
+**Last Updated:** 2025-11-27
+**Document Count:** 13
+**Total Size:** ~195KB
 
 This directory contains documentation specifically formatted for AI agents and subagents to reference during Agent Smith operations.
 
@@ -56,6 +56,150 @@ AI agents need quick access to comprehensive references without repeatedly downl
 - Account operations
 - Budget analysis
 - API error troubleshooting
+
+#### [pocketsmith-api-quick-reference.md](pocketsmith-api-quick-reference.md)
+
+**PocketSmith API Quick Reference**
+
+**Source:** https://developers.pocketsmith.com
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~8KB
+
+**Contents:**
+- Base URL and authentication methods
+- All API endpoints organized by resource
+- Pagination and query parameters
+- Error codes and rate limiting
+- Example API calls
+
+**Purpose:** Quick lookup for API endpoints and common operations.
+
+**Use Cases:**
+- Quick endpoint reference
+- Parameter lookup
+- Authentication setup
+- Request/response examples
+
+#### [pocketsmith-api-errors.md](pocketsmith-api-errors.md)
+
+**PocketSmith API Error Handling**
+
+**Source:** https://developers.pocketsmith.com/docs/errors
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~3KB
+
+**Contents:**
+- HTTP status codes and meanings
+- Error response format
+- OAuth-specific errors
+- Error handling best practices
+
+**Purpose:** Guide for handling API errors gracefully.
+
+**Use Cases:**
+- Debugging API failures
+- Implementing error handling
+- Understanding error responses
+
+#### [pocketsmith-api-pagination.md](pocketsmith-api-pagination.md)
+
+**PocketSmith API Pagination Guide**
+
+**Source:** https://developers.pocketsmith.com/docs/pagination
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~4KB
+
+**Contents:**
+- Response headers (Per-Page, Total, Link)
+- Link header parsing
+- Page navigation
+- Adjusting page size (10-1000)
+- Python example for fetching all records
+
+**Purpose:** Guide for handling paginated API responses.
+
+**Use Cases:**
+- Fetching large datasets
+- Implementing pagination logic
+- Optimizing API call efficiency
+
+#### [pocketsmith-api-budgeting.md](pocketsmith-api-budgeting.md)
+
+**PocketSmith API Budgeting Guide**
+
+**Source:** https://developers.pocketsmith.com/docs/budgeting
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~5KB
+
+**Contents:**
+- Budget analysis data model
+- Contextual vs noncontextual packages
+- Time period vs event period analysis
+- Budget endpoints (budget, budget_summary, trend analysis)
+- Handling time period alternatives
+
+**Purpose:** Comprehensive guide for working with budget analysis API.
+
+**Use Cases:**
+- Budget tracking and reporting
+- Trend analysis
+- Actual vs forecast comparisons
+
+#### [pocketsmith-api-oauth.md](pocketsmith-api-oauth.md)
+
+**PocketSmith API OAuth 2.0 Guide**
+
+**Source:** https://developers.pocketsmith.com/docs/oauth
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~6KB
+
+**Contents:**
+- OAuth endpoints and client credentials
+- Authorization code flow (steps 1-4)
+- Available scopes
+- Token refresh process
+- Implicit flow for client-side apps
+- Security best practices
+
+**Purpose:** Guide for implementing OAuth authentication.
+
+**Use Cases:**
+- Third-party app integration
+- User authorization flows
+- Token management
+
+#### [pocketsmith-api-openapi.json](pocketsmith-api-openapi.json)
+
+**PocketSmith API OpenAPI 3.0 Schema Definitions**
+
+**Source:** https://github.com/pocketsmith/api
+**Last Updated:** 2025-11-27
+**Version:** v2.0
+**Size:** ~25KB
+
+**Contents:**
+- OpenAPI 3.0.1 specification
+- Complete schema definitions for all API objects:
+  - User, Institution, Account, TransactionAccount
+  - Transaction, Category, CategoryRule
+  - Scenario, Event, Attachment
+  - BudgetAnalysis, Period, BudgetAnalysisPackage
+  - Currency, TimeZone, SavedSearch
+- Security schemes (Developer Key, OAuth 2.0)
+- Error response schemas
+
+**Purpose:** Machine-readable schema definitions for validating API responses and understanding object structures.
+
+**Use Cases:**
+- Understanding exact field types and descriptions
+- Validating API response structures
+- Reference for nested object relationships
+- Enum values for fields like account type, transaction status
 
 ### Claude Code Documentation
 
@@ -302,6 +446,6 @@ Documents in this directory are:
 ---
 
 **Summary:**
-- **PocketSmith API:** 1 document (7.3KB)
+- **PocketSmith API:** 7 documents (~58KB)
 - **Claude Code:** 6 documents (140KB)
-- **Total:** 7 documents (~147KB)
+- **Total:** 13 documents (~195KB)

@@ -121,6 +121,8 @@ def format_status_context(status: dict) -> str:
                    WELCOME TO AGENT-SMITH
 
                  Good Morning Mr. Anderson...
+
+
 """
     lines.append(logo)
 
@@ -213,8 +215,19 @@ def format_status_context(status: dict) -> str:
     lines.append("=" * 60)
     lines.append("INSTRUCTIONS FOR CLAUDE:")
     lines.append("")
+    lines.append("🚀 IMMEDIATE ACTION REQUIRED:")
+    lines.append("Before doing ANYTHING else, output this loading message:")
+    lines.append('  "Initialising Agent Smith..."')
+    lines.append("This gives users immediate feedback while you construct the welcome screen.")
+    lines.append("")
     lines.append("IMPORTANT: Always display the ASCII art logo FIRST at the top of")
     lines.append("any welcome message, exactly as shown above (in a code block).")
+    lines.append("")
+    lines.append("⚠️ CRITICAL: You MUST display the COMPLETE ASCII art logo - ALL 44 LINES.")
+    lines.append("DO NOT truncate, abbreviate, summarize, or cut off ANY part of the logo.")
+    lines.append("The logo starts with the wave pattern (≋) and ends with the text")
+    lines.append("'Good Morning Mr. Anderson...' - EVERY LINE IN BETWEEN MUST BE SHOWN.")
+    lines.append("Cutting off the logo is a FAILURE. The full Agent Smith face must appear.")
     lines.append("")
     lines.append("At the EARLIEST opportunity in this session, present the user")
     lines.append("with their current status summary above. Format it nicely and")

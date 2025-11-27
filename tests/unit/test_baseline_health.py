@@ -65,6 +65,11 @@ def test_discovery_analyze_with_health_check():
         {"id": 300, "title": "Groceries", "parent_id": None, "transaction_count": 1},
     ]
 
+    # Mock transaction count (total=1, uncategorized=0 since transaction has category)
+    mock_client.get_transaction_count.side_effect = lambda user_id, uncategorised=False: (
+        0 if uncategorised else 1
+    )
+
     # Mock transactions
     mock_client.get_transactions.return_value = [
         {
@@ -107,6 +112,11 @@ def test_discovery_analyze_without_health_check():
     mock_client.get_categories.return_value = [
         {"id": 300, "title": "Groceries", "parent_id": None, "transaction_count": 1},
     ]
+
+    # Mock transaction count (total=1, uncategorized=0 since transaction has category)
+    mock_client.get_transaction_count.side_effect = lambda user_id, uncategorised=False: (
+        0 if uncategorised else 1
+    )
 
     # Mock transactions
     mock_client.get_transactions.return_value = [

@@ -1,151 +1,148 @@
 ---
 name: smith:categorize
-description: Categorize transactions using the hybrid rule + LLM workflow
+description: Categorize uncategorized transactions using the hybrid rule + LLM workflow
 argument-hints:
-  - "[--mode=conservative|smart|aggressive] [--period=YYYY-MM] [--account=ID] [--dry-run]"
+  - "[--period=YYYY-MM|last-30-days] [--mode=conservative|smart|aggressive] [--dry-run]"
 ---
 
-Categorize transactions using the hybrid rule + LLM workflow.
+# Transaction Categorization
 
-You are the Agent Smith categorization assistant with real LLM integration. Your job is to:
+Categorize uncategorized transactions using Agent Smith's hybrid rule + LLM workflow.
 
-1. Ask the user for:
-   - Period to process (YYYY-MM or "last-30-days")
-   - Intelligence mode (conservative/smart/aggressive)
-   - Whether to apply changes or dry-run
+## Goal
 
-2. Execute the categorization workflow with LLM orchestration:
+Automatically categorize transactions using rules first, then AI for unmatched items.
 
-   **Step 2a:** Fetch and categorize transactions using Python:
-   ```bash
-   uv run python -c "
-import sys
-import os
-import json
-from datetime import datetime, timedelta
+## Why This Matters
 
-# Add plugin root to Python path for imports
-plugin_root = os.environ.get('CLAUDE_PLUGIN_ROOT', '.')
-if plugin_root not in sys.path:
-    sys.path.insert(0, plugin_root)
+Uncategorized transactions reduce financial visibility, make reporting inaccurate, and lower your health score. Regular categorization keeps your finances organized.
 
-from scripts.core.api_client import PocketSmithClient
-from scripts.workflows.categorization import CategorizationWorkflow
+## Execution
 
-# Parameters (will be substituted)
-period = '${period}'
-mode = '${mode}'
-dry_run = ${dry_run}
+**IMPORTANT: Delegate ALL work to a subagent to preserve main context window.**
 
-# Parse period
-if period == 'last-30-days':
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
-else:
-    year, month = period.split('-')
-    start_date = datetime(int(year), int(month), 1)
-    if int(month) == 12:
-        end_date = datetime(int(year) + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = datetime(int(year), int(month) + 1, 1) - timedelta(days=1)
+Use the Task tool with `subagent_type: "general-purpose"` to execute the categorization workflow:
 
-# Fetch transactions
-client = PocketSmithClient()
-user = client.get_user()
-transactions = client.get_transactions(
-    user_id=user['id'],
-    start_date=start_date.strftime('%Y-%m-%d'),
-    end_date=end_date.strftime('%Y-%m-%d'),
+```
+Task(
+  subagent_type: "general-purpose",
+  description: "Categorize transactions",
+  prompt: <full subagent prompt below>
 )
-
-# Filter uncategorized
-needs_categorization = [
-    t for t in transactions
-    if not t.get('category') or t.get('needs_review')
-]
-
-if not needs_categorization:
-    print(json.dumps({'status': 'no_transactions'}))
-    sys.exit(0)
-
-# Get categories
-categories = client.get_categories(user['id'])
-
-# Run categorization workflow (in production mode)
-workflow = CategorizationWorkflow(client=client, mode=mode)
-workflow.llm_orchestrator.test_mode = False  # Enable production mode
-
-result = workflow.categorize_transactions_batch(needs_categorization, categories)
-
-# Output results as JSON
-output = {
-    'status': 'success',
-    'stats': result['stats'],
-    'results': result['results'],
-    'transactions': needs_categorization,
-    'categories': categories,
-    'dry_run': dry_run
-}
-print(json.dumps(output))
-"
-   ```
-
-   **Step 2b:** Parse the JSON output and handle LLM needs:
-   - If workflow returns marker dicts (indicated by logging warnings), those indicate LLM prompts that need execution
-   - For each prompt that needs execution:
-     - Extract the prompt text
-     - Execute it directly using your LLM capabilities
-     - Parse the response using the service's parsing methods
-
-   **Step 2c:** Apply results to PocketSmith (if not dry-run):
-   - For each categorized transaction, update via API
-   - Track success/failure counts
-
-3. After processing, show the user:
-   - How many transactions were processed
-   - Rule matches vs LLM fallbacks
-   - Validation results (if any)
-   - Any new rules suggested
-   - Ask if they want to create rules from high-confidence LLM patterns
-
-4. If user wants to create rules, collect:
-   - Which LLM patterns to convert to rules
-   - Confirmation before adding to rules.yaml
-
-5. Remind user to restart Claude Code after any rule changes.
-
-**Example interaction:**
-
 ```
-User: /smith:categorizeAssistant: I'll help categorize your transactions. What period would you like to process?
-  - "2025-11" for November 2025
-  - "last-30-days" for recent transactions
 
-User: last-30-daysAssistant: What intelligence mode would you like to use?
-  - conservative: Manual review for all (safer)
-  - smart: Auto-apply 90%+ confidence (recommended)
-  - aggressive: Auto-apply 80%+ confidence (faster)
+### Subagent Prompt
 
-User: smart
-Assistant: Would you like to apply changes or run in dry-run mode first?
-  - dry-run: Preview only
-  - apply: Make actual changes
+You are the Agent Smith categorization assistant. Execute this workflow:
 
-User: dry-run
-Assistant: Running categorization with smart mode in dry-run...
+## Step 1: Gather Parameters
 
-[Executes workflow, shows progress]
+Parse any provided arguments. If not provided, ask the user using AskUserQuestion:
 
-✓ Categorized 45/50 transactions
-  - Rule matches: 30
-  - LLM fallbacks: 12
-  - Validations: 8 (6 upgraded)
-  - Skipped: 5 (low confidence)
+**Period** (default: current month):
+- "YYYY-MM" format (e.g., "2025-11")
+- "last-30-days" for recent transactions
 
-Found 3 high-confidence LLM patterns that could become rules:
-1. "NETFLIX" → Entertainment (confidence: 95%)
-2. "UBER EATS" → Dining Out (confidence: 92%)
-3. "CHEMIST WAREHOUSE" → Health & Medical (confidence: 91%)
+**Mode** (default: smart):
+- conservative: Manual review for all (safest)
+- smart: Auto-apply 90%+ confidence (recommended)
+- aggressive: Auto-apply 80%+ confidence (fastest)
 
-Would you like to create rules for any of these patterns?
+**Dry-run** (default: true for first run):
+- true: Preview only, no changes
+- false: Apply changes
+
+## Step 2: Run Categorization
+
+Execute the Python script with user's parameters:
+
+```bash
+uv run python -u scripts/operations/categorize_batch.py \
+  --period [PERIOD] \
+  --mode [MODE] \
+  [--dry-run if selected]
 ```
+
+Stream the output to show real-time progress.
+
+## Step 3: Present Results
+
+Parse the script output and present:
+- Total transactions processed
+- Rule matches vs LLM fallbacks
+- Conflicts flagged for review
+- Skipped (low confidence)
+- Any errors encountered
+
+Use this format:
+```
+📊 CATEGORIZATION RESULTS
+═══════════════════════════════════════════════════════════════
+  Total processed:     100
+  Rule matches:        65 (65%)
+  LLM categorized:     25 (25%)
+  Conflicts flagged:   5 (5%)
+  Skipped:             5 (5%)
+═══════════════════════════════════════════════════════════════
+```
+
+## Step 4: Offer Next Steps
+
+Based on results, suggest:
+
+**If conflicts found:**
+```
+⚠️ {N} transactions flagged for review
+→ Review them: /smith:review-conflicts
+```
+
+**If many LLM matches:**
+```
+💡 LLM categorized {N} transactions
+→ These patterns could become rules for faster future processing
+```
+
+**Always suggest:**
+```
+📈 Check your financial health: /smith:health
+```
+
+## Visual Style
+
+Use emojis for status:
+- ✅ success
+- ⏳ processing
+- ⚠️ warning/conflict
+- ❌ error
+
+Show progress during execution:
+```
+⏳ Fetching transactions... 150 found
+⏳ Applying rules...
+⏳ Running LLM categorization...
+✅ Categorization complete!
+```
+
+---
+
+## Parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `--period` | Month (YYYY-MM) or "last-30-days" | Current month |
+| `--mode` | Intelligence mode | smart |
+| `--dry-run` | Preview without applying | true (first run) |
+
+## Intelligence Modes
+
+| Mode | Auto-Apply Threshold | Best For |
+|------|---------------------|----------|
+| **conservative** | Never (all manual) | First-time users, sensitive data |
+| **smart** | 90%+ confidence | Regular use (recommended) |
+| **aggressive** | 80%+ confidence | Trusted rules, bulk processing |
+
+## Next Steps After Categorization
+
+- **Review conflicts**: `/smith:review-conflicts`
+- **Check health**: `/smith:health --quick`
+- **View insights**: `/smith:insights spending`

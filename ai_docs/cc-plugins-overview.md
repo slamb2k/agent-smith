@@ -294,7 +294,7 @@ When developing plugins, use a local marketplace to test changes iteratively. Th
     ```
 
     ```shell Add your development marketplace theme={null}
-    /plugin marketplace add ./dev-marketplace
+    `/plugin marketplace add `./dev-marketplace
     ```
 
     ```shell Install your plugin theme={null}
