@@ -98,8 +98,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--period",
         type=str,
-        help="Period to process (YYYY-MM or 'last-30-days')",
-        default="last-30-days",
+        help=(
+            "Period to process (YYYY-MM or 'last-30-days'). "
+            "If omitted, processes all uncategorized."
+        ),
+        default=None,
     )
 
     parser.add_argument(
@@ -123,31 +126,52 @@ def parse_args() -> argparse.Namespace:
         help="Preview changes without applying",
     )
 
+    parser.add_argument(
+        "--auto-confirm",
+        action="store_true",
+        help="Auto-confirm transactions (sets needs_review=false)",
+    )
+
+    parser.add_argument(
+        "--reprocess",
+        action="store_true",
+        help=(
+            "Reprocess ALL transactions (default: uncategorized only). "
+            "Enables conflict detection and label updates on "
+            "already-categorized transactions."
+        ),
+    )
+
     return parser.parse_args()
 
 
 def get_transactions(
     client: PocketSmithClient,
-    period: str,
+    period: Optional[str] = None,
     account_filter: Optional[str] = None,
+    reprocess: bool = False,
 ) -> List[Dict[str, Any]]:
     """Fetch transactions for the specified period.
 
     Args:
         client: PocketSmith API client
-        period: Period string (YYYY-MM or 'last-30-days')
+        period: Period string (YYYY-MM or 'last-30-days'). If None, no date filter.
         account_filter: Optional account name filter
+        reprocess: If True, fetch ALL transactions. If False (default), only uncategorized.
 
     Returns:
         List of transaction dicts
     """
     user = client.get_user()
 
-    # Parse period into date range
+    # Parse period into date range (None = no date filter)
+    start_date = None
+    end_date = None
+
     if period == "last-30-days":
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30)
-    elif "-" in period:
+    elif period and "-" in period:
         # Format: YYYY-MM
         year, month = period.split("-")
         start_date = datetime(int(year), int(month), 1)
@@ -156,18 +180,22 @@ def get_transactions(
             end_date = datetime(int(year) + 1, 1, 1) - timedelta(days=1)
         else:
             end_date = datetime(int(year), int(month) + 1, 1) - timedelta(days=1)
-    else:
+    elif period:
         raise ValueError(f"Invalid period format: {period}")
 
-    # Fetch ALL transactions with pagination
-    print(f"Fetching transactions for {period}...", end="", flush=True)
+    # Fetch transactions with pagination
+    # Default: uncategorized only. With --reprocess: all transactions.
+    filter_desc = "all " if reprocess else "uncategorized "
+    period_desc = period if period else "all time"
+    print(f"Fetching {filter_desc}transactions for {period_desc}...", end="", flush=True)
     all_transactions = []
     page = 1
     while True:
         batch = client.get_transactions(
             user_id=user["id"],
-            start_date=start_date.strftime("%Y-%m-%d"),
-            end_date=end_date.strftime("%Y-%m-%d"),
+            start_date=start_date.strftime("%Y-%m-%d") if start_date else None,
+            end_date=end_date.strftime("%Y-%m-%d") if end_date else None,
+            uncategorised=None if reprocess else True,
             page=page,
             per_page=100,
         )
@@ -207,14 +235,18 @@ def main() -> int:
         client = PocketSmithClient()
 
         # Fetch transactions
-        print(f"Fetching transactions for {args.period}...")
-        transactions = get_transactions(client, args.period, args.account)
+        transactions = get_transactions(client, args.period, args.account, args.reprocess)
 
         if not transactions:
             print("No transactions found for the specified period.")
             return 0
 
-        print(f"Processing {len(transactions)} transactions...\n")
+        print(f"Processing {len(transactions)} transactions...")
+        if args.reprocess:
+            print("Mode: reprocess ALL (conflict detection enabled)")
+        if args.auto_confirm:
+            print("Auto-confirm: ON (transactions will be marked as reviewed)")
+        print()
 
         # Get available categories (flatten to include all child categories)
         user = client.get_user()
@@ -288,6 +320,10 @@ def main() -> int:
 
                     if result.get("labels"):
                         update["labels"] = result["labels"]
+
+                    # Auto-confirm if requested (clears needs_review flag)
+                    if args.auto_confirm:
+                        update["needs_review"] = False
 
                     updates.append(update)
 

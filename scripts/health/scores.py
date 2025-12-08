@@ -174,7 +174,7 @@ class DataQualityScorer(BaseScorer):
         dup_score = (100 * self.DUPLICATE_WEIGHT) - dup_penalty
         if duplicates > 0:
             issues.append(f"{duplicates} potential duplicate transactions detected")
-            recommendations.append("Review and merge duplicate transactions")
+            recommendations.append("Run /smith:review-issues to review suspected duplicates")
 
         total_score = int(cat_score + payee_score + max(0, dup_score))
 

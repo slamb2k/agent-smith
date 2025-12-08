@@ -104,6 +104,7 @@ class LabelRule:
 
     name: str
     labels: List[str]
+    patterns: List[str] = field(default_factory=list)
     when_categories: List[str] = field(default_factory=list)
     when_accounts: List[str] = field(default_factory=list)
     when_amount_operator: Optional[str] = None
@@ -125,6 +126,17 @@ class LabelRule:
             if category is None:
                 return True
             return False
+
+        # Check pattern condition (if patterns specified, at least one must match)
+        if self.patterns:
+            payee = transaction.get("payee", "")
+            normalized_payee = _merchant_matcher.normalize_payee(payee)
+            pattern_match = any(
+                _merchant_matcher.normalize_payee(pattern) in normalized_payee
+                for pattern in self.patterns
+            )
+            if not pattern_match:
+                return False
 
         # Check category condition (OR logic within list)
         if self.when_categories:
@@ -153,6 +165,16 @@ class LabelRule:
             amount = abs(float(transaction.get("amount", 0)))
             if not self._check_amount(amount):
                 return False
+
+        # If no conditions specified at all, rule should NOT match (safety)
+        if (
+            not self.patterns
+            and not self.when_categories
+            and not self.when_accounts
+            and not self.when_amount_operator
+        ):
+            logger.warning(f"Label rule '{self.name}' has no conditions - skipping")
+            return False
 
         return True
 
@@ -252,6 +274,11 @@ class UnifiedRuleEngine:
         """Parse label rule from dict."""
         when = rule_dict.get("when", {})
 
+        # Parse patterns (can be at root level or inside 'when')
+        patterns = rule_dict.get("patterns", when.get("patterns", []))
+        if isinstance(patterns, str):
+            patterns = [patterns]
+
         # Ensure all when conditions are lists
         categories = when.get("categories", [])
         if isinstance(categories, str):
@@ -268,6 +295,7 @@ class UnifiedRuleEngine:
         return LabelRule(
             name=rule_dict["name"],
             labels=labels,
+            patterns=patterns,
             when_categories=categories,
             when_accounts=accounts,
             when_amount_operator=when.get("amount_operator"),

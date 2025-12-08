@@ -28,12 +28,16 @@ LABEL_UNCATEGORIZED = "⚠️ Review: Uncategorized"
 LABEL_LARGE_AMOUNT = "⚠️ Review: Large Amount"
 """Applied to transactions exceeding threshold for review."""
 
+LABEL_SUSPECTED_DUPLICATE = "⚠️ Review: Suspected Duplicate"
+"""Applied to transactions with same payee, amount, and date in same account."""
+
 # All system review labels (for easy detection)
 SYSTEM_REVIEW_LABELS = [
     LABEL_CATEGORY_CONFLICT,
     LABEL_GENERIC_PAYPAL,
     LABEL_UNCATEGORIZED,
     LABEL_LARGE_AMOUNT,
+    LABEL_SUSPECTED_DUPLICATE,
 ]
 
 # =============================================================================

@@ -303,7 +303,58 @@ optimizations = suggest_optimizations(transactions=transactions)
 print(f"Potential savings: ${optimizations['potential_annual_savings']:.2f}")
 ```
 
-## Subagent Orchestration
+## Command Architecture Patterns
+
+All Agent Smith commands follow consistent patterns for reliability and maintainability.
+
+### 1. Deterministic Python Scripts
+
+Commands delegate to git-tracked Python scripts in `scripts/` for all operations:
+
+```
+User Request → Slash Command → Python Script → PocketSmith API
+     (UX)        (Guidance)      (Logic)         (Data)
+```
+
+**Why this matters**:
+- Same inputs always produce same outputs
+- All logic is testable and auditable
+- No hidden state or side effects
+
+### 2. Subagent Delegation Pattern
+
+Commands use subagents to preserve main conversation context:
+
+```markdown
+**IMPORTANT: Delegate ALL work to a subagent to preserve main context window.**
+
+Use the Task tool with `subagent_type: "general-purpose"` to execute...
+```
+
+**When to use subagents**:
+- Batch operations (>50 transactions)
+- Multi-step workflows with verbose output
+- Operations that could pollute context
+
+### 3. Guided Workflow Pattern
+
+Every command follows this structure:
+
+1. **Goal** - What will this accomplish?
+2. **Why This Matters** - Business context
+3. **Execution Steps** - Numbered steps with scripts
+4. **Next Steps** - What to do after completion
+
+### 4. Visual Style Guidelines
+
+| Element | Usage |
+|---------|-------|
+| Emojis | Status: ✅ success, ⏳ processing, ⚠️ warning, ❌ error |
+| Progress | `[23/100] Processing...` |
+| Tables | Results summaries |
+| ASCII bars | Health dimensions: `████████░░ 80%` |
+
+### 5. Subagent Orchestration
 
 Agent Smith uses intelligent subagent orchestration for complex operations:
 
@@ -315,12 +366,8 @@ Agent Smith uses intelligent subagent orchestration for complex operations:
 - Parallelization opportunities
 
 **Subagent types**:
-- `categorization-agent` - Transaction categorization
-- `analysis-agent` - Financial analysis
-- `reporting-agent` - Report generation
-- `tax-agent` - Tax intelligence operations
-- `optimization-agent` - Category/rule optimization
-- `scenario-agent` - Scenario modeling
+- `general-purpose` - Most operations (categorization, analysis, reporting)
+- Purpose-built agents for specialized workflows
 
 **Context preservation**: Main skill maintains user preferences, session state, and high-level decisions while subagents handle heavy processing.
 

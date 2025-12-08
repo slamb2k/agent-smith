@@ -10,9 +10,13 @@ Follows PocketSmith API v2 OpenAPI specification for field names:
 
 from typing import Dict, List, Any, Optional, Set
 from datetime import datetime
-from collections import Counter
+from collections import defaultdict
 import json
+import random
 from pathlib import Path
+
+from scripts.core.unified_rules import UnifiedRuleEngine
+from scripts.core.labels import LABEL_SUSPECTED_DUPLICATE
 
 
 class HealthDataCollector:
@@ -51,20 +55,17 @@ class HealthDataCollector:
         Returns:
             Dict with data quality metrics
         """
-        transactions = self.api_client.get_transactions(self.user_id)
+        # Use get_all_transactions to fetch ALL transactions, not just first page
+        transactions = self.api_client.get_all_transactions(self.user_id)
 
         total = len(transactions)
         categorized = sum(1 for t in transactions if t.get("category"))
         with_payee = sum(1 for t in transactions if t.get("payee", "").strip())
 
-        # Simple duplicate detection by payee+amount+date
-        signatures = []
-        for t in transactions:
-            sig = f"{t.get('payee', '')}|{t.get('amount', '')}|{t.get('date', '')}"
-            signatures.append(sig)
-
-        sig_counts = Counter(signatures)
-        duplicates = sum(count - 1 for count in sig_counts.values() if count > 1)
+        # Improved duplicate detection:
+        # 1. Group by account+payee+amount+date (same-account only, not transfers)
+        # 2. Exclude transactions that have been reviewed (have the duplicate label)
+        duplicates = self._count_unreviewed_duplicates(transactions)
 
         return {
             "total_transactions": total,
@@ -72,6 +73,70 @@ class HealthDataCollector:
             "transactions_with_payee": with_payee,
             "duplicate_count": duplicates,
         }
+
+    def _count_unreviewed_duplicates(self, transactions: List[Dict]) -> int:
+        """Count suspected duplicates that haven't been reviewed yet.
+
+        Only counts same-account duplicates (excludes transfers).
+        Excludes transactions that have been reviewed and cleared
+        (those with the LABEL_SUSPECTED_DUPLICATE label have been flagged,
+        those without it in a duplicate group have been cleared as "not duplicate").
+
+        Args:
+            transactions: List of transaction objects from API
+
+        Returns:
+            Count of unreviewed suspected duplicates
+        """
+        # Group transactions by account and signature
+        by_account_sig: Dict[str, Dict[str, List[Dict]]] = defaultdict(lambda: defaultdict(list))
+
+        for txn in transactions:
+            account_id = str(txn.get("transaction_account", {}).get("id", ""))
+            payee = txn.get("payee", "").strip()
+            amount = txn.get("amount", 0)
+            date = txn.get("date", "")
+
+            # Skip if it looks like a transfer
+            if "transfer" in payee.lower():
+                continue
+
+            sig = f"{payee}|{amount}|{date}"
+            by_account_sig[account_id][sig].append(txn)
+
+        # Count unreviewed duplicates
+        # A transaction is an unreviewed duplicate if:
+        # 1. It's in a group with multiple transactions (duplicate signature)
+        # 2. It does NOT have the LABEL_SUSPECTED_DUPLICATE label
+        #    (if it had the label and was cleared, it means user confirmed "not duplicate")
+        unreviewed_count = 0
+
+        for account_id, sigs in by_account_sig.items():
+            for sig, txns in sigs.items():
+                if len(txns) > 1:
+                    # This is a duplicate group - count those without the label
+                    # (transactions WITH the label are flagged for review,
+                    #  transactions WITHOUT the label in a dup group were cleared)
+                    for txn in txns:
+                        labels = txn.get("labels", [])
+                        # If it has the label, it's flagged but not yet reviewed
+                        # For now, count all unreviewed (those without cleared status)
+                        # We'll improve this logic as the workflow matures
+                        has_duplicate_label = LABEL_SUSPECTED_DUPLICATE in labels
+                        # For health scoring, don't count those that have been
+                        # explicitly labeled (they're being tracked for review)
+                        if not has_duplicate_label:
+                            unreviewed_count += 1
+
+        # Subtract the "first" transaction in each group (not a duplicate of itself)
+        # This gives us the actual duplicate count (N-1 per group)
+        group_count = sum(
+            1 for sigs in by_account_sig.values() for txns in sigs.values() if len(txns) > 1
+        )
+
+        # The actual duplicate count is unreviewed_count minus group_count
+        # because one transaction in each group is the "original"
+        return max(0, unreviewed_count - group_count)
 
     def collect_category_structure(self) -> Dict[str, Any]:
         """Collect category structure metrics.
@@ -87,7 +152,8 @@ class HealthDataCollector:
 
         # Build set of category IDs that have transactions
         # API spec: Transaction.category is an object with 'id' field, not category_id
-        transactions = self.api_client.get_transactions(self.user_id)
+        # Use get_all_transactions to fetch ALL transactions, not just first page
+        transactions = self.api_client.get_all_transactions(self.user_id)
         categories_with_txns = self._get_categories_with_transactions(transactions)
 
         total = len(categories)
@@ -141,49 +207,46 @@ class HealthDataCollector:
         Returns:
             Dict with rule engine metrics
         """
-        # Load local category and label rules (we only use local rules now)
-        category_rules = self._load_json("category_rules.json", [])
-        label_rules = self._load_json("label_rules.json", [])
+        # Load rules from unified YAML rules file
+        rule_engine = UnifiedRuleEngine()
+        category_rules = rule_engine.category_rules
+        label_rules = rule_engine.label_rules
 
         total_rules = len(category_rules) + len(label_rules)
-        active_cat_rules = sum(1 for r in category_rules if r.get("active", True))
-        active_label_rules = sum(1 for r in label_rules if r.get("active", True))
-        active_rules = active_cat_rules + active_label_rules
-
-        # Calculate metrics from rule metadata
-        rule_metadata = self._load_json("rule_metadata.json", {})
-
-        total_applied = sum(r.get("applied", 0) for r in category_rules + label_rules)
-        total_overrides = sum(r.get("user_overrides", 0) for r in category_rules + label_rules)
+        # All rules from YAML are active (no inactive flag in current format)
+        active_rules = total_rules
 
         # Get transactions for coverage calculation
-        # API spec: Transaction does NOT have 'auto_categorized' field
-        # Instead, we calculate coverage from local rule application stats
-        transactions = self.api_client.get_transactions(self.user_id)
+        # Use get_all_transactions to fetch ALL transactions, not just first page
+        transactions = self.api_client.get_all_transactions(self.user_id)
         total_txn = len(transactions)
 
-        # Calculate coverage from locally tracked rule applications
-        # If no rule metadata, estimate from categorized transactions
-        auto_categorized = rule_metadata.get("total_auto_categorized", 0)
-        if auto_categorized == 0 and total_rules > 0:
-            # Fallback: estimate from rule application counts
-            auto_categorized = total_applied
+        # Calculate coverage by testing rules against a sample of transactions
+        # Sampling 1000 transactions is statistically representative and much faster
+        sample_size = min(1000, total_txn)
+        sample_txns = random.sample(transactions, sample_size) if total_txn > 0 else []
 
-        coverage = auto_categorized / total_txn if total_txn > 0 else 0
-        # Cap coverage at 1.0 (can't be more than 100%)
-        coverage = min(1.0, coverage)
+        matched_count = 0
+        for txn in sample_txns:
+            result = rule_engine.categorize_and_label(txn)
+            if result.get("category") or result.get("labels"):
+                matched_count += 1
 
+        coverage = matched_count / sample_size if sample_size > 0 else 0
+
+        # Rule metadata for accuracy tracking (if available)
+        rule_metadata = self._load_json("rule_metadata.json", {})
+        total_applied = rule_metadata.get("total_applied", 0)
+        total_overrides = rule_metadata.get("total_overrides", 0)
         accuracy = (
             total_applied / (total_applied + total_overrides)
             if (total_applied + total_overrides) > 0
             else 1.0
         )
 
-        # Count conflicts and stale rules
+        # Conflict and stale rule counts from metadata
         conflicts = rule_metadata.get("conflicts", 0)
-        stale_days = 90
-        all_rules = category_rules + label_rules
-        stale = sum(1 for r in all_rules if self._days_since(r.get("last_used")) > stale_days)
+        stale = 0  # No last_used tracking in current rule format
 
         return {
             "total_rules": total_rules,
@@ -206,7 +269,8 @@ class HealthDataCollector:
         ato_mappings = self._load_json("tax/ato_category_mappings.json", {})
 
         # Count deductible transactions (simplified)
-        transactions = self.api_client.get_transactions(self.user_id)
+        # Use get_all_transactions to fetch ALL transactions, not just first page
+        transactions = self.api_client.get_all_transactions(self.user_id)
         deductible = sum(1 for t in transactions if self._is_deductible(t))
         substantiated = substantiation.get("substantiated_count", 0)
 
