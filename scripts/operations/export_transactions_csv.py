@@ -161,12 +161,15 @@ def format_transaction_for_csv(
     except (ValueError, AttributeError):
         formatted_date = date_str
 
-    # Get amount (positive for easier reading)
-    amount = abs(float(txn.get("amount", 0)))
+    # Get amount (preserve sign - negative for debits, positive for credits)
+    amount = float(txn.get("amount", 0))
 
     # Get labels as comma-separated string
     labels = txn.get("labels", [])
     labels_str = ", ".join(labels) if labels else ""
+
+    # Get memo/notes
+    note = txn.get("note", "") or ""
 
     return {
         "Date": formatted_date,
@@ -175,6 +178,7 @@ def format_transaction_for_csv(
         "Category": parent_category,
         "Subcategory": subcategory if subcategory != parent_category else "",
         "Account": get_account_name(txn, accounts),
+        "Notes": note,
         "Labels": labels_str,
     }
 
@@ -188,10 +192,20 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=str,
-        default="reports/transactions_last_3_months.csv",
-        help="Output CSV file path (default: reports/transactions_last_3_months.csv)",
+        default=None,
+        help="Output CSV file path (default: reports/transactions_<months>_months.csv)",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="export_all",
+        help="Export all transactions without category filtering",
     )
     args = parser.parse_args()
+
+    # Set default output based on months if not specified
+    if args.output is None:
+        args.output = f"reports/transactions_{args.months}_months.csv"
 
     # Initialize API client
     print("Initializing PocketSmith API client...", flush=True)
@@ -218,7 +232,7 @@ def main() -> int:
     )
     print(f"Fetched {len(transactions)} total transactions", flush=True)
 
-    # Define target categories
+    # Define target categories (used when not exporting all)
     target_categories = [
         "Food & Dining",
         "Housing & Utilities",
@@ -230,33 +244,48 @@ def main() -> int:
     ]
 
     # Filter and format transactions
-    print("Filtering transactions...", flush=True)
+    if args.export_all:
+        print("Exporting all transactions (no filtering)...", flush=True)
+    else:
+        print("Filtering transactions by category...", flush=True)
+
     csv_rows = []
     category_counts: Dict[str, int] = {}
 
     for txn in transactions:
-        # Check if it's a kids transfer
-        if is_kids_transfer(txn, accounts):
-            row = format_transaction_for_csv(txn, categories, accounts)
-            row["Category"] = "Transfers"
-            row["Subcategory"] = "Kids Account"
-            csv_rows.append(row)
-            key = "Transfers (Kids Account)"
-            category_counts[key] = category_counts.get(key, 0) + 1
-            continue
-
-        # Check if it matches target categories
-        if matches_target_categories(txn, categories, target_categories):
+        if args.export_all:
+            # Export all transactions without filtering
             row = format_transaction_for_csv(txn, categories, accounts)
             csv_rows.append(row)
 
             # Count by category
-            cat_key = row["Category"]
+            cat_key = row["Category"] or "Uncategorized"
             if row["Subcategory"]:
                 cat_key = f"{row['Category']} > {row['Subcategory']}"
             category_counts[cat_key] = category_counts.get(cat_key, 0) + 1
+        else:
+            # Check if it's a kids transfer
+            if is_kids_transfer(txn, accounts):
+                row = format_transaction_for_csv(txn, categories, accounts)
+                row["Category"] = "Transfers"
+                row["Subcategory"] = "Kids Account"
+                csv_rows.append(row)
+                key = "Transfers (Kids Account)"
+                category_counts[key] = category_counts.get(key, 0) + 1
+                continue
 
-    print(f"Filtered to {len(csv_rows)} matching transactions", flush=True)
+            # Check if it matches target categories
+            if matches_target_categories(txn, categories, target_categories):
+                row = format_transaction_for_csv(txn, categories, accounts)
+                csv_rows.append(row)
+
+                # Count by category
+                cat_key = row["Category"]
+                if row["Subcategory"]:
+                    cat_key = f"{row['Category']} > {row['Subcategory']}"
+                category_counts[cat_key] = category_counts.get(cat_key, 0) + 1
+
+    print(f"Total transactions to export: {len(csv_rows)}", flush=True)
 
     # Sort by date descending (most recent first)
     csv_rows.sort(key=lambda x: x["Date"], reverse=True)
@@ -271,7 +300,16 @@ def main() -> int:
     # Write CSV
     print(f"Writing CSV to: {output_path}", flush=True)
     with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
-        fieldnames = ["Date", "Payee", "Amount", "Category", "Subcategory", "Account", "Labels"]
+        fieldnames = [
+            "Date",
+            "Payee",
+            "Amount",
+            "Category",
+            "Subcategory",
+            "Account",
+            "Notes",
+            "Labels",
+        ]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
