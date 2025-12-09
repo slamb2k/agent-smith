@@ -191,8 +191,8 @@ rules:
 
   - type: label
     name: Work expenses are tax deductible
-    conditions:
-      category_match: [Business]
+    when:
+      categories: [Business]
     labels: [Tax Deductible, Work Expense]
 """
     )
@@ -254,8 +254,8 @@ rules:
 
   - type: label
     name: Work expenses are tax deductible
-    conditions:
-      category_match: [Business]
+    when:
+      categories: [Business]
     labels: [Tax Deductible, Work Expense]
 """
     )

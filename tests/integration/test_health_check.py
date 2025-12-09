@@ -19,8 +19,8 @@ class TestHealthCheckIntegration:
         """Create mock API client with realistic data."""
         client = Mock()
 
-        # Transactions
-        client.get_transactions.return_value = [
+        # Transactions data
+        transactions_data = [
             {
                 "id": i,
                 "category": {"id": i % 10, "name": f"Category {i % 10}"},
@@ -33,6 +33,10 @@ class TestHealthCheckIntegration:
             {"id": 100 + i, "category": None, "payee": "", "amount": 25.0, "date": "2025-01-02"}
             for i in range(20)
         ]
+
+        # Mock both get_transactions and get_all_transactions
+        client.get_transactions.return_value = transactions_data
+        client.get_all_transactions.return_value = transactions_data
 
         # Categories
         client.get_categories.return_value = [
@@ -57,6 +61,7 @@ class TestHealthCheckIntegration:
         # Setup
         collector = HealthDataCollector(
             api_client=mock_api_client,
+            user_id=12345,
             data_dir=tmp_path,
         )
         engine = HealthCheckEngine()
@@ -104,7 +109,9 @@ class TestHealthCheckIntegration:
             score_drop_threshold=10,
         )
         monitor = HealthMonitor(config=config)
-        collector = HealthDataCollector(api_client=mock_api_client, data_dir=tmp_path)
+        collector = HealthDataCollector(
+            api_client=mock_api_client, user_id=12345, data_dir=tmp_path
+        )
         engine = HealthCheckEngine()
 
         # Create minimal data files
@@ -143,7 +150,9 @@ class TestHealthCheckIntegration:
 
     def test_quick_health_check(self, mock_api_client, tmp_path):
         """Test quick health check (single dimension)."""
-        collector = HealthDataCollector(api_client=mock_api_client, data_dir=tmp_path)
+        collector = HealthDataCollector(
+            api_client=mock_api_client, user_id=12345, data_dir=tmp_path
+        )
         engine = HealthCheckEngine()
 
         # Quick check - just data quality

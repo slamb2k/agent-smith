@@ -34,12 +34,12 @@ class TestSlashCommands:
         expected_commands = [
             "install.md",
             "categorize.md",
-            "analyze.md",
-            "scenario.md",
-            "report.md",
-            "optimize.md",
-            "tax.md",
             "health.md",
+            "insights.md",
+            "review-conflicts.md",
+            "review-issues.md",
+            "schedule.md",
+            "tax.md",
         ]
 
         for cmd_file in expected_commands:
