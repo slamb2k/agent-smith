@@ -417,6 +417,7 @@ class PocketSmithClient:
         category_id: Optional[int] = None,
         note: Optional[str] = None,
         labels: Optional[List[str]] = None,
+        needs_review: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """Update a transaction.
 
@@ -425,6 +426,7 @@ class PocketSmithClient:
             category_id: New category ID
             note: Transaction note/memo
             labels: List of labels to apply
+            needs_review: Set to False to auto-confirm, True to flag for review
 
         Returns:
             Updated transaction object
@@ -436,6 +438,8 @@ class PocketSmithClient:
             data["note"] = note
         if labels is not None:
             data["labels"] = ",".join(labels)
+        if needs_review is not None:
+            data["needs_review"] = needs_review
 
         logger.info(f"Updating transaction {transaction_id}")
         return cast(Dict[str, Any], self.put(f"/transactions/{transaction_id}", data=data))
@@ -458,6 +462,7 @@ class PocketSmithClient:
                 - category_id: int (optional)
                 - note: str (optional)
                 - labels: List[str] (optional)
+                - needs_review: bool (optional) - False to auto-confirm
             max_workers: Maximum concurrent requests (default: 5)
             progress_callback: Optional callback(completed, total, txn_id, success)
 
@@ -485,6 +490,7 @@ class PocketSmithClient:
                     category_id=update.get("category_id"),
                     note=update.get("note"),
                     labels=update.get("labels"),
+                    needs_review=update.get("needs_review"),
                 )
                 return (txn_id, True, None)
             except Exception as e:

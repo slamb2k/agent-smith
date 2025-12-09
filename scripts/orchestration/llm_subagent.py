@@ -160,6 +160,7 @@ class LLMSubagent:
 
         # Configure SDK options for financial categorization
         options = ClaudeAgentOptions(
+            model="claude-haiku-4-5-20251001",
             system_prompt="You are a financial analysis expert helping categorize transactions.",
             allowed_tools=[],  # No tools needed for simple categorization
             permission_mode="default",

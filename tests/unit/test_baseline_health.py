@@ -20,7 +20,7 @@ def test_run_baseline_check():
     mock_client.get_user.return_value = {"id": 12345}
 
     # Mock transactions data for data_quality collection
-    mock_client.get_transactions.return_value = [
+    mock_client.get_all_transactions.return_value = [
         {
             "id": 1,
             "payee": "Store",
@@ -70,7 +70,19 @@ def test_discovery_analyze_with_health_check():
         0 if uncategorised else 1
     )
 
-    # Mock transactions
+    # Mock transactions - get_all_transactions for health collector
+    mock_client.get_all_transactions.return_value = [
+        {
+            "id": 1,
+            "payee": "Store",
+            "amount": -50.00,
+            "date": "2025-11-01",
+            "category": {"id": 300, "name": "Groceries"},
+            "transaction_account": {"id": 100},
+        },
+    ]
+
+    # Mock get_transactions for discovery date range calculation
     mock_client.get_transactions.return_value = [
         {
             "id": 1,

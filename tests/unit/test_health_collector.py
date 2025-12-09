@@ -18,7 +18,7 @@ class TestHealthDataCollector:
     def test_collect_data_quality_metrics(self):
         """Collects data quality metrics from transactions."""
         mock_client = Mock()
-        mock_client.get_transactions.return_value = [
+        mock_client.get_all_transactions.return_value = [
             {"id": 1, "category": {"id": 1}, "payee": "Store A"},
             {"id": 2, "category": {"id": 2}, "payee": "Store B"},
             {"id": 3, "category": None, "payee": ""},

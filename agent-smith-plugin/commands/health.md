@@ -87,9 +87,44 @@ Show top 3-5 recommendations with actionable next steps:
    → Review LLM patterns after categorization
 
 3. [LOW] Review unused categories
-   → Consider consolidation
+   → Consider consolidation (see below)
 ─────────────────────────────────────────────────────────────────
 ```
+
+## Step 4b: Category Optimization Analysis
+
+If category health is below 70%, provide specific optimization recommendations:
+
+```
+📂 CATEGORY OPTIMIZATION
+─────────────────────────────────────────────────────────────────
+🔍 UNUSED CATEGORIES (never used):
+  - "Office Supplies" - no transactions in 12 months
+  - "Travel > International" - no transactions
+  Consider: Merge into parent or delete
+
+📊 LOW ACTIVITY CATEGORIES (< 5 transactions):
+  - "Utilities > Gas" - 2 transactions, consider merge with "Utilities"
+  - "Entertainment > Cinema" - 3 transactions
+
+🌳 HIERARCHY SUGGESTIONS:
+  - "Transport" has 15 sub-categories, consider grouping:
+    → Combine "Uber", "Lyft", "Taxi" into "Rideshare"
+  - Flat categories could be grouped:
+    → "Netflix", "Spotify", "Disney+" → "Subscriptions > Streaming"
+
+🏛️ ATO ALIGNMENT:
+  - Work-related categories not mapped to ATO expense types:
+    → "Home Office" → map to D5 (Other work-related deductions)
+    → "Professional Development" → map to D4 (Self-education)
+  - Missing tax-relevant categories:
+    → Consider adding "Work From Home" for WFH deductions
+─────────────────────────────────────────────────────────────────
+```
+
+When presenting category optimization suggestions, explain:
+- **Why consolidation helps**: Simpler structure = easier tracking + better reports
+- **ATO alignment benefit**: Pre-mapped categories enable automatic tax deduction identification
 
 ## Step 5: Offer Next Steps
 
